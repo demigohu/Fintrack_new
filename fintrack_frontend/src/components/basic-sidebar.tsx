@@ -1,0 +1,110 @@
+"use client"
+
+import * as React from "react"
+import { TrendingUp, PieChart, ArrowDownToLine, ArrowUpFromLine, Home, GalleryVerticalEnd } from "lucide-react"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenuButton,
+  SidebarRail,
+  SidebarMenu,
+  SidebarMenuItem,
+  useSidebar,
+  SidebarGroup,
+} from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleTrigger } from "./ui/collapsible";
+import Link from "next/link";
+import { DropdownMenu } from "./ui/dropdown-menu";
+
+const navItems = [
+  {
+    title: "Home",
+    url: "/",
+    icon: Home,
+  },
+  {
+    title: "Trade",
+    url: "/trade",
+    icon: TrendingUp,
+  },
+  {
+    title: "Portfolio",
+    url: "/portfolio",
+    icon: PieChart,
+  },
+  {
+    title: "Deposits",
+    url: "/deposits",
+    icon: ArrowDownToLine,
+  },
+  {
+    title: "Withdraw",
+    url: "/withdraw",
+    icon: ArrowUpFromLine,
+  },
+]
+
+export function BasicSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { toggleSidebar } = useSidebar()
+
+  return (
+    <Sidebar collapsible="icon" variant="floating" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <DropdownMenu>
+                    <SidebarMenuButton
+                        onClick={toggleSidebar}
+                        size="lg"
+                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
+                    >
+                        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                            <GalleryVerticalEnd className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                            <span className="truncate font-semibold">FinTrack</span>
+                            {/* <span className="truncate text-xs">{activeTeam.plan}</span> */}
+                        </div>
+                        {/* <ChevronsUpDown className="ml-auto" /> */}
+                    </SidebarMenuButton>
+                </DropdownMenu>
+            </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+            {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
+            <SidebarMenu>
+                {navItems.map((item) => (
+                    <Collapsible
+                        key={item.title}
+                        asChild
+                        // defaultOpen={item.isActive}
+                        className="group/collapsible"
+                    >
+                        <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                                <Link href={item.url}
+                                    key={item.url}>
+                                    <SidebarMenuButton className='cursor-pointer' tooltip={item.title}>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                        {/* <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" /> */}
+                                    </SidebarMenuButton>
+                                </Link>
+                            </CollapsibleTrigger>
+                        </SidebarMenuItem>
+                    </Collapsible>
+                ))}
+            </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      {/* <SidebarFooter>
+        <NavUser user={data.user} />
+      </SidebarFooter> */}
+      {/* <SidebarRail /> */}
+    </Sidebar>
+  )
+}
