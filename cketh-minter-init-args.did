@@ -1,0 +1,13 @@
+(variant {
+  InitArg = record {
+    ledger_id = principal "apia6-jaaaa-aaaar-qabma-cai"; // ledger canister ID dari dfx.json
+    ecdsa_key_name = "key_1"; // sesuai perintah
+    ethereum_network = variant { Sepolia };
+    ethereum_contract_address = opt "0x2D39863d30716aaf2B7fFFd85Dd03Dda2BFC2E38"; // Sepolia helper contract
+    ethereum_block_height = variant { Finalized };
+    minimum_withdrawal_amount = 10_000_000_000_000_000 : nat; // 0.01 ETH
+    next_transaction_nonce = 0 : nat; // default untuk inisialisasi baru
+    last_scraped_block_number = 0 : nat; // wajib, mulai dari block 0
+    evm_rpc_id = opt principal "7hfb6-caaaa-aaaar-qadga-cai" // EVM RPC canister untuk Sepolia
+  }
+})
