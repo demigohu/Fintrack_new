@@ -73,7 +73,7 @@ export default function WithdrawPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900">
-      <div className="p-4 max-w-4xl mx-auto h-full flex flex-col justify-center">
+      <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-heading font-bold text-white mb-2">Withdraw Crypto</h1>
           <p className="text-slate-400">Send your crypto to an external wallet</p>

@@ -56,13 +56,13 @@ export default function DepositPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-900">
-      <div className="p-4 max-w-4xl mx-auto">
+      <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-heading font-bold text-white mb-2">Deposit Crypto</h1>
           <p className="text-slate-400">Add funds to your CyberTrade account</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Asset Selection & Deposit Form */}
           <div className="space-y-6">
             {/* Asset Selection */}
@@ -191,43 +191,45 @@ export default function DepositPage() {
                 </div>
               </div>
             </Card>
+          </div>
+        </div>
 
-            {/* Deposit Instructions */}
-            <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-              <h3 className="font-heading font-semibold text-white text-lg mb-4">Instructions</h3>
-              <div className="space-y-4 text-sm text-slate-300">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                    1
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Copy the deposit address</div>
-                    <div className="text-slate-400">Use the copy button or scan the QR code</div>
-                  </div>
+        <div>
+          {/* Deposit Instructions */}
+          <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+            <h3 className="font-heading font-semibold text-white text-lg mb-4">Instructions</h3>
+            <div className="space-y-4 text-sm text-slate-300">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  1
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                    2
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Send from your wallet</div>
-                    <div className="text-slate-400">Transfer {selectedAsset.name} from your external wallet</div>
-                  </div>
+                <div>
+                  <div className="font-semibold text-white">Copy the deposit address</div>
+                  <div className="text-slate-400">Use the copy button or scan the QR code</div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
-                    3
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Wait for confirmations</div>
-                    <div className="text-slate-400">
-                      Your deposit will appear after {selectedAsset.confirmations} network confirmations
-                    </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  2
+                </div>
+                <div>
+                  <div className="font-semibold text-white">Send from your wallet</div>
+                  <div className="text-slate-400">Transfer {selectedAsset.name} from your external wallet</div>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                  3
+                </div>
+                <div>
+                  <div className="font-semibold text-white">Wait for confirmations</div>
+                  <div className="text-slate-400">
+                    Your deposit will appear after {selectedAsset.confirmations} network confirmations
                   </div>
                 </div>
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

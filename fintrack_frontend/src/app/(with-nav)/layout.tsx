@@ -7,6 +7,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Separator } from "@/components/ui/separator";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ThemeProvider } from "@/components/theme-provider"
+import { Button } from "@/components/ui/button";
+import { Wallet } from "lucide-react";
 
 // const spaceGrotesk = Space_Grotesk({
 //   subsets: ["latin"],
@@ -31,16 +36,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${dmSans.className} antialiased bg-red-600`}
+        className={`${dmSans.className} antialiased`}
       >
-        <SidebarProvider>
-          <BasicSidebar />
-          <SidebarInset>
-            {children}
-          </SidebarInset>
-        </SidebarProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <SidebarProvider>
+            <BasicSidebar />
+            <SidebarInset>
+              <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-purple-500/20 bg-background/80 backdrop-blur-xl justify-end">
+                <div className="flex items-center gap-2 px-4">
+                  {/* <SidebarTrigger className="-ml-1" />
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem className="hidden md:block">
+                        <BreadcrumbLink href="#">
+                          Building Your Application
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="hidden md:block" />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </BreadcrumbList>
+                  </Breadcrumb> */}
+                  <Button className="w-full cursor-pointer bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 glow-purple hover:animate-pulse-glow transition-all">
+                    <Wallet className="h-4 w-4 mr-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">Connect Wallet</span>
+                  </Button>
+                </div>
+              </header>
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

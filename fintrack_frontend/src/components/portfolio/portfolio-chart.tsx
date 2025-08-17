@@ -3,8 +3,39 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BarChart3, TrendingUp } from "lucide-react"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 const timeframes = ["24H", "7D", "1M", "3M", "1Y", "ALL"]
+
+// Mock portfolio performance data
+const portfolioData = [
+  { date: "Jan 1", value: 65000, change: 0 },
+  { date: "Jan 5", value: 72000, change: 7000 },
+  { date: "Jan 10", value: 68000, change: 3000 },
+  { date: "Jan 15", value: 85000, change: 20000 },
+  { date: "Jan 20", value: 92000, change: 27000 },
+  { date: "Jan 25", value: 105000, change: 40000 },
+  { date: "Jan 30", value: 127450, change: 62450 },
+]
+
+const CustomPortfolioTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const value = payload[0].value
+    const change = payload[0].payload.change
+    const changePercent = ((change / (value - change)) * 100).toFixed(2)
+
+    return (
+      <div className="bg-slate-800/95 border border-purple-500/30 rounded-lg p-3 shadow-lg backdrop-blur-sm">
+        <p className="text-slate-300 text-sm">{`Date: ${label}`}</p>
+        <p className="text-purple-400 font-semibold">{`Value: $${value.toLocaleString()}`}</p>
+        <p className={`text-sm ${change >= 0 ? "text-green-400" : "text-red-400"}`}>
+          {`Change: ${change >= 0 ? "+" : ""}$${change.toLocaleString()} (${changePercent}%)`}
+        </p>
+      </div>
+    )
+  }
+  return null
+}
 
 export function PortfolioChart() {
   return (
@@ -41,80 +72,36 @@ export function PortfolioChart() {
         </div>
       </div>
 
-      {/* Chart Area */}
-      <div className="relative h-80 bg-slate-950/50 rounded-lg border border-slate-700/50 overflow-hidden">
-        {/* Grid Background */}
-        <div className="absolute inset-0 bg-cyber-grid opacity-10"></div>
-
-        {/* Mock Portfolio Performance Chart */}
-        <div className="absolute inset-0 p-4">
-          {/* Y-axis labels */}
-          <div className="absolute left-2 top-4 bottom-4 flex flex-col justify-between text-xs text-slate-500">
-            <span>$140k</span>
-            <span>$120k</span>
-            <span>$100k</span>
-            <span>$80k</span>
-            <span>$60k</span>
-          </div>
-
-          {/* Chart line */}
-          <div className="ml-12 mr-4 h-full relative">
-            <svg className="w-full h-full" viewBox="0 0 400 200">
-              <defs>
-                <linearGradient id="portfolioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="rgb(139, 92, 246)" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.05" />
-                </linearGradient>
-              </defs>
-
-              {/* Area under curve */}
-              <path
-                d="M 0 180 Q 50 160 100 140 T 200 120 T 300 100 T 400 80 L 400 200 L 0 200 Z"
-                fill="url(#portfolioGradient)"
-              />
-
-              {/* Main line */}
-              <path
-                d="M 0 180 Q 50 160 100 140 T 200 120 T 300 100 T 400 80"
-                stroke="rgb(139, 92, 246)"
-                strokeWidth="2"
-                fill="none"
-                className="drop-shadow-lg"
-                style={{ filter: "drop-shadow(0 0 4px rgb(139, 92, 246))" }}
-              />
-
-              {/* Data points */}
-              {[0, 100, 200, 300, 400].map((x, i) => {
-                const y = [180, 140, 120, 100, 80][i]
-                return (
-                  <circle
-                    key={i}
-                    cx={x}
-                    cy={y}
-                    r="4"
-                    fill="rgb(139, 92, 246)"
-                    className="drop-shadow-lg"
-                    style={{ filter: "drop-shadow(0 0 6px rgb(139, 92, 246))" }}
-                  />
-                )
-              })}
-            </svg>
-          </div>
-
-          {/* X-axis labels */}
-          <div className="absolute bottom-2 left-12 right-4 flex justify-between text-xs text-slate-500">
-            <span>Jan 1</span>
-            <span>Jan 8</span>
-            <span>Jan 15</span>
-            <span>Jan 22</span>
-            <span>Jan 29</span>
-          </div>
-        </div>
-
-        {/* Current value indicator */}
-        <div className="absolute right-4 top-1/4">
-          <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded glow-purple">$127,450</div>
-        </div>
+      <div className="h-80 bg-slate-950/50 rounded-lg border border-slate-700/50 p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={portfolioData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+            <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis
+              stroke="#9ca3af"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+            />
+            <Tooltip content={<CustomPortfolioTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#8b5cf6"
+              strokeWidth={3}
+              fill="url(#portfolioGradient)"
+              dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 5 }}
+              activeDot={{ r: 7, stroke: "#8b5cf6", strokeWidth: 3, fill: "#8b5cf6" }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Chart Stats */}
