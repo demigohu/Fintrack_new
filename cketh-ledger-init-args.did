@@ -1,0 +1,24 @@
+(variant {
+  Init = record {
+    minting_account = record { owner = principal "jzenf-aiaaa-aaaar-qaa7q-cai"; subaccount = null };
+    feature_flags = opt record { icrc2 = true };
+    decimals = opt (18 : nat8);
+    max_memo_length = opt (80 : nat16);
+    transfer_fee = 10_000_000_000 : nat;
+    token_symbol = "ckSepoliaETH";
+    token_name = "Chain key Sepolia Ethereum";
+    metadata = vec {};
+    initial_balances = vec {};
+    fee_collector_account = null;
+    archive_options = record {
+      num_blocks_to_archive = 1000 : nat64;
+      max_transactions_per_response = null : opt nat64;
+      trigger_threshold = 2000 : nat64;
+      max_message_size_bytes = null : opt nat64;
+      cycles_for_archive_creation = opt (1_000_000_000_000 : nat64);
+      node_max_memory_size_bytes = opt (3_221_225_472 : nat64);
+      controller_id = principal "la3uc-5t5pj-zjpdq-taqu6-mttyn-7krke-u23hq-tu23u-tv6uq-ioizg-bae";
+      more_controller_ids = null : opt vec principal;
+    }
+  }
+})
