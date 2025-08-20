@@ -5,9 +5,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.6-black.svg)](https://nextjs.org/)
 [![Rust](https://img.shields.io/badge/Rust-2021-orange.svg)](https://rust-lang.org/)
 
-**FInTrack Protocol** adalah platform cross-chain bridge dan DeFi yang dibangun di atas Internet Computer (IC), memungkinkan pengguna untuk melakukan bridge aset antara blockchain tradisional (Bitcoin, Ethereum) dan Internet Computer melalui ckBTC dan ckETH. Platform ini menyediakan solusi lengkap untuk cross-chain asset management, DeFi operations, dan portfolio tracking.
+**FInTrack Protocol** is a cross-chain bridge and DeFi platform built on top of Internet Computer (IC), enabling users to bridge assets between traditional blockchains (Bitcoin, Ethereum) and Internet Computer through ckBTC and ckETH. The platform provides a complete solution for cross-chain asset management, DeFi operations, and portfolio tracking.
 
-## 🌟 Fitur Utama
+## 🌟 Key Features
 
 ### 🔗 Cross-Chain Bridge Operations
 - **BTC Bridge**: Deposit BTC → Convert to ckBTC → Transfer via Chain Fusion
@@ -30,7 +30,7 @@
 - **Internet Identity**: Decentralized authentication via Internet Computer
 
 
-## 🏗️ Arsitektur Sistem
+## 🏗️ System Architecture
 
 ### Backend (Rust + Internet Computer)
 ```
