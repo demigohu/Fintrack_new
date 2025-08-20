@@ -1,5 +1,5 @@
 [package]
-name = "Fintrack_backend"
+name = "fintrack_backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,5 +10,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 candid = "0.10"
-ic-cdk = "0.17"
-ic-cdk-timers = "0.11" # Feel free to remove this dependency if you don't need timers
+ic-cdk = "0.18.5"
+ic-stable-structures = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+num-traits = "0.2"
+hex = "0.4"

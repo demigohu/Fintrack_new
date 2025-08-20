@@ -128,7 +128,7 @@ export function WithdrawConfirmationModal({
                 </span>
               </div>
               <div className="flex justify-between border-t border-slate-700 pt-3">
-                <span className="text-white font-semibold">You'll Receive</span>
+                <span className="text-white font-semibold">You&apos;ll Receive</span>
                 <span className="text-purple-400 font-bold">
                   {receiveAmount} {asset.symbol}
                 </span>

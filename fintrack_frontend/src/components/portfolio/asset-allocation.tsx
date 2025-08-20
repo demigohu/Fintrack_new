@@ -1,65 +1,167 @@
 "use client"
 
+import { useEffect, useState, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { useAuth } from "@/contexts/AuthContext"
+import { bitcoinService, ethereumService } from "@/services/backend"
+import { RefreshCw } from "lucide-react"
 
-const allocations = [
-  { symbol: "BTC", name: "Bitcoin", percentage: 45.2, value: 57635.64, color: "#f97316" },
-  { symbol: "ETH", name: "Ethereum", percentage: 28.7, value: 36578.24, color: "#3b82f6" },
-  { symbol: "SOL", name: "Solana", percentage: 12.1, value: 15421.59, color: "#8b5cf6" },
-  { symbol: "ADA", name: "Cardano", percentage: 8.3, value: 10584.42, color: "#10b981" },
-  { symbol: "DOT", name: "Polkadot", percentage: 5.7, value: 7230.43, color: "#ec4899" },
-]
-
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload
-    return (
-      <div className="bg-slate-800/95 border border-purple-500/30 rounded-lg p-3 shadow-lg backdrop-blur-sm">
-        <div className="text-white font-semibold">{data.name}</div>
-        <div className="text-purple-400 text-sm">{data.symbol}</div>
-        <div className="text-cyan-400 font-bold">{data.percentage}%</div>
-        <div className="text-slate-300 text-sm">${data.value.toLocaleString()}</div>
-      </div>
-    )
-  }
-  return null
-}
-
-const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-  const RADIAN = Math.PI / 180
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-
-  return percent > 0.05 ? (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      className="text-xs font-semibold"
-      style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }}
-    >
-      {`${(percent * 100).toFixed(1)}%`}
-    </text>
-  ) : null
+type AssetAllocation = {
+  symbol: string
+  name: string
+  percentage: number
+  value: number
+  color: string
 }
 
 export function AssetAllocation() {
-  const totalValue = allocations.reduce((sum, asset) => sum + asset.value, 0)
+  const { isLoggedIn } = useAuth()
+  const [allocations, setAllocations] = useState<AssetAllocation[]>([])
+  const [totalValue, setTotalValue] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadData = useCallback(async () => {
+    if (!isLoggedIn) return
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Get BTC and ETH balances
+      const btcRes = await bitcoinService.getBtcBalance()
+      const ethRes = await ethereumService.getEthBalance()
+      
+      if (!btcRes.success || !ethRes.success) {
+        setError("Failed to load balance data")
+        return
+      }
+      
+      const btcBalance = Number(btcRes.data) / 100000000 // Convert satoshis to BTC
+      const ethBalance = Number(ethRes.data) / 1000000000000000000 // Convert wei to ETH
+      
+      // Mock prices (in real app, these would come from price API)
+      const btcPrice = 43250
+      const ethPrice = 2675
+      
+      const btcValue = btcBalance * btcPrice
+      const ethValue = ethBalance * ethPrice
+      const currentTotalValue = btcValue + ethValue
+      
+      setTotalValue(currentTotalValue)
+      
+      if (currentTotalValue > 0) {
+        const newAllocations: AssetAllocation[] = [
+          {
+            symbol: "BTC",
+            name: "Bitcoin",
+            percentage: (btcValue / currentTotalValue) * 100,
+            value: btcValue,
+            color: "#f97316"
+          },
+          {
+            symbol: "ETH",
+            name: "Ethereum",
+            percentage: (ethValue / currentTotalValue) * 100,
+            value: ethValue,
+            color: "#3b82f6"
+          }
+        ]
+        
+        // Only show assets with balance > 0
+        const filteredAllocations = newAllocations.filter(asset => asset.value > 0)
+        setAllocations(filteredAllocations)
+      } else {
+        setAllocations([])
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to load allocation data")
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
+
+  if (!isLoggedIn) {
+    return (
+      <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+        <div className="text-slate-400 text-center py-8">
+          Silakan login terlebih dahulu
+        </div>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+        <div className="text-red-400 text-center py-8">
+          Error: {error}
+        </div>
+      </Card>
+    )
+  }
+
+  if (loading) {
+    return (
+      <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+        <div className="text-slate-400 text-center py-8">
+          Memuat allocation...
+        </div>
+      </Card>
+    )
+  }
+
+  if (allocations.length === 0) {
+    return (
+      <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <div className="h-5 w-5 text-purple-400">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+            </div>
+            <h3 className="font-heading font-semibold text-white text-lg">Asset Allocation</h3>
+          </div>
+          <button
+            onClick={() => void loadData()}
+            className="p-2 text-slate-400 hover:text-white transition-colors"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        <div className="text-slate-400 text-center py-8">
+          Tidak ada asset untuk ditampilkan
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="h-5 w-5 text-purple-400">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-            <path d="M22 12A10 10 0 0 0 12 2v10z" />
-          </svg>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-2">
+          <div className="h-5 w-5 text-purple-400">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg>
+          </div>
+          <h3 className="font-heading font-semibold text-white text-lg">Asset Allocation</h3>
         </div>
-        <h3 className="font-heading font-semibold text-white text-lg">Asset Allocation</h3>
+        <button
+          onClick={() => void loadData()}
+          className="p-2 text-slate-400 hover:text-white transition-colors"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       <div className="h-80 mb-6">
@@ -130,7 +232,7 @@ export function AssetAllocation() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-white font-semibold text-sm">{asset.percentage}%</div>
+              <div className="text-white font-semibold text-sm">{asset.percentage.toFixed(1)}%</div>
               <div className="text-slate-400 text-xs">${asset.value.toLocaleString()}</div>
             </div>
           </div>
@@ -138,4 +240,40 @@ export function AssetAllocation() {
       </div>
     </Card>
   )
+}
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-slate-800/95 border border-purple-500/30 rounded-lg p-3 shadow-lg backdrop-blur-sm">
+        <div className="text-white font-semibold">{data.name}</div>
+        <div className="text-purple-400 text-sm">{data.symbol}</div>
+        <div className="text-cyan-400 font-bold">{data.percentage.toFixed(1)}%</div>
+        <div className="text-slate-300 text-sm">${data.value.toLocaleString()}</div>
+      </div>
+    )
+  }
+  return null
+}
+
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return percent > 0.05 ? (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      className="text-xs font-semibold"
+      style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }}
+    >
+      {`${(percent * 100).toFixed(1)}%`}
+    </text>
+  ) : null
 }

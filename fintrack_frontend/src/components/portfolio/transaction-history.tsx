@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { History, ArrowUpRight, ArrowDownLeft, ArrowRightLeft } from "lucide-react"
+import Link from "next/link"
 
 const transactions = [
   {
@@ -89,13 +90,15 @@ export function TransactionHistory() {
           <History className="h-5 w-5 text-purple-400" />
           <h3 className="font-heading font-semibold text-white text-lg">Recent Transactions</h3>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/10 bg-transparent"
-        >
-          View All
-        </Button>
+        <Link href="/transactions">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-purple-500/50 text-purple-300 hover:bg-purple-500/10 bg-transparent"
+          >
+            View All
+          </Button>
+        </Link>
       </div>
 
       <div className="space-y-3">

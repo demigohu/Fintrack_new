@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WithdrawConfirmationModal } from "@/components/withdraw/withdraw-confirmation-modal"
+import { BtcWithdrawalForm } from "@/components/withdraw/btc-withdrawal-form"
+import { CkethWithdrawalForm } from "@/components/withdraw/cketh-withdrawal-form"
 import { ArrowUpFromLine, AlertTriangle, Info } from "lucide-react"
 
 const cryptoAssets = [
@@ -69,6 +71,16 @@ export default function WithdrawPage() {
   const setMaxAmount = () => {
     const maxAmount = Math.max(0, Number.parseFloat(selectedAsset.balance) - Number.parseFloat(selectedAsset.fee))
     setWithdrawAmount(maxAmount.toString())
+  }
+
+  const handleBtcWithdrawalSuccess = (blockIndex: string) => {
+    console.log("BTC withdrawal successful with block index:", blockIndex)
+    // You can add navigation or other success handling here
+  }
+
+  const handleCkethWithdrawalSuccess = (withdrawalId: string) => {
+    console.log("ckETH withdrawal successful with withdrawal ID:", withdrawalId)
+    // You can add navigation or other success handling here
   }
 
   return (
@@ -143,71 +155,77 @@ export default function WithdrawPage() {
               </Tabs>
             </Card>
 
-            {/* Withdrawal Details */}
-            <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-              <h3 className="font-heading font-semibold text-white text-lg mb-4">Withdrawal Details</h3>
-              <div className="space-y-4">
-                {/* Destination Address */}
-                <div>
-                  <Label className="text-slate-300">Destination Address</Label>
-                  <Input
-                    value={withdrawAddress}
-                    onChange={(e) => setWithdrawAddress(e.target.value)}
-                    placeholder={`Enter ${selectedAsset.name} address`}
-                    className="bg-slate-800/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-white mt-2 font-mono"
-                  />
-                </div>
-
-                {/* Amount */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-slate-300">Amount</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={setMaxAmount}
-                      className="text-purple-400 hover:text-purple-300 text-xs"
-                    >
-                      Max: {selectedAsset.balance} {selectedAsset.symbol}
-                    </Button>
+            {/* Withdrawal Form - Show BTC form for BTC, generic form for others */}
+            {selectedAsset.symbol === "BTC" ? (
+              <BtcWithdrawalForm onSuccess={handleBtcWithdrawalSuccess} />
+            ) : selectedAsset.symbol === "ETH" ? (
+              <CkethWithdrawalForm onSuccess={handleCkethWithdrawalSuccess} />
+            ) : (
+              <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+                <h3 className="font-heading font-semibold text-white text-lg mb-4">Withdrawal Details</h3>
+                <div className="space-y-4">
+                  {/* Destination Address */}
+                  <div>
+                    <Label className="text-slate-300">Destination Address</Label>
+                    <Input
+                      value={withdrawAddress}
+                      onChange={(e) => setWithdrawAddress(e.target.value)}
+                      placeholder={`Enter ${selectedAsset.name} address`}
+                      className="bg-slate-800/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-white mt-2 font-mono"
+                    />
                   </div>
-                  <Input
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="bg-slate-800/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-white"
-                  />
+
+                  {/* Amount */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-slate-300">Amount</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={setMaxAmount}
+                        className="text-purple-400 hover:text-purple-300 text-xs"
+                      >
+                        Max: {selectedAsset.balance} {selectedAsset.symbol}
+                      </Button>
+                    </div>
+                    <Input
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="bg-slate-800/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-white"
+                    />
+                  </div>
+
+                  {/* Quick Amount Buttons */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {["25%", "50%", "75%", "Max"].map((percent) => (
+                      <Button
+                        key={percent}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const balance = Number.parseFloat(selectedAsset.balance)
+                          const fee = Number.parseFloat(selectedAsset.fee)
+                          let amount = 0
+
+                          if (percent === "Max") {
+                            amount = Math.max(0, balance - fee)
+                          } else {
+                            const percentage = Number.parseInt(percent) / 100
+                            amount = balance * percentage
+                          }
+
+                          setWithdrawAmount(amount.toString())
+                        }}
+                        className="border-slate-600 text-slate-400 hover:border-purple-500/50 hover:text-purple-400 hover:bg-purple-500/10 bg-transparent"
+                      >
+                        {percent}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-
-                {/* Quick Amount Buttons */}
-                <div className="grid grid-cols-4 gap-2">
-                  {["25%", "50%", "75%", "Max"].map((percent) => (
-                    <Button
-                      key={percent}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const balance = Number.parseFloat(selectedAsset.balance)
-                        const fee = Number.parseFloat(selectedAsset.fee)
-                        let amount = 0
-
-                        if (percent === "Max") {
-                          amount = Math.max(0, balance - fee)
-                        } else {
-                          const percentage = Number.parseInt(percent) / 100
-                          amount = balance * percentage
-                        }
-
-                        setWithdrawAmount(amount.toString())
-                      }}
-                      className="border-slate-600 text-slate-400 hover:border-purple-500/50 hover:text-purple-400 hover:bg-purple-500/10 bg-transparent"
-                    >
-                      {percent}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
 
           {/* Withdrawal Summary */}
@@ -233,7 +251,7 @@ export default function WithdrawPage() {
                   <span className="text-slate-400">{selectedAsset.feeUsd}</span>
                 </div>
                 <div className="flex justify-between items-center py-3 bg-purple-500/10 rounded-lg px-4">
-                  <span className="text-white font-semibold">You'll Receive</span>
+                  <span className="text-white font-semibold">You&apos;ll Receive</span>
                   <span className="text-purple-400 font-bold text-lg">
                     {calculateReceiveAmount()} {selectedAsset.symbol}
                   </span>
@@ -249,7 +267,7 @@ export default function WithdrawPage() {
                   <h4 className="font-semibold text-yellow-400 mb-2">Security Notice</h4>
                   <ul className="text-sm text-yellow-300 space-y-1">
                     <li>• Double-check the destination address</li>
-                    <li>• Ensure you're using the correct network</li>
+                    <li>• Ensure you&apos;re using the correct network</li>
                     <li>• Withdrawals cannot be reversed</li>
                     <li>• Allow up to 30 minutes for processing</li>
                   </ul>
@@ -257,19 +275,21 @@ export default function WithdrawPage() {
               </div>
             </Card>
 
-            {/* Withdraw Button */}
-            <Button
-              onClick={handleWithdraw}
-              disabled={
-                !withdrawAddress ||
-                !withdrawAmount ||
-                Number.parseFloat(withdrawAmount) < Number.parseFloat(selectedAsset.minWithdraw)
-              }
-              className="w-full h-12 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 glow-purple hover:animate-pulse-glow text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowUpFromLine className="mr-2 h-5 w-5" />
-              Withdraw {selectedAsset.symbol}
-            </Button>
+            {/* Withdraw Button - Only show for non-BTC/ETH assets */}
+            {selectedAsset.symbol !== "BTC" && selectedAsset.symbol !== "ETH" && (
+              <Button
+                onClick={handleWithdraw}
+                disabled={
+                  !withdrawAddress ||
+                  !withdrawAmount ||
+                  Number.parseFloat(withdrawAmount) < Number.parseFloat(selectedAsset.minWithdraw)
+                }
+                className="w-full h-12 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 glow-purple hover:animate-pulse-glow text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ArrowUpFromLine className="mr-2 h-5 w-5" />
+                Withdraw {selectedAsset.symbol}
+              </Button>
+            )}
 
             {/* Info */}
             <div className="flex items-start space-x-2 text-xs text-slate-500">
@@ -283,15 +303,17 @@ export default function WithdrawPage() {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
-      <WithdrawConfirmationModal
-        isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
-        asset={selectedAsset}
-        address={withdrawAddress}
-        amount={withdrawAmount}
-        receiveAmount={calculateReceiveAmount()}
-      />
+      {/* Confirmation Modal - Only show for non-BTC/ETH assets */}
+      {selectedAsset.symbol !== "BTC" && selectedAsset.symbol !== "ETH" && (
+        <WithdrawConfirmationModal
+          isOpen={showConfirmation}
+          onClose={() => setShowConfirmation(false)}
+          asset={selectedAsset}
+          address={withdrawAddress}
+          amount={withdrawAmount}
+          receiveAmount={calculateReceiveAmount()}
+        />
+      )}
     </div>
   )
 }

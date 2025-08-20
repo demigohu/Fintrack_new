@@ -1,3 +1,70 @@
+type BitcoinTransaction = record {
+  fee : nat64;
+  confirmations : nat32;
+  txid : text;
+  address : text;
+  operation : text;
+  timestamp : nat64;
+  amount : nat64;
+  block_height : nat32;
+};
+type EthereumTransaction = record {
+  confirmations : nat32;
+  block_number : nat64;
+  address : text;
+  operation : text;
+  timestamp : nat64;
+  gas_used : nat64;
+  tx_hash : text;
+  amount : nat;
+  gas_price : nat;
+};
+type IcpTransaction = record {
+  to : principal;
+  fee : nat;
+  token : text;
+  block_index : nat64;
+  from : principal;
+  operation : text;
+  timestamp : nat64;
+  amount : nat;
+};
+type Result = variant { Ok : nat; Err : text };
+type Result_1 = variant { Ok : text; Err : text };
+type Result_2 = variant { Ok : vec SimplifiedUtxo; Err : text };
+type Result_3 = variant { Ok; Err : text };
+type Result_4 = variant { Ok : vec Transaction; Err : text };
+type Result_5 = variant { Ok : UserBalances; Err : text };
+type SimplifiedUtxo = record { confirmations : nat32; hash : text };
+type Transaction = record {
+  id : TransactionId;
+  status : text;
+  btc_tx : opt BitcoinTransaction;
+  icp_tx : opt IcpTransaction;
+  description : text;
+  eth_tx : opt EthereumTransaction;
+};
+type TransactionId = record { chain : text; timestamp : nat64; tx_hash : text };
+type UserBalances = record {
+  last_updated : nat64;
+  cketh_balance : nat;
+  ckbtc_balance : nat;
+};
 service : {
-    "greet": (text) -> (text) query;
+  btc_get_balance : (opt principal, opt blob) -> (Result);
+  btc_get_deposit_address : (opt principal, opt blob) -> (Result_1);
+  // Returns the UTXOs of the given Bitcoin address with simplified response (hash and confirmations only)
+  btc_get_utxos : (text) -> (Result_2);
+  btc_refresh_balance : (opt principal, opt blob) -> (Result_3);
+  clear_user_transactions : (principal) -> ();
+  eth_estimate_withdrawal_fee : () -> (Result_1) query;
+  eth_get_balance : (opt principal, opt blob) -> (Result);
+  eth_get_deposit_address : (opt blob) -> (Result_1);
+  eth_get_minter_address : () -> (Result_1) query;
+  eth_get_minter_info : () -> (Result_1) query;
+  eth_refresh_balance : (opt blob) -> (Result_3);
+  get_transaction_count : (principal) -> (nat32) query;
+  get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_4);
+  get_user_balances : (principal) -> (Result_5) query;
+  principal_to_bytes32 : (text) -> (Result_1) query;
 }

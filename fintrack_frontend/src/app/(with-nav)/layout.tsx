@@ -10,8 +10,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
+import { ConnectWalletButton } from "@/components/connect-wallet-button";
 
 // const spaceGrotesk = Space_Grotesk({
 //   subsets: ["latin"],
@@ -41,9 +43,10 @@ export default function RootLayout({
         className={`${dmSans.className} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <SidebarProvider>
-            <BasicSidebar />
-            <SidebarInset>
+          <AuthProvider>
+            <SidebarProvider>
+              <BasicSidebar />
+              <SidebarInset>
               <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-purple-500/20 bg-background/80 backdrop-blur-xl justify-end">
                 <div className="flex items-center gap-2 px-4">
                   {/* <SidebarTrigger className="-ml-1" />
@@ -61,15 +64,13 @@ export default function RootLayout({
                       </BreadcrumbItem>
                     </BreadcrumbList>
                   </Breadcrumb> */}
-                  <Button className="w-full cursor-pointer bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 glow-purple hover:animate-pulse-glow transition-all">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">Connect Wallet</span>
-                  </Button>
+                  <ConnectWalletButton />
                 </div>
               </header>
-              {children}
-            </SidebarInset>
-          </SidebarProvider>
+                {children}
+              </SidebarInset>
+            </SidebarProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

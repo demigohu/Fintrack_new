@@ -6,7 +6,7 @@ DIR=target/ic
 
 mkdir -p "$DIR"
 
-IC_COMMIT="bb6e758c739768ef6713f9f3be2df47884544900"
+IC_COMMIT="9bceb44972670f28cf6bb3b48446c3308ad1cddb"
 
 scripts/download-immutable.sh "https://download.dfinity.systems/ic/$IC_COMMIT/canisters/ic-cketh-minter.wasm.gz" "$DIR"/cketh_minter.wasm.gz
 gunzip --keep --force "$DIR"/cketh_minter.wasm.gz

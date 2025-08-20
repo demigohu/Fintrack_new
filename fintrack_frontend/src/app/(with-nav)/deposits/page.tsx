@@ -1,19 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, QrCode, CheckCircle, AlertTriangle } from "lucide-react"
+import { Copy, QrCode, CheckCircle, AlertTriangle, RefreshCw, Coins, Send } from "lucide-react"
+import { bitcoinService, ethereumService } from "@/services/backend"
+import { useRefreshBtcBalance, useEthDeposit } from "@/hooks/useData"
+import { useAuth } from "@/contexts/AuthContext"
+
+// Component untuk preview principal bytes32
+function PrincipalPreview({ principal }: { principal: string }) {
+  const [bytes32, setBytes32] = useState<string>("Loading...")
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function convertPrincipal() {
+      try {
+        const { getBackendActor } = await import('../../../lib/ic')
+        const actor = await getBackendActor()
+        const result = await actor.principal_to_bytes32(principal)
+        
+        if ('Ok' in result) {
+          setBytes32(result.Ok)
+        } else {
+          setError(result.Err || 'Failed to convert principal')
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+      }
+    }
+
+    convertPrincipal()
+  }, [principal])
+
+  if (error) {
+    return <span className="text-red-400">Error: {error}</span>
+  }
+
+  return <span>{bytes32}</span>
+}
 
 const cryptoAssets = [
   {
     symbol: "BTC",
     name: "Bitcoin",
     network: "Bitcoin",
-    address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+    address: "",
     minDeposit: "0.0001",
     confirmations: 3,
   },
@@ -21,7 +56,7 @@ const cryptoAssets = [
     symbol: "ETH",
     name: "Ethereum",
     network: "Ethereum (ERC-20)",
-    address: "0x742d35Cc6634C0532925a3b8D4C9db96590b5b8e",
+    address: "",
     minDeposit: "0.01",
     confirmations: 12,
   },
@@ -47,6 +82,54 @@ export default function DepositPage() {
   const [selectedAsset, setSelectedAsset] = useState(cryptoAssets[0])
   const [customAmount, setCustomAmount] = useState("")
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Hook untuk refresh BTC balance (mint ke ckBTC)
+  const { refreshing, error: refreshError, success: refreshSuccess, refreshBalance } = useRefreshBtcBalance()
+  
+  // Hook untuk ETH deposit
+  const { user } = useAuth()
+  const { depositing, error: depositError, success: depositSuccess, transactionHash, depositEth, resetDeposit, principalBytes32 } = useEthDeposit()
+
+  useEffect(() => {
+    const loadAddresses = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        // Use the correct service functions
+        const btcResult = await bitcoinService.getBtcDepositAddress()
+        const ethResult = await ethereumService.getEthDepositAddress()
+
+        if (btcResult.success) {
+          cryptoAssets[0].address = btcResult.data
+        } else {
+          console.error("BTC address error:", btcResult.error)
+          cryptoAssets[0].address = "Address unavailable"
+        }
+
+        if (ethResult.success) {
+          cryptoAssets[1].address = ethResult.data
+        } else {
+          console.error("ETH address error:", ethResult.error)
+          cryptoAssets[1].address = "Address unavailable"
+        }
+
+        // Force refresh selected asset object
+        setSelectedAsset({ ...cryptoAssets.find(a => a.symbol === selectedAsset.symbol)! })
+      } catch (e: any) {
+        setError(e?.message || "Failed to load deposit addresses")
+        // Set fallback addresses
+        cryptoAssets[0].address = "Address unavailable"
+        cryptoAssets[1].address = "Address unavailable"
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAddresses()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -134,6 +217,19 @@ export default function DepositPage() {
                     This helps us track your deposit. Leave empty if you prefer not to specify.
                   </p>
                 </div>
+
+                {/* Principal Bytes32 Preview - Only show for ETH */}
+                {selectedAsset.symbol === "ETH" && user && customAmount && (
+                  <div className="p-3 bg-slate-800/30 rounded-lg border border-slate-700">
+                    <div className="text-slate-300 text-xs font-medium mb-2">Principal Bytes32 Preview:</div>
+                    <div className="text-white text-xs font-mono break-all bg-slate-900/50 p-2 rounded border border-slate-600">
+                      <PrincipalPreview principal={user} />
+                    </div>
+                    <div className="text-slate-400 text-xs mt-2">
+                      Principal converted using official ICP method (backend)
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -158,17 +254,24 @@ export default function DepositPage() {
                 <Label className="text-slate-300">Wallet Address</Label>
                 <div className="flex items-center space-x-2">
                   <Input
-                    value={selectedAsset.address}
+                    value={selectedAsset.address || (loading ? "Loading..." : error ? "Unavailable" : "")}
                     readOnly
+                    placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
                     className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
                   />
                   <Button
-                    onClick={() => copyToClipboard(selectedAsset.address)}
+                    onClick={() => selectedAsset.address && copyToClipboard(selectedAsset.address)}
                     className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
+                    disabled={!selectedAsset.address}
                   >
                     {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
+                {error && (
+                  <p className="text-red-400 text-sm">
+                    {error}
+                  </p>
+                )}
                 {copied && (
                   <p className="text-green-400 text-sm flex items-center">
                     <CheckCircle className="h-4 w-4 mr-1" />
@@ -231,6 +334,155 @@ export default function DepositPage() {
             </div>
           </Card>
         </div>
+
+        {/* BTC Mint Section - Only show for BTC */}
+        {selectedAsset.symbol === "BTC" && selectedAsset.address && selectedAsset.address !== "Address unavailable" && (
+          <div className="mt-6">
+            <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-heading font-semibold text-white text-lg">Mint BTC to ckBTC</h3>
+                <Button
+                  onClick={refreshBalance}
+                  disabled={refreshing}
+                  className="bg-purple-600 hover:bg-purple-700 glow-purple"
+                >
+                  {refreshing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Minting...
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="h-4 w-4 mr-2" />
+                      Mint to ckBTC
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Status Messages */}
+              {refreshSuccess && (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center text-green-400 text-sm">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Successfully minted BTC to ckBTC!
+                  </div>
+                </div>
+              )}
+
+              {refreshError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <div className="flex items-center text-red-400 text-sm">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Error: {refreshError}
+                  </div>
+                </div>
+              )}
+
+              {/* Info about minting */}
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <div className="text-blue-400 text-xs">
+                  <div className="font-medium mb-1">How it works:</div>
+                  <div>1. Send BTC to the address above</div>
+                  <div>2. Wait for network confirmations</div>
+                  <div>3. Click &quot;Mint to ckBTC&quot; to convert your BTC to ckBTC tokens</div>
+                  <div>4. Your ckBTC balance will be updated automatically</div>
+                  <div className="mt-2 text-blue-300">
+                    <strong>Note:</strong> The mint button will check for new UTXOs and mint them to ckBTC automatically.
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ETH Deposit Section - Only show for ETH */}
+        {selectedAsset.symbol === "ETH" && selectedAsset.address && selectedAsset.address !== "Address unavailable" && (
+          <div className="mt-6">
+            <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-heading font-semibold text-white text-lg">Deposit ETH to ckETH</h3>
+                <Button
+                  onClick={() => {
+                    if (customAmount && customAmount !== "" && user) {
+                      depositEth(customAmount, selectedAsset.address)
+                    }
+                  }}
+                  disabled={depositing || !customAmount || customAmount === "" || !user}
+                  className="bg-purple-600 hover:bg-purple-700 glow-purple"
+                >
+                  {depositing ? (
+                    <>
+                      <Send className="h-4 w-4 mr-2 animate-spin" />
+                      Depositing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Deposit ETH
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Principal Information */}
+              {user && (
+                <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="text-slate-300 text-sm font-medium mb-2">Your Principal:</div>
+                  <div className="text-white text-xs font-mono break-all mb-2">{user}</div>
+                  <div className="text-slate-400 text-xs">
+                    This principal will be converted to bytes32 and sent to the helper contract
+                  </div>
+                </div>
+              )}
+
+              {/* Status Messages */}
+              {depositSuccess && (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center text-green-400 text-sm">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    ETH deposit successful!
+                  </div>
+                  {transactionHash && (
+                    <div className="mt-2 text-xs text-green-300">
+                      Transaction Hash: {transactionHash}
+                    </div>
+                  )}
+                  {principalBytes32 && (
+                    <div className="mt-2 text-xs text-green-300">
+                      Principal Bytes32: {principalBytes32}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {depositError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <div className="flex items-center text-red-400 text-sm">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Error: {depositError}
+                  </div>
+                </div>
+              )}
+
+              {/* Info about ETH deposit */}
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <div className="text-blue-400 text-xs">
+                  <div className="font-medium mb-1">How ETH deposit works:</div>
+                  <div>1. Enter the amount of ETH you want to deposit</div>
+                  <div>2. Your principal is converted to bytes32 format</div>
+                  <div>3. Click &quot;Deposit ETH&quot; to send to helper contract</div>
+                  <div>4. Confirm transaction in MetaMask</div>
+                  <div>5. Helper contract receives your ETH + principal</div>
+                  <div>6. Minter automatically detects and mints ckETH</div>
+                  <div className="mt-2 text-blue-300">
+                    <strong>Note:</strong> ETH deposits are processed automatically by the minter after confirmation.
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )

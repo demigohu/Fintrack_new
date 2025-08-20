@@ -1,46 +1,147 @@
 "use client"
 
+import { useEffect, useState, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, DollarSign, Percent } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
+import { balanceService, bitcoinService, ethereumService } from "@/services/backend"
 
-const portfolioStats = [
-  {
-    title: "Total Balance",
-    value: "$127,450.32",
-    change: "+$8,234.56",
-    changePercent: "+6.91%",
-    isPositive: true,
-    icon: DollarSign,
-  },
-  {
-    title: "24h Change",
-    value: "+$2,145.78",
-    change: "+1.71%",
-    changePercent: "vs yesterday",
-    isPositive: true,
-    icon: TrendingUp,
-  },
-  {
-    title: "Total P&L",
-    value: "+$34,892.15",
-    change: "+37.65%",
-    changePercent: "all time",
-    isPositive: true,
-    icon: Percent,
-  },
-  {
-    title: "Available Balance",
-    value: "$12,450.00",
-    change: "USDT",
-    changePercent: "for trading",
-    isPositive: null,
-    icon: DollarSign,
-  },
-]
+type PortfolioStats = {
+  title: string
+  value: string
+  change: string
+  changePercent: string
+  isPositive: boolean | null
+  icon: any
+}
 
 export function PortfolioOverview() {
+  const { isLoggedIn } = useAuth()
+  const [portfolioStats, setPortfolioStats] = useState<PortfolioStats[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadData = useCallback(async () => {
+    if (!isLoggedIn) return
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Get balances from different services
+      const btcRes = await bitcoinService.getBtcBalance()
+      const ethRes = await ethereumService.getEthBalance()
+      const portfolioRes = await balanceService.getPortfolioSummary()
+      
+      if (!btcRes.success || !ethRes.success) {
+        setError("Failed to load balance data")
+        return
+      }
+      
+      const btcBalance = Number(btcRes.data) / 100000000 // Convert satoshis to BTC
+      const ethBalance = Number(ethRes.data) / 1000000000000000000 // Convert wei to ETH
+      
+      // Mock prices (in real app, these would come from price API)
+      const btcPrice = 43250
+      const ethPrice = 2675
+      
+      const btcValue = btcBalance * btcPrice
+      const ethValue = ethBalance * ethPrice
+      const totalValue = btcValue + ethValue
+      
+      // Calculate 24h change (mock for now)
+      const yesterdayValue = totalValue * 0.98
+      const change24h = totalValue - yesterdayValue
+      const changePercent24h = ((change24h / yesterdayValue) * 100)
+      
+      // Calculate total P&L (mock for now)
+      const initialValue = totalValue * 0.7
+      const totalPnL = totalValue - initialValue
+      const totalPnLPercent = ((totalPnL / initialValue) * 100)
+      
+      const stats: PortfolioStats[] = [
+        {
+          title: "Total Balance",
+          value: `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          change: `$${change24h.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          changePercent: `${changePercent24h >= 0 ? '+' : ''}${changePercent24h.toFixed(2)}%`,
+          isPositive: change24h >= 0,
+          icon: DollarSign,
+        },
+        {
+          title: "24h Change",
+          value: `${change24h >= 0 ? '+' : ''}$${change24h.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          change: `${changePercent24h >= 0 ? '+' : ''}${changePercent24h.toFixed(2)}%`,
+          changePercent: "vs yesterday",
+          isPositive: change24h >= 0,
+          icon: TrendingUp,
+        },
+        {
+          title: "Total P&L",
+          value: `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          change: `${totalPnLPercent >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%`,
+          changePercent: "all time",
+          isPositive: totalPnL >= 0,
+          icon: Percent,
+        },
+        {
+          title: "Available Balance",
+          value: `${btcBalance.toFixed(4)} BTC + ${ethBalance.toFixed(4)} ETH`,
+          change: "Crypto Assets",
+          changePercent: "for trading",
+          isPositive: null,
+          icon: DollarSign,
+        },
+      ]
+      
+      setPortfolioStats(stats)
+    } catch (e: any) {
+      setError(e?.message || "Failed to load portfolio data")
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
+
+  if (!isLoggedIn) {
+    return (
+      <div className="text-slate-400 text-center py-8">
+        Silakan login terlebih dahulu
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-400 text-center py-8">
+        Error: {error}
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="text-slate-400 text-center py-8">
+        Memuat portfolio...
+      </div>
+    )
+  }
+
   return (
     <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-white">Portfolio Overview</h2>
+        <button
+          onClick={() => void loadData()}
+          className="p-2 text-slate-400 hover:text-white transition-colors"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {portfolioStats.map((stat, index) => {
           const Icon = stat.icon

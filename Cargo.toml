@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "src/Fintrack_backend"
+    "fintrack_backend"
 ]
 resolver = "2"
