@@ -2,6 +2,7 @@
 
 import { AuthClient } from "@dfinity/auth-client"
 import { type ActorSubclass } from "@dfinity/agent"
+import { Principal } from "@dfinity/principal"
 import { getBackendActor } from "@/lib/ic"
 import type { _SERVICE } from "../../../src/declarations/fintrack_backend/fintrack_backend.did"
 
@@ -185,16 +186,27 @@ export const bitcoinService = {
         canisterId: ckbtcLedgerCanisterId,
       })
       
+      // Fetch ledger transfer fee to use for approval (ICRC-1 fee)
+      let ledgerFee: bigint | null = null
+      try {
+        ledgerFee = await ckbtcLedgerActor.icrc1_fee() as bigint
+      } catch (e) {
+        // fallback to let ledger decide if fee not retrievable
+      }
+
       // Call icrc2_approve on ckBTC ledger
       const approveResult = await ckbtcLedgerActor.icrc2_approve({
         spender: {
-          owner: ckbtcMinterCanisterId,
+          owner: Principal.fromText(ckbtcMinterCanisterId),
           subaccount: subaccount ? [subaccount] : []
         },
         amount: amount,
         from_subaccount: subaccount ? [subaccount] : [],
         expected_allowance: [],
-        expires_at: []
+        expires_at: [],
+        fee: ledgerFee !== null ? [ledgerFee] : [],
+        memo: [],
+        created_at_time: []
       }) as { Ok: bigint } | { Err: any }
       
       if ("Ok" in approveResult) {
@@ -261,39 +273,19 @@ export const bitcoinService = {
   // Get BTC withdrawal fee
   getBtcWithdrawalFee: async (): Promise<Result<bigint>> => {
     try {
-      const client = await ensureAuthClient()
-      const identity = client.getIdentity()
-      
-      // Get ckBTC minter canister ID from environment
-      const ckbtcMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_MINTER || "ml52i-qqaaa-aaaar-qaaba-cai"
-      
-      // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
-        try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
+      const a = await ensureActor()
+      const res = await a.btc_get_current_fee_percentiles()
+      if ("Ok" in res) {
+        // Use 50th percentile (median) fee for withdrawal
+        const fees = res.Ok
+        if (fees.length > 0) {
+          const medianFee = fees[Math.floor(fees.length / 2)]
+          // Convert millisatoshi/byte to satoshi (assuming average tx size ~250 bytes)
+          const estimatedFee = BigInt(medianFee) * BigInt(250) / BigInt(1000)
+          return { success: true, data: estimatedFee }
         }
       }
-      
-      // Create actor for ckBTC minter
-      const { Actor } = await import("@dfinity/agent")
-      const { idlFactory: ckbtcMinterIdlFactory } = await import("../../../src/declarations/ckbtc_minter")
-      
-      const ckbtcMinterActor = Actor.createActor(ckbtcMinterIdlFactory, {
-        agent,
-        canisterId: ckbtcMinterCanisterId,
-      })
-      
-      // For now, return a default fee since get_withdrawal_account doesn't return fee directly
-      // In a real implementation, you might need to call estimate_withdrawal_fee
+      // Fallback to default fee if no fee data available
       return { success: true, data: BigInt(10000) } // Default fee: 0.0001 BTC
     } catch (e: any) {
       return { success: false, error: e?.message || "Failed to get BTC withdrawal fee" }
@@ -377,13 +369,16 @@ export const ethereumService = {
       // Call icrc2_approve on ckETH ledger
       const approveResult = await ckethLedgerActor.icrc2_approve({
         spender: {
-          owner: ckethMinterCanisterId,
-          subaccount: subaccount ? [subaccount] : []
+          owner: Principal.fromText(ckethMinterCanisterId),
+        subaccount: subaccount ? [subaccount] : []
         },
         amount: amount,
         from_subaccount: subaccount ? [subaccount] : [],
         expected_allowance: [],
-        expires_at: []
+        expires_at: [],
+        fee: [],
+        memo: [],
+        created_at_time: []
       }) as { Ok: bigint } | { Err: any }
       
       if ("Ok" in approveResult) {
@@ -433,7 +428,8 @@ export const ethereumService = {
       // Call withdraw_eth on ckETH minter
       const withdrawResult = await ckethMinterActor.withdraw_eth({
         amount: amount,
-        recipient: address
+        recipient: address,
+        from_subaccount: subaccount ? [subaccount] : []
       }) as { Ok: any } | { Err: any }
       
       if ("Ok" in withdrawResult) {
@@ -449,39 +445,26 @@ export const ethereumService = {
   // Get ckETH withdrawal fee
   getCkethWithdrawalFee: async (): Promise<Result<bigint>> => {
     try {
-      const client = await ensureAuthClient()
-      const identity = client.getIdentity()
-      
-      // Get ckETH minter canister ID from environment
-      const ckethMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_MINTER || "jzenf-aiaaa-aaaar-qaa7q-cai"
-      
-      // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
+      const a = await ensureActor()
+      const res = await a.eth_fee_history()
+      if ("Ok" in res) {
+        // Parse fee history response and extract gas price
         try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
+          const feeData = JSON.parse(res.Ok)
+          if (feeData.baseFeePerGas && feeData.baseFeePerGas.length > 0) {
+            // Use the latest base fee and add priority fee (tip)
+            const latestBaseFee = BigInt(feeData.baseFeePerGas[0])
+            const priorityFee = BigInt(2000000000) // 2 gwei tip
+            const estimatedGasPrice = latestBaseFee + priorityFee
+            // Assume withdrawal uses ~21000 gas
+            const estimatedFee = estimatedGasPrice * BigInt(21000)
+            return { success: true, data: estimatedFee }
+          }
+        } catch (parseError) {
+          console.warn("Failed to parse fee history:", parseError)
         }
       }
-      
-      // Create actor for ckETH minter
-      const { Actor } = await import("@dfinity/agent")
-      const { idlFactory: ckethMinterIdlFactory } = await import("../../../src/declarations/cketh_minter")
-      
-      const ckethMinterActor = Actor.createActor(ckethMinterIdlFactory, {
-        agent,
-        canisterId: ckethMinterCanisterId,
-      })
-      
-      // For now, return a default fee since we don't have a direct fee endpoint
-      // In a real implementation, you might need to call estimate_withdrawal_fee or similar
+      // Fallback to default fee if no fee data available
       return { success: true, data: BigInt(1000000000000000) } // Default fee: 0.001 ETH (in wei)
     } catch (e: any) {
       return { success: false, error: e?.message || "Failed to get ckETH withdrawal fee" }
@@ -505,9 +488,15 @@ export const balanceService = {
 }
 
 export const currencyService = {
-  getCurrencyRates: async (): Promise<Result<{ usd_to_idr: number; btc_to_usd: number; eth_to_usd: number; sol_to_usd: number; last_updated: number }>> => {
-    // Placeholder: map from get_user_balances timestamp or other endpoint when available
-    return { success: true, data: { usd_to_idr: 0, btc_to_usd: 0, eth_to_usd: 0, sol_to_usd: 0, last_updated: Date.now() } }
+  getCurrencyRates: async (): Promise<Result<{ btc_to_usd: number; eth_to_usd: number; sol_to_usd: number; last_updated: number }>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.get_rates_summary()
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get rates" }
+    }
   },
   fetchRealTimeRates: async (): Promise<Result<any>> => {
     return { success: false, error: "Not implemented on backend" }

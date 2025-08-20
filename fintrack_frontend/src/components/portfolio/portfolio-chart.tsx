@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { BarChart3, TrendingUp, RefreshCw } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { useAuth } from "@/contexts/AuthContext"
-import { bitcoinService, ethereumService } from "@/services/backend"
+import { bitcoinService, ethereumService, currencyService } from "@/services/backend"
 
 type PortfolioData = {
   date: string
@@ -38,12 +38,19 @@ export function PortfolioChart() {
         return
       }
       
-      const btcBalance = Number(btcRes.data) / 100000000 // Convert satoshis to BTC
-      const ethBalance = Number(ethRes.data) / 1000000000000000000 // Convert wei to ETH
+      const btcSats = typeof btcRes.data === "bigint" ? Number(btcRes.data) : Number(btcRes.data ?? 0)
+      const ethWei = typeof ethRes.data === "bigint" ? Number(ethRes.data) : Number(ethRes.data ?? 0)
+      const btcBalance = btcSats / 100000000 // Convert satoshis to BTC
+      const ethBalance = ethWei / 1000000000000000000 // Convert wei to ETH
       
-      // Mock prices (in real app, these would come from price API)
-      const btcPrice = 43250
-      const ethPrice = 2675
+      // Live USD rates from backend
+      const ratesRes = await currencyService.getCurrencyRates()
+      if (!ratesRes.success) {
+        setError("Failed to load rates")
+        return
+      }
+      const btcPrice = ratesRes.data.btc_to_usd
+      const ethPrice = ratesRes.data.eth_to_usd
       
       const btcValue = btcBalance * btcPrice
       const ethValue = ethBalance * ethPrice

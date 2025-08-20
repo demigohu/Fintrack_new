@@ -1,7 +1,7 @@
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::api::call::call;
 use ic_cdk::{
-    bitcoin_canister::{bitcoin_get_utxos, GetUtxosRequest, GetUtxosResponse},
+    bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest},
 };
 
 // Simplified UTXO structure for frontend consumption - only hash and confirmations
@@ -162,6 +162,28 @@ pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
         .collect();
     
     Ok(simplified_utxos)
+}
+
+/// Get current Bitcoin fee percentiles in millisatoshi/byte
+pub async fn get_current_fee_percentiles() -> Result<Vec<u64>, String> {
+    // For local development, use Regtest network
+    let network = ic_cdk::bitcoin_canister::Network::Regtest;
+    
+    let request = GetCurrentFeePercentilesRequest {
+        network,
+    };
+    
+    let fee_percentiles = bitcoin_get_current_fee_percentiles(&request)
+        .await
+        .map_err(|e| format!("Failed to get fee percentiles: {:?}", e))?;
+    
+    // Convert MillisatoshiPerByte to u64 for easier handling
+    let fees: Vec<u64> = fee_percentiles
+        .into_iter()
+        .map(|fee| fee.into())
+        .collect();
+    
+    Ok(fees)
 }
 
 

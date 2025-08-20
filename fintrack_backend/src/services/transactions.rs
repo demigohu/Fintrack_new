@@ -225,9 +225,9 @@ async fn get_ckbtc_transactions(user: Principal, max_results: u32) -> Result<Vec
             
             for tx_record in response.transactions {
                 if let Some(transaction) = convert_index_transaction_to_transaction(
-                    tx_record, 
-                    "ckBTC", 
-                    "ICP"
+                    tx_record,
+                    "ckBTC",
+                    "Bitcoin"
                 ) {
                     transactions.push(transaction);
                 }
@@ -261,9 +261,9 @@ async fn get_cketh_transactions(user: Principal, max_results: u32) -> Result<Vec
             
             for tx_record in response.transactions {
                 if let Some(transaction) = convert_index_transaction_to_transaction(
-                    tx_record, 
-                    "ckETH", 
-                    "ICP"
+                    tx_record,
+                    "ckETH",
+                    "Ethereum"
                 ) {
                     transactions.push(transaction);
                 }

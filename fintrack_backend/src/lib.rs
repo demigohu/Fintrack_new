@@ -5,6 +5,7 @@ use ic_cdk::{
     bitcoin_canister::{bitcoin_get_utxos, GetUtxosRequest, GetUtxosResponse},
     update,
 };
+use ic_cdk::api::management_canister::http_request::{TransformArgs, HttpResponse};
 
 // -------------------------
 // BTC service endpoints
@@ -29,6 +30,12 @@ async fn btc_get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
 #[ic_cdk::update]
 async fn btc_get_utxos(address: String) -> Result<Vec<services::btc::SimplifiedUtxo>, String> {
     services::btc::get_utxos(address).await
+}
+
+/// Returns the 100 fee percentiles measured in millisatoshi/byte for Bitcoin network
+#[ic_cdk::update]
+async fn btc_get_current_fee_percentiles() -> Result<Vec<u64>, String> {
+    services::btc::get_current_fee_percentiles().await
 }
 
 // -------------------------
@@ -69,6 +76,12 @@ async fn eth_estimate_withdrawal_fee() -> Result<String, String> {
     services::eth::estimate_withdrawal_fee().await
 }
 
+/// Returns the historical fee data to estimate gas prices for Ethereum transactions
+#[ic_cdk::query]
+async fn eth_fee_history() -> Result<String, String> {
+    services::eth::fee_history().await
+}
+
 // Principal to bytes32 conversion endpoint
 #[ic_cdk::query]
 fn principal_to_bytes32(principal_text: String) -> Result<String, String> {
@@ -104,3 +117,17 @@ async fn clear_user_transactions(user: Principal) {
 }
 
 ic_cdk::export_candid!();
+
+// -------------------------
+// Rates service endpoints (HTTP outcalls)
+// -------------------------
+
+#[ic_cdk::update]
+async fn get_crypto_usd_rate(crypto_id: String) -> Result<f64, String> {
+    services::rates::get_crypto_usd_rate(&crypto_id).await
+}
+
+#[ic_cdk::update]
+async fn get_rates_summary() -> Result<services::rates::CryptoRates, String> {
+    services::rates::get_rates_summary().await
+}

@@ -1,5 +1,6 @@
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::api::call::call;
+use ic_cdk::api::call::call_with_payment;
 
 // Helper: read ckETH minter and ledger principals from dfx.json (baked-in for now)
 fn cketh_minter_principal() -> Principal {
@@ -77,6 +78,39 @@ pub async fn estimate_withdrawal_fee() -> Result<String, String> {
         .await
         .map_err(|e| format!("eip_1559_transaction_price failed: {:?}", e))?;
     Ok(fee_info)
+}
+
+/// Get historical fee data to estimate gas prices for Ethereum transactions
+pub async fn fee_history() -> Result<String, String> {
+    // Get EVM RPC canister ID from dfx.json
+    let evm_rpc_principal = Principal::from_text("xhcuo-6yaaa-aaaar-qacqq-cai")
+        .expect("invalid evm_rpc principal");
+    
+    // Define the fee_history request structure
+    #[derive(CandidType)]
+    struct FeeHistoryRequest {
+        block_count: u64,
+        newest_block: String, // "latest" or block number
+        reward_percentiles: Vec<f64>,
+    }
+    
+    let request = FeeHistoryRequest {
+        block_count: 10, // Get fee data for last 10 blocks
+        newest_block: "latest".to_string(),
+        reward_percentiles: vec![25.0, 75.0], // 25th and 75th percentiles
+    };
+    
+    // Call EVM RPC canister's eth_feeHistory method
+    let (fee_history_result,): (String,) = call_with_payment(
+        evm_rpc_principal,
+        "eth_feeHistory",
+        (request,),
+        0, // No payment needed for query
+    )
+    .await
+    .map_err(|e| format!("eth_feeHistory failed: {:?}", e))?;
+    
+    Ok(fee_history_result)
 }
 
 

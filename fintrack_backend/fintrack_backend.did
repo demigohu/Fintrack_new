@@ -35,6 +35,14 @@ type Result_2 = variant { Ok : vec SimplifiedUtxo; Err : text };
 type Result_3 = variant { Ok; Err : text };
 type Result_4 = variant { Ok : vec Transaction; Err : text };
 type Result_5 = variant { Ok : UserBalances; Err : text };
+type Result_6 = variant { Ok : vec nat64; Err : text };
+type CryptoRates = record {
+  btc_to_usd : float64;
+  eth_to_usd : float64;
+  sol_to_usd : float64;
+  last_updated : nat64;
+};
+type Result_7 = variant { Ok : CryptoRates; Err : text };
 type SimplifiedUtxo = record { confirmations : nat32; hash : text };
 type Transaction = record {
   id : TransactionId;
@@ -55,9 +63,11 @@ service : {
   btc_get_deposit_address : (opt principal, opt blob) -> (Result_1);
   // Returns the UTXOs of the given Bitcoin address with simplified response (hash and confirmations only)
   btc_get_utxos : (text) -> (Result_2);
+  btc_get_current_fee_percentiles : () -> (Result_6);
   btc_refresh_balance : (opt principal, opt blob) -> (Result_3);
   clear_user_transactions : (principal) -> ();
   eth_estimate_withdrawal_fee : () -> (Result_1) query;
+  eth_fee_history : () -> (Result_1) query;
   eth_get_balance : (opt principal, opt blob) -> (Result);
   eth_get_deposit_address : (opt blob) -> (Result_1);
   eth_get_minter_address : () -> (Result_1) query;
@@ -67,4 +77,7 @@ service : {
   get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_4);
   get_user_balances : (principal) -> (Result_5) query;
   principal_to_bytes32 : (text) -> (Result_1) query;
+  // Rates via HTTP outcalls
+  get_crypto_usd_rate : (text) -> (variant { Ok : float64; Err : text });
+  get_rates_summary : () -> (Result_7);
 }
