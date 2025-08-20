@@ -1,10 +1,6 @@
 mod services;
 
 use candid::{Nat, Principal};
-use ic_cdk::{
-    bitcoin_canister::{bitcoin_get_utxos, GetUtxosRequest, GetUtxosResponse},
-    update,
-};
 use ic_cdk::api::management_canister::http_request::{TransformArgs, HttpResponse};
 
 // -------------------------
@@ -89,6 +85,39 @@ fn principal_to_bytes32(principal_text: String) -> Result<String, String> {
 }
 
 // -------------------------
+// Address derivation (EVM/BTC) via ECDSA
+// -------------------------
+
+#[ic_cdk::update]
+async fn evm_derive_address(owner: Option<Principal>) -> Result<String, String> {
+    services::address::get_eth_address(owner).await
+}
+
+#[ic_cdk::update]
+async fn btc_derive_address(owner: Option<Principal>) -> Result<String, String> {
+    services::address::get_btc_address(owner).await
+}
+
+// -------------------------
+// Transfer services
+// -------------------------
+
+#[ic_cdk::update]
+async fn btc_transfer(request: services::transfer::BtcTransferRequest) -> Result<services::transfer::BtcTransferResponse, String> {
+    services::transfer::transfer_btc(request).await
+}
+
+#[ic_cdk::update]
+async fn btc_get_utxos_for_address(address: String) -> Result<Vec<ic_cdk::bitcoin_canister::Utxo>, String> {
+    services::transfer::get_utxos_for_address(address).await
+}
+
+#[ic_cdk::update]
+async fn btc_get_fee_percentiles() -> Result<Vec<ic_cdk::bitcoin_canister::MillisatoshiPerByte>, String> {
+    services::transfer::get_current_fee_percentiles().await
+}
+
+// -------------------------
 // Transaction service endpoints
 // -------------------------
 
@@ -116,8 +145,6 @@ async fn clear_user_transactions(user: Principal) {
     services::transactions::clear_user_transactions(user);
 }
 
-ic_cdk::export_candid!();
-
 // -------------------------
 // Rates service endpoints (HTTP outcalls)
 // -------------------------
@@ -131,3 +158,5 @@ async fn get_crypto_usd_rate(crypto_id: String) -> Result<f64, String> {
 async fn get_rates_summary() -> Result<services::rates::CryptoRates, String> {
     services::rates::get_rates_summary().await
 }
+
+ic_cdk::export_candid!();

@@ -8,6 +8,22 @@ type BitcoinTransaction = record {
   amount : nat64;
   block_height : nat32;
 };
+type BtcTransferRequest = record {
+  destination_address : text;
+  owner : opt principal;
+  amount_in_satoshi : nat64;
+};
+type BtcTransferResponse = record {
+  transaction_id : opt text;
+  error : opt text;
+  success : bool;
+};
+type CryptoRates = record {
+  btc_to_usd : float64;
+  last_updated : nat64;
+  eth_to_usd : float64;
+  sol_to_usd : float64;
+};
 type EthereumTransaction = record {
   confirmations : nat32;
   block_number : nat64;
@@ -19,6 +35,12 @@ type EthereumTransaction = record {
   amount : nat;
   gas_price : nat;
 };
+type HttpHeader = record { value : text; name : text };
+type HttpResponse = record {
+  status : nat;
+  body : blob;
+  headers : vec HttpHeader;
+};
 type IcpTransaction = record {
   to : principal;
   fee : nat;
@@ -29,20 +51,18 @@ type IcpTransaction = record {
   timestamp : nat64;
   amount : nat;
 };
-type Result = variant { Ok : nat; Err : text };
-type Result_1 = variant { Ok : text; Err : text };
-type Result_2 = variant { Ok : vec SimplifiedUtxo; Err : text };
-type Result_3 = variant { Ok; Err : text };
-type Result_4 = variant { Ok : vec Transaction; Err : text };
-type Result_5 = variant { Ok : UserBalances; Err : text };
-type Result_6 = variant { Ok : vec nat64; Err : text };
-type CryptoRates = record {
-  btc_to_usd : float64;
-  eth_to_usd : float64;
-  sol_to_usd : float64;
-  last_updated : nat64;
-};
-type Result_7 = variant { Ok : CryptoRates; Err : text };
+type Outpoint = record { txid : blob; vout : nat32 };
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : nat; Err : text };
+type Result_10 = variant { Ok : UserBalances; Err : text };
+type Result_2 = variant { Ok : vec nat64; Err : text };
+type Result_3 = variant { Ok : vec SimplifiedUtxo; Err : text };
+type Result_4 = variant { Ok : vec Utxo; Err : text };
+type Result_5 = variant { Ok; Err : text };
+type Result_6 = variant { Ok : BtcTransferResponse; Err : text };
+type Result_7 = variant { Ok : float64; Err : text };
+type Result_8 = variant { Ok : CryptoRates; Err : text };
+type Result_9 = variant { Ok : vec Transaction; Err : text };
 type SimplifiedUtxo = record { confirmations : nat32; hash : text };
 type Transaction = record {
   id : TransactionId;
@@ -53,31 +73,40 @@ type Transaction = record {
   eth_tx : opt EthereumTransaction;
 };
 type TransactionId = record { chain : text; timestamp : nat64; tx_hash : text };
+type TransformArgs = record { context : blob; response : HttpResponse };
 type UserBalances = record {
   last_updated : nat64;
   cketh_balance : nat;
   ckbtc_balance : nat;
 };
+type Utxo = record { height : nat32; value : nat64; outpoint : Outpoint };
 service : {
-  btc_get_balance : (opt principal, opt blob) -> (Result);
-  btc_get_deposit_address : (opt principal, opt blob) -> (Result_1);
+  btc_derive_address : (opt principal) -> (Result);
+  btc_get_balance : (opt principal, opt blob) -> (Result_1);
+  // Returns the 100 fee percentiles measured in millisatoshi/byte for Bitcoin network
+  btc_get_current_fee_percentiles : () -> (Result_2);
+  btc_get_deposit_address : (opt principal, opt blob) -> (Result);
+  btc_get_fee_percentiles : () -> (Result_2);
   // Returns the UTXOs of the given Bitcoin address with simplified response (hash and confirmations only)
-  btc_get_utxos : (text) -> (Result_2);
-  btc_get_current_fee_percentiles : () -> (Result_6);
-  btc_refresh_balance : (opt principal, opt blob) -> (Result_3);
+  btc_get_utxos : (text) -> (Result_3);
+  btc_get_utxos_for_address : (text) -> (Result_4);
+  btc_refresh_balance : (opt principal, opt blob) -> (Result_5);
+  btc_transfer : (BtcTransferRequest) -> (Result_6);
   clear_user_transactions : (principal) -> ();
-  eth_estimate_withdrawal_fee : () -> (Result_1) query;
-  eth_fee_history : () -> (Result_1) query;
-  eth_get_balance : (opt principal, opt blob) -> (Result);
-  eth_get_deposit_address : (opt blob) -> (Result_1);
-  eth_get_minter_address : () -> (Result_1) query;
-  eth_get_minter_info : () -> (Result_1) query;
-  eth_refresh_balance : (opt blob) -> (Result_3);
+  eth_estimate_withdrawal_fee : () -> (Result) query;
+  // Returns the historical fee data to estimate gas prices for Ethereum transactions
+  eth_fee_history : () -> (Result) query;
+  eth_get_balance : (opt principal, opt blob) -> (Result_1);
+  eth_get_deposit_address : (opt blob) -> (Result);
+  eth_get_minter_address : () -> (Result) query;
+  eth_get_minter_info : () -> (Result) query;
+  eth_refresh_balance : (opt blob) -> (Result_5);
+  evm_derive_address : (opt principal) -> (Result);
+  get_crypto_usd_rate : (text) -> (Result_7);
+  get_rates_summary : () -> (Result_8);
   get_transaction_count : (principal) -> (nat32) query;
-  get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_4);
-  get_user_balances : (principal) -> (Result_5) query;
-  principal_to_bytes32 : (text) -> (Result_1) query;
-  // Rates via HTTP outcalls
-  get_crypto_usd_rate : (text) -> (variant { Ok : float64; Err : text });
-  get_rates_summary : () -> (Result_7);
+  get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_9);
+  get_user_balances : (principal) -> (Result_10) query;
+  principal_to_bytes32 : (text) -> (Result) query;
+  transform : (TransformArgs) -> (HttpResponse) query;
 }

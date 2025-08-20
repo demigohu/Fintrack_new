@@ -1,61 +1,181 @@
-# `Fintrack`
+# 🔄 FInTrack Protocol - Cross-Chain Bridge & DeFi Platform
 
-Welcome to your new `Fintrack` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DFX Version](https://img.shields.io/badge/DFX-1.0-blue.svg)](https://internetcomputer.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.4.6-black.svg)](https://nextjs.org/)
+[![Rust](https://img.shields.io/badge/Rust-2021-orange.svg)](https://rust-lang.org/)
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+**FInTrack Protocol** adalah platform cross-chain bridge dan DeFi yang dibangun di atas Internet Computer (IC), memungkinkan pengguna untuk melakukan bridge aset antara blockchain tradisional (Bitcoin, Ethereum) dan Internet Computer melalui ckBTC dan ckETH. Platform ini menyediakan solusi lengkap untuk cross-chain asset management, DeFi operations, dan portfolio tracking.
 
-To learn more before you start working with `Fintrack`, see the following documentation available online:
+## 🌟 Fitur Utama
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+### 🔗 Cross-Chain Bridge Operations
+- **BTC Bridge**: Deposit BTC → Convert to ckBTC → Transfer via Chain Fusion
+- **ETH Bridge**: Deposit ETH → Convert to ckETH → Transfer on Ethereum network
+- **ckBTC Integration**: Full Bitcoin support through Internet Computer
+- **ckETH Integration**: Full Ethereum support with smart contract integration
+- **Chain Fusion**: Advanced cross-chain transfer technology for Bitcoin network
 
-If you want to start working on your project right away, you might want to try the following commands:
+### 💼 Asset Management & Portfolio
+- **Real-time Balance Tracking**: Monitor balances across all chains (BTC, ETH, ckBTC, ckETH, ICP)
+- **Transaction History**: Complete deposit, withdrawal, and transfer logs
+- **Portfolio Dashboard**: Visual representation of cross-chain asset distribution
+- **Performance Analytics**: Track portfolio performance across different blockchains
 
-```bash
-cd Fintrack/
-dfx help
-dfx canister --help
+### 🎯 DeFi Features (Coming Soon)
+- **ckAsset Swapping**: Swap between different ckAssets (ckBTC ↔ ckETH)
+
+
+### 🔐 Security & Authentication
+- **Internet Identity**: Decentralized authentication via Internet Computer
+
+
+## 🏗️ Arsitektur Sistem
+
+### Backend (Rust + Internet Computer)
+```
+fintrack_backend/
+├── src/
+│   ├── lib.rs                 # Main entry point & API endpoints
+│   └── services/
+│       ├── btc.rs            # Bitcoin bridge service (ckBTC integration)
+│       ├── eth.rs            # Ethereum bridge service (ckETH integration)
+│       ├── transfer.rs       # Cross-chain transfer logic & Chain Fusion
+│       ├── transactions.rs   # Transaction management & history
+│       ├── rates.rs          # Crypto rates & price feeds
+│       ├── address.rs        # Address derivation (ECDSA)
+│       ├── utils.rs          # Utility functions
+│       └── evm_rpc_canister.rs # EVM RPC integration for ETH operations
 ```
 
-## Running the project locally
+### Frontend (Next.js + TypeScript)
+```
+fintrack_frontend/
+├── src/
+│   ├── app/                  # Next.js 15 App Router
+│   │   ├── (with-nav)/      # Protected routes with navigation
+│   │   │   ├── portfolio/   # Cross-chain portfolio dashboard
+│   │   │   ├── bridge/      # Bridge operations interface
+│   │   │   ├── deposits/    # Deposit management (BTC/ETH → ckAssets)
+│   │   │   ├── withdraw/    # Withdrawal interface (ckAssets → BTC/ETH)
+│   │   │   └── swap/        # ckAsset swapping (coming soon)
+│   │   └── (without-nav)/   # Public routes (login, landing)
+│   ├── components/           # Reusable UI components
+│   ├── services/             # API integration services
+│   ├── hooks/                # Custom React hooks
+│   └── contexts/             # React contexts & state management
+```
 
-If you want to test your project locally, you can use the following commands:
+### Blockchain Integration
+- **Bitcoin Network**: Native BTC blockchain for deposits and withdrawals Powered by Chain Fusion
+- **Ethereum Network**: Native ETH blockchain for deposits and withdrawals Powered by Chain Fusion
+- **Internet Computer (ICP)**: ckAssets (ckBTC, ckETH) and platform services
 
+## 🚀 Getting Started
+
+### Prerequisites
+- [DFX](https://internetcomputer.org/docs/current/developer-docs/setup/install/) (Internet Computer SDK)
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Rust](https://rust-lang.org/) (latest stable)
+- [Git](https://git-scm.com/)
+
+### Installation
+
+1. **Clone Repository**
 ```bash
-# Starts the replica, running in the background
-dfx start --background
+git clone <repository-url>
+cd Fintrack_new
+```
 
-# Deploys your canisters to the replica and generates your candid interface
+2. **Install Dependencies**
+```bash
+# Install Rust dependencies
+cargo build
+
+# Install Node.js dependencies
+npm install
+cd fintrack_frontend && npm install
+```
+
+3. **Start Local Development Environment**
+```bash
+# Start Node Bitcoin Regtest
+bitcoind -conf=$(pwd)/bitcoin.conf -datadir=$(pwd)/bitcoin_data --port=18444
+
+# Start Internet Computer replica
+dfx start --clean --enable-bitcoin --bitcoin-node 127.0.0.1:18444
+
+# Deploy canisters
 dfx deploy
+
+# Start frontend development server
+npm run dev
 ```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+## 📱 Usage
 
-If you have made changes to your backend canister, you can generate a new candid interface with
+### Cross-Chain Bridge Operations
+- **BTC Deposits**: Generate BTC address → Send BTC → Receive ckBTC
+- **ETH Deposits**: Get Helper Contract address → Send ETH → Receive ckETH
+- **Cross-Chain Swapping**: Swap ckETH ↔ ckBTC (DeFi feature)
+- **BTC Withdrawals**: Burn ckBTC → Send BTC on Bitcoin Network
+- **ETH Withdrawals**: Burn ckETH → Send ETH on Ethereum network
 
-```bash
-npm run generate
-```
+**Complete Cross-Chain Flow Example:**
+1. **Deposit ETH** → Get ckETH on Internet Computer
+2. **Swap ckETH → ckBTC** → Convert to ckBTC using DeFi protocol
+3. **Withdraw ckBTC** → Burn ckBTC → Receive BTC on Bitcoin network
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+*This enables true cross-chain asset movement: ETH → ckETH → ckBTC → BTC*
 
-If you are making frontend changes, you can start a development server with
+### Portfolio Dashboard
+- **Cross-Chain Overview**: Total portfolio value across all blockchains
+- **Asset Distribution**: Visual representation of BTC, ETH, ckBTC, ckETH holdings
+- **Transaction History**: Complete bridge operation logs with status tracking
 
-```bash
-npm start
-```
+### DeFi Features (Coming Soon)
+- **ckAsset Swapping**: Swap between ckBTC, ckETH
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
 
-### Note on frontend environment variables
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+## 📊 API Reference
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+### Core Bridge Endpoints
+
+#### Bitcoin Bridge Operations
+- `btc_get_deposit_address(owner?, subaccount?)` - Generate BTC deposit address from minter
+- `btc_get_balance(owner?, subaccount?)` - Get ckBTC balance
+- `btc_transfer(request)` - Transfer BTC via Chain Fusion
+- `btc_get_utxos(address)` - Get UTXOs for address
+
+#### Ethereum Bridge Operations
+- `eth_get_deposit_address(subaccount?)` - Get Helper Contract address
+- `eth_get_balance(owner?, subaccount?)` - Get ckETH balance
+- `eth_estimate_withdrawal_fee()` - Estimate withdrawal fees
+
+#### Portfolio Management
+- `get_user_balances(user)` - Get user balances across all chains
+- `get_transaction_history(user, limit?, offset?)` - Get bridge transaction history
+- `get_crypto_usd_rate(crypto_id)` - Get current crypto rates
+
+
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Internet Computer](https://internetcomputer.org/) - Blockchain infrastructure
+- [DFX](https://internetcomputer.org/docs/current/developer-docs/setup/install/) - Development framework
+- [Next.js](https://nextjs.org/) - React framework
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Radix UI](https://www.radix-ui.com/) - UI components
+
+---
+
+**FInTrack Protocol** - Bridging the gap between traditional blockchains and the Internet Computer through innovative Chain Fusion technology.
+
+*Empowering seamless cross-chain DeFi operations with security and efficiency*
+
+*Built with ❤️ on the Internet Computer*
