@@ -33,6 +33,18 @@
 - **ECDSA Signing**: Secure transaction signing via Internet Computer management canister
 - **Multi-Chain Address Derivation**: Deterministic address generation from Principal
 
+## 🎥 Demo Video
+
+Watch FInTrack Protocol in action! See how easy it is to bridge assets between Bitcoin, Ethereum, and Internet Computer.
+
+[![FInTrack Protocol Demo](https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=OlCddZ8Ey-k)
+
+**What you'll see in the demo:**
+- 🔗 Cross-chain bridge operations (BTC ↔ ckBTC, ETH ↔ ckETH)
+- 💼 Portfolio dashboard with real-time balances
+- 📱 User-friendly interface for deposits and withdrawals
+- 🚀 Native asset transfers on Bitcoin and Ethereum networks
+- 📊 Transaction history across multiple blockchains
 
 ## 🏗️ System Architecture
 
@@ -76,7 +88,7 @@ fintrack_frontend/
 - **Bitcoin Network**: Native BTC blockchain for deposits, withdrawals, and direct transfers via Chain Fusion
 - **Ethereum Network**: Native ETH blockchain for deposits, withdrawals, and direct transfers via EVM RPC
 - **Internet Computer (ICP)**: ckAssets (ckBTC, ckETH) and platform services
-- **HTTP Outcalls**: Integration with Alchemy (ETH) and BlockCypher (BTC) for transaction history
+- **HTTP Outcalls**: Integration with Etherscan (ETH) and BlockCypher (BTC) for transaction history
 
 ## 🚀 Getting Started
 
@@ -186,7 +198,7 @@ dfx canister call evm_rpc updateApiKeys '(vec { record { 9 : nat64; opt "YOUR_AP
 - **Native Asset Transfers**: Direct BTC and ETH transfers on native blockchains
 - **Fee Preview System**: Real-time fee estimation for BTC and ETH transfers
 - **Multi-Chain Transaction History**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
-- **HTTP Outcall Integration**: Alchemy API for ETH transaction history, BlockCypher for BTC
+- **HTTP Outcall Integration**: Etherscan API for ETH transaction history, BlockCypher for BTC
 - **ECDSA Address Derivation**: Deterministic BTC/ETH address generation from Internet Computer Principal
 - **Real-time Balance Updates**: Native BTC and ETH balances integrated into portfolio dashboard
 
@@ -208,7 +220,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [Radix UI](https://www.radix-ui.com/) - UI components
-- [Alchemy](https://www.alchemy.com/) - Ethereum API for transaction history
+- [Etherscan](https://etherscan.io/) - Ethereum API for transaction history
 - [BlockCypher](https://www.blockcypher.com/) - Bitcoin API for transaction data
 
 ---

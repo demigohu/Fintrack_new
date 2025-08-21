@@ -289,6 +289,26 @@ export default function DepositPage() {
                     >
                       {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
+                    {/* Mint BTC to ckBTC button - only show for BTC */}
+                    {selectedAsset.symbol === "BTC" && (
+                      <Button
+                        onClick={refreshBalance}
+                        disabled={refreshing}
+                        className="px-3 bg-green-600 hover:bg-green-700 glow-green"
+                      >
+                        {refreshing ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Minting...
+                          </>
+                        ) : (
+                          <>
+                            <Coins className="h-4 w-4" />
+                            Mint
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
 

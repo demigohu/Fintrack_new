@@ -237,7 +237,8 @@ fn cketh_index_principal() -> Principal {
 }
 
 // Konfigurasi HTTP Outcall
-const ALCHEMY_SEPOLIA_URL: &str = "https://eth-sepolia.g.alchemy.com/v2/8RsCj6scFdYCuefJkjXAekpSrh07JhyV";
+const ETHERSCAN_SEPOLIA_URL: &str = "https://api-sepolia.etherscan.io/api";
+const ETHERSCAN_API_KEY: &str = "69RXZDXVXTN3QDQ2BTXCT57BECUXQ9CJHQ";
 // Jika ingin pakai BlockCypher mainnet (contoh), isi token di sini. Untuk regtest -> tidak digunakan.
 const BLOCKCYPHER_TOKEN: &str = "dce63e3270ec49cfbc91eff20cbece20";
 
@@ -250,6 +251,23 @@ async fn http_post_json(url: &str, body: String, max_response_bytes: u64) -> Res
         url: url.into(),
         method: HttpMethod::POST,
         body: Some(body.into_bytes()),
+        max_response_bytes: Some(max_response_bytes),
+        transform: None,
+        headers,
+    };
+    let (resp,): (ic_cdk::api::management_canister::http_request::HttpResponse,) = mgmt_http_request(arg, 2_500_000_000).await
+        .map_err(|e| format!("HTTP outcall failed: {:?}", e))?;
+    String::from_utf8(resp.body).map_err(|_| "Failed to decode response body".to_string())
+}
+
+async fn http_get_json(url: &str, max_response_bytes: u64) -> Result<String, String> {
+    let headers = vec![
+        HttpHeader { name: "Accept".into(), value: "application/json".into() },
+    ];
+    let arg = CanisterHttpRequestArgument {
+        url: url.into(),
+        method: HttpMethod::GET,
+        body: None,
         max_response_bytes: Some(max_response_bytes),
         transform: None,
         headers,
@@ -407,19 +425,19 @@ async fn get_cketh_transactions(user: Principal, max_results: u32) -> Result<Vec
 // =============================
 
 async fn get_native_transactions(user: Principal, max_results: u32) -> Result<Vec<Transaction>, String> {
-    // Ambil ETH address user (alamat native)
+    // Get user's ETH address (native address)
     let eth_address = crate::services::address::get_eth_address(Some(user)).await
-        .map_err(|e| format!("gagal ambil alamat ETH user: {}", e))?;
+        .map_err(|e| format!("Failed to get user ETH address: {}", e))?;
 
-    // Ambil transaksi dari Alchemy (both incoming/outgoing)
+    // Get transactions from Etherscan (both incoming/outgoing)
     match fetch_eth_transfers_for_address(&eth_address, max_results).await {
         Ok(mut txs) => {
-            // Simpan ke stable map (overwrite)
+            // Store in stable map (overwrite)
             let _ = store_native_txs(user, &txs);
             Ok(txs)
         }
         Err(e) => {
-            // Fallback ke data tersimpan
+            // Fallback to stored data
             if let Some(mut txs) = load_native_txs(user) {
                 txs.sort_by(|a, b| b.id.timestamp.cmp(&a.id.timestamp));
                 txs.truncate(max_results as usize);
@@ -432,140 +450,131 @@ async fn get_native_transactions(user: Principal, max_results: u32) -> Result<Ve
 }
 
 async fn fetch_eth_transfers_for_address(address: &str, max_results: u32) -> Result<Vec<Transaction>, String> {
-    let max_count_hex = format!("0x{:x}", max_results.max(1));
+    // Build Etherscan API URL
+    let url = format!(
+        "{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&sort=desc&apikey={}",
+        ETHERSCAN_SEPOLIA_URL, address, ETHERSCAN_API_KEY
+    );
 
-    // Panggil dua kali: transaksi keluar (fromAddress) dan masuk (toAddress)
-    let body_out = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "alchemy_getAssetTransfers",
-        "params": [{
-            "fromBlock": "0x0",
-            "toBlock": "latest",
-            "fromAddress": address,
-            "category": ["external", "internal"],
-            "withMetadata": true,
-            "excludeZeroValue": false,
-            "maxCount": max_count_hex,
-            "order": "desc"
-        }]
-    }).to_string();
-
-    let body_in = json!({
-        "jsonrpc": "2.0",
-        "id": 2,
-        "method": "alchemy_getAssetTransfers",
-        "params": [{
-            "fromBlock": "0x0",
-            "toBlock": "latest",
-            "toAddress": address,
-            "category": ["external", "internal"],
-            "withMetadata": true,
-            "excludeZeroValue": false,
-            "maxCount": max_count_hex,
-            "order": "desc"
-        }]
-    }).to_string();
-
+    // Make HTTP GET request to Etherscan
     let max_bytes = 100_000;
-    let resp_out = http_post_json(ALCHEMY_SEPOLIA_URL, body_out, max_bytes).await?;
-    let resp_in = http_post_json(ALCHEMY_SEPOLIA_URL, body_in, max_bytes).await?;
+    let response = http_get_json(&url, max_bytes).await?;
 
-    let mut txs: Vec<Transaction> = Vec::new();
-
-    // Parse OUTGOING
-    txs.extend(parse_alchemy_transfers_json(&resp_out, address, false)?);
-    // Parse INCOMING
-    txs.extend(parse_alchemy_transfers_json(&resp_in, address, true)?);
+    // Parse Etherscan response
+    let txs = parse_etherscan_transactions_json(&response, address)?;
 
     // Batasi jumlah akhir
-    txs.sort_by(|a, b| b.id.timestamp.cmp(&a.id.timestamp));
-    txs.truncate(max_results as usize);
-    Ok(txs)
+    let mut sorted_txs = txs;
+    sorted_txs.sort_by(|a, b| b.id.timestamp.cmp(&a.id.timestamp));
+    sorted_txs.truncate(max_results as usize);
+    Ok(sorted_txs)
 }
 
-fn parse_alchemy_transfers_json(body: &str, user_address: &str, incoming: bool) -> Result<Vec<Transaction>, String> {
-    let v: serde_json::Value = serde_json::from_str(body).map_err(|e| format!("gagal parse JSON Alchemy: {}", e))?;
-    let transfers = v.get("result").and_then(|r| r.get("transfers")).and_then(|t| t.as_array()).cloned().unwrap_or_default();
+fn parse_etherscan_transactions_json(body: &str, user_address: &str) -> Result<Vec<Transaction>, String> {
+    let v: serde_json::Value = serde_json::from_str(body).map_err(|e| format!("Failed to parse Etherscan JSON: {}", e))?;
+    
+    // Check if API call was successful
+    let status = v.get("status").and_then(|s| s.as_str()).unwrap_or("");
+    if status != "1" {
+        let message = v.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
+        return Err(format!("Etherscan API error: {}", message));
+    }
+    
+    let transactions = v.get("result").and_then(|r| r.as_array()).cloned().unwrap_or_default();
     let mut out = Vec::new();
-    for item in transfers {
+    
+    for item in transactions {
         let tx_hash = item.get("hash").and_then(|x| x.as_str()).unwrap_or("").to_string();
         if tx_hash.is_empty() { continue; }
-        let block_num_hex = item.get("blockNum").and_then(|x| x.as_str()).unwrap_or("0x0");
-        let block_number = hex_to_u64(block_num_hex).unwrap_or(0);
         
-        // Parse amount - try different possible fields
-        let amount_wei = if let Some(value) = item.get("value") {
-            if let Some(value_str) = value.as_str() {
-                // If it's a string, parse as decimal ETH
-                parse_eth_decimal_to_wei(value_str)
-            } else if let Some(value_num) = value.as_f64() {
-                // If it's a number, convert to wei
-                let wei = (value_num * 1e18) as u64;
-                Nat::from(wei)
-            } else {
-                Nat::from(0u64)
-            }
-        } else if let Some(raw_value) = item.get("rawValue") {
-            // Try rawValue field (hex string)
-            if let Some(raw_str) = raw_value.as_str() {
-                if let Some(wei) = hex_to_u64(raw_str) {
-                    Nat::from(wei)
-                } else {
-                    Nat::from(0u64)
-                }
-            } else {
-                Nat::from(0u64)
-            }
-        } else if let Some(amount) = item.get("amount") {
-            // Try amount field
-            if let Some(amount_str) = amount.as_str() {
-                if amount_str.starts_with("0x") {
-                    // Hex amount
-                    if let Some(wei) = hex_to_u64(amount_str) {
-                        Nat::from(wei)
-                    } else {
-                        Nat::from(0u64)
-                    }
-                } else {
-                    // Decimal amount
-                    parse_eth_decimal_to_wei(amount_str)
-                }
-            } else if let Some(amount_num) = amount.as_f64() {
-                // Numeric amount
-                let wei = (amount_num * 1e18) as u64;
+        let block_number = item.get("blockNumber").and_then(|x| x.as_str()).unwrap_or("0");
+        let block_number_u64 = block_number.parse::<u64>().unwrap_or(0);
+        
+        let timestamp_str = item.get("timeStamp").and_then(|x| x.as_str()).unwrap_or("0");
+        let timestamp = timestamp_str.parse::<u64>().unwrap_or(0);
+        
+        let from_address = item.get("from").and_then(|x| x.as_str()).unwrap_or("");
+        let to_address = item.get("to").and_then(|x| x.as_str()).unwrap_or("");
+        
+        let value_str = item.get("value").and_then(|x| x.as_str()).unwrap_or("0");
+        let amount_wei = if value_str.starts_with("0x") {
+            // Hex value
+            if let Some(wei) = hex_to_u64(value_str) {
                 Nat::from(wei)
             } else {
                 Nat::from(0u64)
             }
         } else {
-            Nat::from(0u64)
+            // Decimal value (should be in wei)
+            if let Some(wei) = value_str.parse::<u64>().ok() {
+                Nat::from(wei)
+            } else {
+                Nat::from(0u64)
+            }
         };
         
-        let metadata_ts = item.get("metadata").and_then(|m| m.get("blockTimestamp")).and_then(|x| x.as_str()).unwrap_or("");
-        let ts = parse_iso8601_to_unix(metadata_ts).unwrap_or(0);
-
-        let operation = if incoming { "NATIVE_TRANSFER_IN" } else { "NATIVE_TRANSFER_OUT" };
-
-        // Calculate confirmations based on block number
-        // If block_number > 0, assume it's confirmed (at least 1 confirmation)
-        let confirmations = if block_number > 0 { 1 } else { 0 };
+        let gas_used_str = item.get("gasUsed").and_then(|x| x.as_str()).unwrap_or("0");
+        let gas_used = gas_used_str.parse::<u64>().unwrap_or(0);
+        
+        let gas_price_str = item.get("gasPrice").and_then(|x| x.as_str()).unwrap_or("0");
+        let gas_price = if gas_price_str.starts_with("0x") {
+            if let Some(price) = hex_to_u64(gas_price_str) {
+                Nat::from(price)
+            } else {
+                Nat::from(0u64)
+            }
+        } else {
+            if let Some(price) = gas_price_str.parse::<u64>().ok() {
+                Nat::from(price)
+            } else {
+                Nat::from(0u64)
+            }
+        };
+        
+        // Determine operation type based on addresses
+        let operation = if from_address.to_lowercase() == user_address.to_lowercase() {
+            "NATIVE_TRANSFER_OUT"
+        } else if to_address.to_lowercase() == user_address.to_lowercase() {
+            "NATIVE_TRANSFER_IN"
+        } else {
+            "NATIVE_TRANSFER_UNKNOWN"
+        };
+        
+        // Skip contract creation and other non-transfer transactions
+        if item.get("contractAddress").and_then(|x| x.as_str()).unwrap_or("") != "" {
+            continue;
+        }
+        
+        // Skip transactions with 0 value (contract interactions)
+        if amount_wei == Nat::from(0u64) {
+            continue;
+        }
+        
+        // Calculate confirmations (assuming current block is latest)
+        let confirmations = if block_number_u64 > 0 { 1 } else { 0 };
         
         // Calculate status based on confirmations
         let status = if confirmations > 0 { "CONFIRMED" } else { "PENDING" };
-
+        
+        // Convert timestamp to nanoseconds (Etherscan returns seconds)
+        let timestamp_ns = timestamp * 1_000_000_000;
+        
         out.push(Transaction {
-            id: TransactionId { chain: "Ethereum".to_string(), tx_hash: tx_hash.clone(), timestamp: ts },
+            id: TransactionId { 
+                chain: "Ethereum".to_string(), 
+                tx_hash: tx_hash.clone(), 
+                timestamp: timestamp_ns 
+            },
             icp_tx: None,
             btc_tx: None,
             eth_tx: Some(EthereumTransaction {
                 tx_hash,
-                block_number,
+                block_number: block_number_u64,
                 confirmations,
                 amount: amount_wei,
-                gas_used: 0,
-                gas_price: Nat::from(0u64), // Keep 0 for now since Alchemy doesn't provide gas price in transfers
-                timestamp: ts,
+                gas_used,
+                gas_price,
+                timestamp: timestamp_ns,
                 address: user_address.to_string(),
                 operation: operation.to_string(),
             }),

@@ -1252,3 +1252,349 @@ CTransaction(hash=7f40a81412, ver=2, vin.size=1, vout.size=2, nLockTime=114)
 2025-08-20T14:09:45Z Potential stale tip detected, will try using extra outbound peer (last tip update: 5389 seconds ago)
 2025-08-20T14:20:01Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6005 seconds ago)
 2025-08-20T14:30:16Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6620 seconds ago)
+
+
+
+
+
+2025-08-21T21:49:16Z Bitcoin Core version v29.0.0 (release build)
+2025-08-21T21:49:16Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-08-21T21:49:16Z Using RdSeed as an additional entropy source
+2025-08-21T21:49:16Z Using RdRand as an additional entropy source
+2025-08-21T21:49:16Z Default data directory /home/demigohu/.bitcoin
+2025-08-21T21:49:16Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-08-21T21:49:16Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-08-21T21:49:16Z Config file arg: fallbackfee="0.0001"
+2025-08-21T21:49:16Z Config file arg: regtest="1"
+2025-08-21T21:49:16Z Config file arg: rpcauth=****
+2025-08-21T21:49:16Z Config file arg: rpcpassword=****
+2025-08-21T21:49:16Z Config file arg: rpcuser=****
+2025-08-21T21:49:16Z Config file arg: txindex="1"
+2025-08-21T21:49:16Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-08-21T21:49:16Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-08-21T21:49:16Z Command-line arg: port="18444"
+2025-08-21T21:49:16Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-08-21T21:49:16Z scheduler thread start
+2025-08-21T21:49:16Z Binding RPC on address ::1 port 18443
+2025-08-21T21:49:16Z Binding RPC on address 127.0.0.1 port 18443
+2025-08-21T21:49:16Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-08-21T21:49:16Z Using rpcauth authentication.
+2025-08-21T21:49:16Z Starting HTTP server with 16 worker threads
+2025-08-21T21:49:16Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-08-21T21:49:16Z init message: Verifying wallet(s)…
+2025-08-21T21:49:16Z Using /16 prefix for IP bucketing
+2025-08-21T21:49:16Z init message: Loading P2P addresses…
+2025-08-21T21:49:16Z Loaded 0 addresses from peers.dat  2ms
+2025-08-21T21:49:16Z init message: Loading banlist…
+2025-08-21T21:49:16Z SetNetworkActive: true
+2025-08-21T21:49:16Z Cache configuration:
+2025-08-21T21:49:16Z * Using 2.0 MiB for block index database
+2025-08-21T21:49:16Z * Using 56.2 MiB for transaction index database
+2025-08-21T21:49:16Z * Using 8.0 MiB for chain state database
+2025-08-21T21:49:16Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-08-21T21:49:16Z Script verification uses 15 additional threads
+2025-08-21T21:49:16Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-08-21T21:49:16Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-08-21T21:49:16Z Opened LevelDB successfully
+2025-08-21T21:49:16Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-08-21T21:49:16Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-08-21T21:49:16Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-08-21T21:49:16Z init message: Loading block index…
+2025-08-21T21:49:16Z Validating signatures for all blocks.
+2025-08-21T21:49:16Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-08-21T21:49:16Z LoadBlockIndexDB: last block file = 0
+2025-08-21T21:49:16Z LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=117, size=32458, heights=0...116, time=2011-02-02...2025-08-20)
+2025-08-21T21:49:16Z Checking all blk files are present...
+2025-08-21T21:49:16Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-08-21T21:49:16Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-08-21T21:49:16Z Fatal LevelDB error: Corruption: 2 missing files; e.g.: /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate/000005.ldb
+2025-08-21T21:49:16Z You can use -debug=leveldb to get more complete diagnostic messages
+2025-08-21T21:49:16Z [error] Fatal LevelDB error: Corruption: 2 missing files; e.g.: /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate/000005.ldb
+2025-08-21T21:49:16Z : Error opening coins database.
+Please restart with -reindex or -reindex-chainstate to recover.
+2025-08-21T21:49:16Z Shutdown: In progress...
+2025-08-21T21:49:16Z scheduler thread exit
+2025-08-21T21:49:16Z Flushed fee estimates to fee_estimates.dat.
+2025-08-21T21:49:16Z Shutdown: done
+
+
+
+
+
+2025-08-21T21:49:39Z Bitcoin Core version v29.0.0 (release build)
+2025-08-21T21:49:39Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-08-21T21:49:39Z Using RdSeed as an additional entropy source
+2025-08-21T21:49:39Z Using RdRand as an additional entropy source
+2025-08-21T21:49:39Z Default data directory /home/demigohu/.bitcoin
+2025-08-21T21:49:39Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-08-21T21:49:39Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-08-21T21:49:39Z Config file arg: fallbackfee="0.0001"
+2025-08-21T21:49:39Z Config file arg: regtest="1"
+2025-08-21T21:49:39Z Config file arg: rpcauth=****
+2025-08-21T21:49:39Z Config file arg: rpcpassword=****
+2025-08-21T21:49:39Z Config file arg: rpcuser=****
+2025-08-21T21:49:39Z Config file arg: txindex="1"
+2025-08-21T21:49:39Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-08-21T21:49:39Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-08-21T21:49:39Z Command-line arg: port="18444"
+2025-08-21T21:49:39Z Command-line arg: reindex=""
+2025-08-21T21:49:39Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-08-21T21:49:39Z scheduler thread start
+2025-08-21T21:49:39Z Binding RPC on address ::1 port 18443
+2025-08-21T21:49:39Z Binding RPC on address 127.0.0.1 port 18443
+2025-08-21T21:49:39Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-08-21T21:49:39Z Using rpcauth authentication.
+2025-08-21T21:49:39Z Starting HTTP server with 16 worker threads
+2025-08-21T21:49:39Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-08-21T21:49:39Z init message: Verifying wallet(s)…
+2025-08-21T21:49:39Z Using /16 prefix for IP bucketing
+2025-08-21T21:49:39Z init message: Loading P2P addresses…
+2025-08-21T21:49:39Z Loaded 0 addresses from peers.dat  0ms
+2025-08-21T21:49:39Z init message: Loading banlist…
+2025-08-21T21:49:39Z SetNetworkActive: true
+2025-08-21T21:49:39Z Cache configuration:
+2025-08-21T21:49:39Z * Using 2.0 MiB for block index database
+2025-08-21T21:49:39Z * Using 56.2 MiB for transaction index database
+2025-08-21T21:49:39Z * Using 8.0 MiB for chain state database
+2025-08-21T21:49:39Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-08-21T21:49:39Z Script verification uses 15 additional threads
+2025-08-21T21:49:39Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-08-21T21:49:39Z Wiping LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-08-21T21:49:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-08-21T21:49:39Z Opened LevelDB successfully
+2025-08-21T21:49:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-08-21T21:49:39Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-08-21T21:49:39Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-08-21T21:49:39Z init message: Loading block index…
+2025-08-21T21:49:39Z Validating signatures for all blocks.
+2025-08-21T21:49:39Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-08-21T21:49:39Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-08-21T21:49:39Z Wiping LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-08-21T21:49:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-08-21T21:49:39Z Opened LevelDB successfully
+2025-08-21T21:49:39Z Wrote new obfuscate key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-08-21T21:49:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-08-21T21:49:39Z init message: Verifying blocks…
+2025-08-21T21:49:39Z Block index and chainstate loaded
+2025-08-21T21:49:39Z Wiping LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-08-21T21:49:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-08-21T21:49:39Z Opened LevelDB successfully
+2025-08-21T21:49:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex: 0000000000000000
+2025-08-21T21:49:39Z Setting NODE_NETWORK on non-prune mode
+2025-08-21T21:49:39Z initload thread start
+2025-08-21T21:49:39Z Reindexing block file blk00000.dat...
+2025-08-21T21:49:39Z UpdateTip: new best=0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206 height=0 version=0x00000001 log2_work=1.000000 tx=1 date='2011-02-02T23:16:42Z' progress=1.000000 cache=0.3MiB(0txo)
+2025-08-21T21:49:39Z block tree size = 1
+2025-08-21T21:49:39Z nBestHeight = 0
+2025-08-21T21:49:39Z torcontrol thread start
+2025-08-21T21:49:39Z Bound to 127.0.0.1:18445
+2025-08-21T21:49:39Z Bound to [::]:18444
+2025-08-21T21:49:39Z Bound to 0.0.0.0:18444
+2025-08-21T21:49:39Z Loaded 0 addresses from "anchors.dat"
+2025-08-21T21:49:39Z 0 block-relay-only anchors will be tried for connections.
+2025-08-21T21:49:39Z init message: Starting network threads…
+2025-08-21T21:49:39Z net thread start
+2025-08-21T21:49:39Z dnsseed thread start
+2025-08-21T21:49:39Z Loading addresses from DNS seed dummySeed.invalid.
+2025-08-21T21:49:39Z init message: Done loading
+2025-08-21T21:49:39Z opencon thread start
+2025-08-21T21:49:39Z msghand thread start
+2025-08-21T21:49:39Z addcon thread start
+2025-08-21T21:49:39Z [error] AcceptBlock: bad-txnmrklroot, hashMerkleRoot mismatch
+2025-08-21T21:49:39Z Loaded 113 blocks from external file in 22ms
+2025-08-21T21:49:39Z Reindexing finished
+2025-08-21T21:49:39Z UpdateTip: new best=468a177a4196a24416fa20cd34c5287a16887959e5b807f66902de154a31fcc0 height=1 version=0x20000000 log2_work=2.000000 tx=2 date='2025-08-18T14:59:20Z' progress=1.000000 cache=0.3MiB(1txo)
+2025-08-21T21:49:39Z UpdateTip: new best=109280100cdde2289cb98a001fb015d6c86a25680a2ee51973b6308473d0e983 height=2 version=0x20000000 log2_work=2.584963 tx=3 date='2025-08-18T14:59:21Z' progress=1.000000 cache=0.3MiB(2txo)
+2025-08-21T21:49:39Z UpdateTip: new best=21406e4eb305a1f7333a1989487e20ac7e5ceea9d7b75cc3ea55de8c13970608 height=3 version=0x20000000 log2_work=3.000000 tx=4 date='2025-08-18T14:59:21Z' progress=1.000000 cache=0.3MiB(3txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6500fbb098915f89306f03661c734d6f50c03987a79f9a1c65d7bea00d78b722 height=4 version=0x20000000 log2_work=3.321928 tx=5 date='2025-08-18T14:59:22Z' progress=1.000000 cache=0.3MiB(4txo)
+2025-08-21T21:49:39Z UpdateTip: new best=26bf320b3469e20456f0f06d97e8fa1581fe728a7e743a84827da5962b5b2614 height=5 version=0x20000000 log2_work=3.584963 tx=6 date='2025-08-18T14:59:22Z' progress=1.000000 cache=0.3MiB(5txo)
+2025-08-21T21:49:39Z 0 addresses found from DNS seeds
+2025-08-21T21:49:39Z dnsseed thread exit
+2025-08-21T21:49:39Z UpdateTip: new best=2dd76c35fee14102a024d3ba6e86288b4f534679c6719a9bc671d11b6b0b15cf height=6 version=0x20000000 log2_work=3.807355 tx=7 date='2025-08-18T14:59:22Z' progress=1.000000 cache=0.3MiB(6txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4bd8e78c18ee96d182ca7d8e56e20ab0caee7bb75cdbcb1425c80c027cf7b087 height=7 version=0x20000000 log2_work=4.000000 tx=8 date='2025-08-18T14:59:22Z' progress=1.000000 cache=0.3MiB(7txo)
+2025-08-21T21:49:39Z UpdateTip: new best=78140339e35c2f9829b5692bb5054393df5fee1eeccb87a832fc08103a70f602 height=8 version=0x20000000 log2_work=4.169925 tx=9 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(8txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7bb0ef5e1365307cf8aaf17f225933877130aa3a48b0f431d007cf824ffe89ad height=9 version=0x20000000 log2_work=4.321928 tx=10 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(9txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0682672912e06e0050b4bebbd6d993efd50c71cfe1e2ebbf76f1393485351647 height=10 version=0x20000000 log2_work=4.459432 tx=11 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(10txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3416108e540a661c9ff0d8099a155e42951b0375d0a0f72962208fb30ae7c19c height=11 version=0x20000000 log2_work=4.584963 tx=12 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(11txo)
+2025-08-21T21:49:39Z UpdateTip: new best=00e128a7aa2201cd98d88700227c7ee49b935e850eb94daec0088d40703ad72f height=12 version=0x20000000 log2_work=4.700440 tx=13 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(12txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2124584713c83cda72cb0f1e95b9d2c64a86361d7bbdcc6b1d1eb8fbff74a502 height=13 version=0x20000000 log2_work=4.807355 tx=14 date='2025-08-18T14:59:23Z' progress=1.000000 cache=0.3MiB(13txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6a36c212ede4e54aacb5a5b900489c984a3a4ca03e4c231d3bf0f8ed0c6750e1 height=14 version=0x20000000 log2_work=4.906891 tx=15 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(14txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7ec80b1605b67ce5c59707f21172b9a3abe6475600a2b1954190af3fd3d3c437 height=15 version=0x20000000 log2_work=5.000000 tx=16 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(15txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2a46ed91ca748ecdf22dbc5cdf35c53e7fbeed6cb70dcc3255f43f77b376daa3 height=16 version=0x20000000 log2_work=5.087463 tx=17 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(16txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3cfe09429fe7364dcb1af9bf2a2bc3a9bb99a7a898c9dda2eebe96d7a6496cea height=17 version=0x20000000 log2_work=5.169925 tx=18 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(17txo)
+2025-08-21T21:49:39Z UpdateTip: new best=22b9a8c26f2900a32556ec5fe083821afdc6d699b40b3e0cbe5aabcc07a2bb6c height=18 version=0x20000000 log2_work=5.247928 tx=19 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(18txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1952d0a43e7f49cbdb37ecfc59c191e611b4c982b081b2e248155e918fe93466 height=19 version=0x20000000 log2_work=5.321928 tx=20 date='2025-08-18T14:59:24Z' progress=1.000000 cache=0.3MiB(19txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1ede773af62fc5f17498df011f40ab299c5b4856a138f1c531329af8fc0cde22 height=20 version=0x20000000 log2_work=5.392317 tx=21 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(20txo)
+2025-08-21T21:49:39Z UpdateTip: new best=19755fe88ad08d22454746c01fa1506aed27d609551bf67435b3faacd48b2fca height=21 version=0x20000000 log2_work=5.459432 tx=22 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(21txo)
+2025-08-21T21:49:39Z UpdateTip: new best=643efda24aa7236ccfab136de879a5d0db5fda65f0e234714f6469ca49bdd096 height=22 version=0x20000000 log2_work=5.523562 tx=23 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(22txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2d645d1281e08d5bb7c84600d17c71ed3815ef79ee36e1dc2e41d40161e2a1db height=23 version=0x20000000 log2_work=5.584963 tx=24 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(23txo)
+2025-08-21T21:49:39Z UpdateTip: new best=30642806744d0d236f55607cb1c9bb0df0837cd638453e2a8668ec3c79a7e20f height=24 version=0x20000000 log2_work=5.643856 tx=25 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(24txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0ef62a63ddfbf25336331897dd1bd5b7d03b022295be2088c7bc3b98bc38791a height=25 version=0x20000000 log2_work=5.700440 tx=26 date='2025-08-18T14:59:25Z' progress=1.000000 cache=0.3MiB(25txo)
+2025-08-21T21:49:39Z UpdateTip: new best=5d529f35baa26ffede4ef5c47f2f2207ccbef029110028b1b6919facc44c37fc height=26 version=0x20000000 log2_work=5.754888 tx=27 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(26txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4b4fd68e9aa356a545a9eba0b1231577412630dad593c1f10277ac9e33e0847c height=27 version=0x20000000 log2_work=5.807355 tx=28 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(27txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2644413bd8173b06a26e5c036dedf5cf83d8df4ba33f98ce2b8940f5bd053e29 height=28 version=0x20000000 log2_work=5.857981 tx=29 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(28txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1076d2e4a79352aeca4d5cc4aa0040775d8988f94dbb1ff48d82706fe131bc2e height=29 version=0x20000000 log2_work=5.906891 tx=30 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(29txo)
+2025-08-21T21:49:39Z UpdateTip: new best=254532e1c3cc568f079badd00815590ff41f58181d9c3cba51237dc41b03c86c height=30 version=0x20000000 log2_work=5.954196 tx=31 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(30txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4a82f4b6f9b162c792275b8844a925385bbb18724e39e3c5949cda4f3bbe15d1 height=31 version=0x20000000 log2_work=6.000000 tx=32 date='2025-08-18T14:59:26Z' progress=1.000000 cache=0.3MiB(31txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2e6eb37902ecc1d3227c9e131a2bb5915986ecc88c0d1022123615ef23fa414e height=32 version=0x20000000 log2_work=6.044394 tx=33 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(32txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1eaaca84df533c17a195ba7e51e3a59cc5eeee4556d51c96458a169ac9680256 height=33 version=0x20000000 log2_work=6.087463 tx=34 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(33txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3214170d55976b3426df76eaa1488fd278ec9a51c8ff32fb17c3878bbea496fa height=34 version=0x20000000 log2_work=6.129283 tx=35 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(34txo)
+2025-08-21T21:49:39Z UpdateTip: new best=648dd6f9f61b741584157a6c7ccc71bdcde67d5c56e309e1f343f0fc3e233954 height=35 version=0x20000000 log2_work=6.169925 tx=36 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(35txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6b46825ac26e77616eb9efde9c8a42af697c2a20b73b5fc89ff59e151a9f9e78 height=36 version=0x20000000 log2_work=6.209453 tx=37 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(36txo)
+2025-08-21T21:49:39Z UpdateTip: new best=007d54a58be7874be2ecc5c44b6a6d70e6dda9981ebea7268dc6f69ba06f9027 height=37 version=0x20000000 log2_work=6.247928 tx=38 date='2025-08-18T14:59:27Z' progress=1.000000 cache=0.3MiB(37txo)
+2025-08-21T21:49:39Z UpdateTip: new best=32bf39d61838ea88c1dfaf128b349e760ac6bdb6cd1e5105a8d10f2efc208e24 height=38 version=0x20000000 log2_work=6.285402 tx=39 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(38txo)
+2025-08-21T21:49:39Z UpdateTip: new best=416b234940482512b30801118c8c1287f46f01f97d16187d28ceccfaf00fa671 height=39 version=0x20000000 log2_work=6.321928 tx=40 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(39txo)
+2025-08-21T21:49:39Z UpdateTip: new best=045e8b3c286d050462b37e88229da826ca664a036af6d666226ac14e87c9a63f height=40 version=0x20000000 log2_work=6.357552 tx=41 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(40txo)
+2025-08-21T21:49:39Z UpdateTip: new best=61b937d5aeaca35988ad8e8d70d22bd6d738a5e30ae63e4bf302a06da0bfd2b2 height=41 version=0x20000000 log2_work=6.392317 tx=42 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(41txo)
+2025-08-21T21:49:39Z UpdateTip: new best=45c8ef164e117a72fcde86f2a32f3a5ff6838cca88ce2e481599f70b037ec949 height=42 version=0x20000000 log2_work=6.426265 tx=43 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(42txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1c970df84da5f6a794b8c03a12bcd53a9715f11134dfd24d4c827a350c1a2a8c height=43 version=0x20000000 log2_work=6.459432 tx=44 date='2025-08-18T14:59:28Z' progress=1.000000 cache=0.3MiB(43txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7728d5308e889cbf41e51f4562b1e643e23e44a4e26e09801784a4b94a5d39b9 height=44 version=0x20000000 log2_work=6.491853 tx=45 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(44txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0acb34eb610a00806c0ee33df819ba06bade1502b94738cfb6f2259cd753a6ff height=45 version=0x20000000 log2_work=6.523562 tx=46 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(45txo)
+2025-08-21T21:49:39Z UpdateTip: new best=5fd939d8e08f5d84d56ef0fe0049c020a4a1d56914e85ad7a9c38aa14b8c8426 height=46 version=0x20000000 log2_work=6.554589 tx=47 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(46txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6254080a193309ea59013a332788ed60a08a7ea5a7d5716ca02c389f75caeb81 height=47 version=0x20000000 log2_work=6.584963 tx=48 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(47txo)
+2025-08-21T21:49:39Z UpdateTip: new best=672da4a9b90ac0bd7eb8cfa9f673d7a96a2f3905e9efdc8f9d60d7c387aecdb1 height=48 version=0x20000000 log2_work=6.614710 tx=49 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(48txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4c82efa08da0eda0f2f05fd6ac2f27e76d7a526815ff77b7582c0ed70ff50985 height=49 version=0x20000000 log2_work=6.643856 tx=50 date='2025-08-18T14:59:29Z' progress=1.000000 cache=0.3MiB(49txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7d8979ab6bd02d1cf2b8c8992df65476bcd1a3495c9fa287e7fd4ec5c62dd7fa height=50 version=0x20000000 log2_work=6.672425 tx=51 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(50txo)
+2025-08-21T21:49:39Z UpdateTip: new best=601ebb170f60b3a8e2f45a9087ae765c8613db03bc208b8b8e96e0515ae77ee1 height=51 version=0x20000000 log2_work=6.700440 tx=52 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(51txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6a19be85b85de1780845dfe0dedd2d72c98282a5b6caabb62ebf3dac0120d249 height=52 version=0x20000000 log2_work=6.727920 tx=53 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(52txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6e3de011a898e07bef169fa6c9ad23140b1d8763861abf08074f4abc1b319653 height=53 version=0x20000000 log2_work=6.754888 tx=54 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(53txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3468e51c919fbf2e30f760b8c42c24815ff05bcf8d39e5482c01d18559f1dcad height=54 version=0x20000000 log2_work=6.781360 tx=55 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(54txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3e29653fbde9feb4d658e6cc3660e9e4fb5f98cdb0377c592cd399980fa04ae3 height=55 version=0x20000000 log2_work=6.807355 tx=56 date='2025-08-18T14:59:30Z' progress=1.000000 cache=0.3MiB(55txo)
+2025-08-21T21:49:39Z UpdateTip: new best=066c5ef30fb9e36496f354a8f4e32b446a3ac55a8c5f304114af327479f40956 height=56 version=0x20000000 log2_work=6.832890 tx=57 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(56txo)
+2025-08-21T21:49:39Z UpdateTip: new best=57df232d24cd6dd43da16a4f4b119bbb6dc01f2f70314f6efd67cc3303251ca9 height=57 version=0x20000000 log2_work=6.857981 tx=58 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(57txo)
+2025-08-21T21:49:39Z UpdateTip: new best=41bb7723dc5aa9d5347cf39647cb97c6ef53d0881085d98a4382502b6f45757a height=58 version=0x20000000 log2_work=6.882643 tx=59 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(58txo)
+2025-08-21T21:49:39Z UpdateTip: new best=35f15509aea23d49a4d2c007a233c38e4f99d9106e10344b508deca3c036abca height=59 version=0x20000000 log2_work=6.906891 tx=60 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(59txo)
+2025-08-21T21:49:39Z UpdateTip: new best=11ab60f4516e2bf81a4afe937acfbbcebff69ae4c81c9935863397487d04c904 height=60 version=0x20000000 log2_work=6.930737 tx=61 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(60txo)
+2025-08-21T21:49:39Z UpdateTip: new best=642a081d1e8ce23e25f83830f877af47524033ea87822049efb88ab76a818b73 height=61 version=0x20000000 log2_work=6.954196 tx=62 date='2025-08-18T14:59:31Z' progress=1.000000 cache=0.3MiB(61txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3b1bfbe7109d37bd066cc61f5cc87283026e42d8501ad06ab92b4d31f10ac496 height=62 version=0x20000000 log2_work=6.977280 tx=63 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(62txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4a71e53b7017845c2b5c6c188769c56d03d087e40bae0a393198926ecaf0290f height=63 version=0x20000000 log2_work=7.000000 tx=64 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(63txo)
+2025-08-21T21:49:39Z UpdateTip: new best=699bdd46f6ec1a6599fb51e4c1f9ffa3c23b3e9067597b6ea072391569cb296a height=64 version=0x20000000 log2_work=7.022368 tx=65 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(64txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0428fcf2e56badcaebd03f47d57c3b76765eef64f1395330811b761e876d9aa6 height=65 version=0x20000000 log2_work=7.044394 tx=66 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(65txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4d6671faa3d9a33bbeffea7b880b0b589667b12ec113773a09db9a0b527564bc height=66 version=0x20000000 log2_work=7.066089 tx=67 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(66txo)
+2025-08-21T21:49:39Z UpdateTip: new best=75acf1777cd52e3326e418416f55ee8f69d82958e815bef55d929f87f4e8aca8 height=67 version=0x20000000 log2_work=7.087463 tx=68 date='2025-08-18T14:59:32Z' progress=1.000000 cache=0.3MiB(67txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3684fae775ddc5c05025de54e4c6358b556a8e4efa8273f1e3364436c6bd4f1a height=68 version=0x20000000 log2_work=7.108524 tx=69 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(68txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6de2591e3589b7e61cdf9e5745316de47890f41be51d1dcdc5fec03d104c2a41 height=69 version=0x20000000 log2_work=7.129283 tx=70 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(69txo)
+2025-08-21T21:49:39Z UpdateTip: new best=11955b8c1c9c6723ef2266be0b6c2e44c58b094f376c7a16d3db6652ad9026c8 height=70 version=0x20000000 log2_work=7.149747 tx=71 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(70txo)
+2025-08-21T21:49:39Z UpdateTip: new best=206573aef5191cce38a306576f8e0ef17e31ec9bb11978bd2c923ad74ebfdb4d height=71 version=0x20000000 log2_work=7.169925 tx=72 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(71txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2f267b55e79617c424aa3f7225968190383f62cfb4f887af1bd9dd6a36fc42b3 height=72 version=0x20000000 log2_work=7.189825 tx=73 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(72txo)
+2025-08-21T21:49:39Z UpdateTip: new best=14c2ed9ce94908526a8fc3c9394f5fbb181a6300d106894cd8ee427d32acad04 height=73 version=0x20000000 log2_work=7.209453 tx=74 date='2025-08-18T14:59:33Z' progress=1.000000 cache=0.3MiB(73txo)
+2025-08-21T21:49:39Z UpdateTip: new best=252356c1eaf8407e82918e0cc55c1df946ad7e1c224fd19cc5109732608b1b61 height=74 version=0x20000000 log2_work=7.228819 tx=75 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(74txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2c4aca83d0d99779d5f1a345fe472c818342af3b08f88f8cafb324a08668efde height=75 version=0x20000000 log2_work=7.247928 tx=76 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(75txo)
+2025-08-21T21:49:39Z UpdateTip: new best=48c8f7bdeaa846b2c91925a35ceb9f53ba6065b678257a67d3752cf241e22a4f height=76 version=0x20000000 log2_work=7.266787 tx=77 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(76txo)
+2025-08-21T21:49:39Z UpdateTip: new best=11ab7239c98d1b96672a954fc596a18e3f6a191dafa8ce647cd809e8a32671dc height=77 version=0x20000000 log2_work=7.285402 tx=78 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(77txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4c585ce63d56ce2ff31ef4755ebaa3e58eb7eaac6a1af0f718d6868f41e7a6f5 height=78 version=0x20000000 log2_work=7.303781 tx=79 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(78txo)
+2025-08-21T21:49:39Z UpdateTip: new best=00b603943dc37b3d0b3b78b70156dcf428ad4cc4be1ce856792eea64181fb125 height=79 version=0x20000000 log2_work=7.321928 tx=80 date='2025-08-18T14:59:34Z' progress=1.000000 cache=0.3MiB(79txo)
+2025-08-21T21:49:39Z UpdateTip: new best=24414c6e966e0f6c3b3a0a06b288d7cf968399ef567573c9da1a6bad74301540 height=80 version=0x20000000 log2_work=7.339850 tx=81 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(80txo)
+2025-08-21T21:49:39Z UpdateTip: new best=38146fd9935de48da47c5cd0c895efbd0a3393e820064375e10d7bb095fc67e0 height=81 version=0x20000000 log2_work=7.357552 tx=82 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(81txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1b208a5e2c4c9f5ade1739a1580a9dc4d97fd395ecad409dafc908398473e0b4 height=82 version=0x20000000 log2_work=7.375039 tx=83 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(82txo)
+2025-08-21T21:49:39Z UpdateTip: new best=19a14bb800339adf661fff1e03ae8e3a2f1a8aedc648a24dae0ae95489a41e14 height=83 version=0x20000000 log2_work=7.392317 tx=84 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(83txo)
+2025-08-21T21:49:39Z UpdateTip: new best=48fa361a4555af2fa1593174095a53a0310a1be2250f5cea675c6f9772a65c46 height=84 version=0x20000000 log2_work=7.409391 tx=85 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(84txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2c72c9c0e1864e2ac45ccf448c852ac349d85d88e6e2c88a47ed0023b8b8df5f height=85 version=0x20000000 log2_work=7.426265 tx=86 date='2025-08-18T14:59:35Z' progress=1.000000 cache=0.3MiB(85txo)
+2025-08-21T21:49:39Z UpdateTip: new best=091b95f4ae4f9f8aee0c97d144de651b41a3fe6d91b9ceb543ef9c4996558641 height=86 version=0x20000000 log2_work=7.442943 tx=87 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(86txo)
+2025-08-21T21:49:39Z UpdateTip: new best=627947e2a0c1d5db479e803d7dede2b6debae4a3e98bedd8863b8397ab557b4d height=87 version=0x20000000 log2_work=7.459432 tx=88 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(87txo)
+2025-08-21T21:49:39Z UpdateTip: new best=151951db0302fb1c8b12ff076fd983a92e56297a20241638bfccb827d4ea45d9 height=88 version=0x20000000 log2_work=7.475733 tx=89 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(88txo)
+2025-08-21T21:49:39Z UpdateTip: new best=5854a437c5a2c41fe9a0df2744de4b1da601848d53fe613429fb3c5e2bd09ef5 height=89 version=0x20000000 log2_work=7.491853 tx=90 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(89txo)
+2025-08-21T21:49:39Z UpdateTip: new best=65a436a03de5a6bd2a2d13ee350f884e23a0c2f407eb9737404a7b3cd8974716 height=90 version=0x20000000 log2_work=7.507795 tx=91 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(90txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0118d8b8f3bfc5bd4ab65ce483aade67aed45f569c0d7810347697c75980f008 height=91 version=0x20000000 log2_work=7.523562 tx=92 date='2025-08-18T14:59:36Z' progress=1.000000 cache=0.3MiB(91txo)
+2025-08-21T21:49:39Z UpdateTip: new best=088070192b89263c4df61f585fff55b49ec2554956e79e31276e19c6bf66be09 height=92 version=0x20000000 log2_work=7.539159 tx=93 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(92txo)
+2025-08-21T21:49:39Z UpdateTip: new best=392d8b5b0c4c6aabed4d7744dea94ec2fd6f89b624978148128efd6fe98a5326 height=93 version=0x20000000 log2_work=7.554589 tx=94 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(93txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2a7d4775118fe6d14e9362585b49ffae5bc1bca44d92194c976b81c4eb95d770 height=94 version=0x20000000 log2_work=7.569856 tx=95 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(94txo)
+2025-08-21T21:49:39Z UpdateTip: new best=016fdafb7db26c4033dfb893837413b75c9bd3575a6f8495ae8fc7305e917e82 height=95 version=0x20000000 log2_work=7.584963 tx=96 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(95txo)
+2025-08-21T21:49:39Z UpdateTip: new best=71ef14b43a377e80bdd36c1bdf6ef7e8b0950988e46c8d557914f762bd1a9adf height=96 version=0x20000000 log2_work=7.599913 tx=97 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(96txo)
+2025-08-21T21:49:39Z UpdateTip: new best=57ba5b4d0a26d7c5280db0d8c7d8ba1e294297edf428c345ceb0e85d5118ba06 height=97 version=0x20000000 log2_work=7.614710 tx=98 date='2025-08-18T14:59:37Z' progress=1.000000 cache=0.3MiB(97txo)
+2025-08-21T21:49:39Z UpdateTip: new best=68c511c0893bb6975c39da759c959a0a2ba25dc4e3e53234477b80c2059a8d2f height=98 version=0x20000000 log2_work=7.629357 tx=99 date='2025-08-18T14:59:38Z' progress=1.000000 cache=0.3MiB(98txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1bd064e5ffc9d0a5a3d45b56f5eeede808e03ffac95d84a8c56e10741411d906 height=99 version=0x20000000 log2_work=7.643856 tx=100 date='2025-08-18T14:59:38Z' progress=1.000000 cache=0.3MiB(99txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6ef13a1d11bbdc4d894c43fd03590e90dc0c418f1a654e635cfee392af30fe56 height=100 version=0x20000000 log2_work=7.658211 tx=101 date='2025-08-18T14:59:38Z' progress=1.000000 cache=0.3MiB(100txo)
+2025-08-21T21:49:39Z UpdateTip: new best=08074ff605c3d7d35720758874dda051c17b1eeb762449ef45c54f76343e652c height=101 version=0x20000000 log2_work=7.672425 tx=102 date='2025-08-18T14:59:38Z' progress=1.000000 cache=0.3MiB(101txo)
+2025-08-21T21:49:39Z UpdateTip: new best=19cdd06e596f0cd605bb851722cac3e9b1d3bbb76b30fc3acfa67993fbf48ddf height=102 version=0x20000000 log2_work=7.686501 tx=104 date='2025-08-18T15:00:26Z' progress=1.000000 cache=0.3MiB(104txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7df6152148bf5050c40db3478944d381ce937bcd00fb2fcf58fdb52663ca3414 height=103 version=0x20000000 log2_work=7.700440 tx=105 date='2025-08-18T17:32:35Z' progress=1.000000 cache=0.3MiB(105txo)
+2025-08-21T21:49:39Z UpdateTip: new best=65f137ab5710f95e828a4c0e14726aa7778127d46873fc6b86ba7337e8838d28 height=104 version=0x20000000 log2_work=7.714246 tx=106 date='2025-08-18T17:32:40Z' progress=1.000000 cache=0.3MiB(106txo)
+2025-08-21T21:49:39Z UpdateTip: new best=4d9f5fda1693349575fd82b46dc6637ce49a35b116cc5bf6e0c298dd8ef17787 height=105 version=0x20000000 log2_work=7.727920 tx=108 date='2025-08-18T17:51:24Z' progress=1.000000 cache=0.3MiB(108txo)
+2025-08-21T21:49:39Z UpdateTip: new best=2acf6c3bb7932f79d35d0669e0bede532c7bd974b5ce0a5e98dfac866f7fb441 height=106 version=0x20000000 log2_work=7.741467 tx=109 date='2025-08-18T17:51:31Z' progress=1.000000 cache=0.3MiB(109txo)
+2025-08-21T21:49:39Z UpdateTip: new best=6502565b001beded17a77fa49f2d4f2d70c324c0d616c2b14ffd1da2fc32e553 height=107 version=0x20000000 log2_work=7.754888 tx=111 date='2025-08-19T20:13:04Z' progress=1.000000 cache=0.3MiB(111txo)
+2025-08-21T21:49:39Z UpdateTip: new best=3663b136248d6f584896c26e5c1de982be1f0bd204844cf2f418a00b9a657673 height=108 version=0x20000000 log2_work=7.768184 tx=112 date='2025-08-19T20:13:44Z' progress=1.000000 cache=0.3MiB(112txo)
+2025-08-21T21:49:39Z UpdateTip: new best=38e2ae1938d506c1126f2331d8eb6d2dfa8262aecb84a1391cebfe41fc314fed height=109 version=0x20000000 log2_work=7.781360 tx=114 date='2025-08-19T20:15:30Z' progress=1.000000 cache=0.3MiB(114txo)
+2025-08-21T21:49:39Z UpdateTip: new best=1b52b29dccc5b73da863d672341572b76ea899795cb6b6813f72eca07bcd1728 height=110 version=0x20000000 log2_work=7.794416 tx=116 date='2025-08-19T20:47:43Z' progress=1.000000 cache=0.3MiB(116txo)
+2025-08-21T21:49:39Z UpdateTip: new best=7747d5ec6f84b1e3158d9766f14bf3a9b2b884fe35a9154901767fedb41a6af8 height=111 version=0x20000000 log2_work=7.807355 tx=118 date='2025-08-19T21:22:26Z' progress=1.000000 cache=0.3MiB(118txo)
+2025-08-21T21:49:39Z UpdateTip: new best=0219fb9b4fcfa37345d552f37e5f48067ec74b4d34837ede56e3e66dab640568 height=112 version=0x20000000 log2_work=7.820179 tx=120 date='2025-08-19T21:56:32Z' progress=1.000000 cache=0.3MiB(120txo)
+2025-08-21T21:49:39Z Loading 0 mempool transactions from file...
+2025-08-21T21:49:39Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-08-21T21:49:39Z initload thread exit
+2025-08-21T21:49:39Z txindex thread start
+2025-08-21T21:49:39Z txindex is enabled at height 112
+2025-08-21T21:49:39Z txindex thread exit
+2025-08-21T21:50:40Z Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network
+2025-08-21T21:50:40Z Added 0 fixed seeds from reachable networks.
+2025-08-21T21:56:00Z Using SQLite Version 3.46.1
+2025-08-21T21:56:00Z Using wallet /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets/testwallet
+2025-08-21T21:56:00Z init message: Loading wallet…
+2025-08-21T21:56:00Z [testwallet] Wallet file version = 10500, last client version = 290000
+2025-08-21T21:56:00Z [testwallet] Descriptors: 8, Descriptor Keys: 1 plaintext, 0 encrypted, 1 total.
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = 16898009de45c538fbefec8a246c87cdf3079c277151036fe3d02e81a83f54c8, type = legacy, internal = false
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = 0fd92b8d6fc270cdece16fecc8edd59c9e72548403014da5a32c883bb7086455, type = p2sh-segwit, internal = false
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = 0a3e9736c9c2cf1113b1631156f0dc559f45769c74e10d2f85a1e7b4ed65e3b5, type = bech32, internal = false
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = 525a6d3c603724261b0373660f85b880f78ef0b34b250417f4301e668c2b7b2a, type = bech32m, internal = false
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = e91e4a99e3de2d148842ab787ac86a4e99e17b824064a59bbf893b796b54ad8c, type = legacy, internal = true
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = ab921ecc98f3fb7d89848048796ad003b6708d5aa25540485511f08815f0fa49, type = p2sh-segwit, internal = true
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = 3d11a234e863750b405c3a38d98f196584250e816c46e3f3cf5cc444888e0cab, type = bech32, internal = true
+2025-08-21T21:56:00Z [testwallet] Setting spkMan to active: id = e95ef4b9c39aea234ac31e50c8f0fc9cf02685a0505cba1c1db558a1ae14cf71, type = bech32m, internal = true
+2025-08-21T21:56:00Z [testwallet] Wallet completed loading in             271ms
+2025-08-21T21:56:00Z [testwallet] setKeyPool.size() = 8000
+2025-08-21T21:56:00Z [testwallet] mapWallet.size() = 128
+2025-08-21T21:56:00Z [testwallet] m_address_book.size() = 2
+2025-08-21T21:56:00Z [testwallet] Submitting wtx ea0191e284cd5498aa3cde55302554e662776f2697b60d980bcf8ad4a237f38b to mempool for relay
+2025-08-21T21:56:00Z [testwallet] Submitting wtx aead22807d3f95d5d77d8b752970c77f285723f975bb2c1a9393b160aba78535 to mempool for relay
+2025-08-21T21:56:00Z [testwallet] Submitting wtx 7f40a8141223880e70ed96594d501c6f76a6eb112481a5c64e2be46fca57484b to mempool for relay
+2025-08-21T21:56:00Z [testwallet] Submitting wtx ed95ef03989ee17925d5e9ab74dc3ebc0330acd23b600ae615d521e3acb7bbab to mempool for relay
+2025-08-21T21:56:00Z [testwallet] ResubmitWalletTransactions: resubmit 3 unconfirmed transactions
+2025-08-21T21:56:00Z [testwallet] AddToWallet ea0191e284cd5498aa3cde55302554e662776f2697b60d980bcf8ad4a237f38b   InMempool
+2025-08-21T21:56:00Z [testwallet] AddToWallet ea0191e284cd5498aa3cde55302554e662776f2697b60d980bcf8ad4a237f38b   InMempool
+2025-08-21T21:56:00Z [testwallet] AddToWallet aead22807d3f95d5d77d8b752970c77f285723f975bb2c1a9393b160aba78535   InMempool
+2025-08-21T21:56:00Z [testwallet] AddToWallet ed95ef03989ee17925d5e9ab74dc3ebc0330acd23b600ae615d521e3acb7bbab   InMempool
+2025-08-21T21:56:00Z [testwallet] AddToWallet aead22807d3f95d5d77d8b752970c77f285723f975bb2c1a9393b160aba78535   InMempool
+2025-08-21T21:56:00Z [testwallet] AddToWallet ed95ef03989ee17925d5e9ab74dc3ebc0330acd23b600ae615d521e3acb7bbab   InMempool
+2025-08-21T21:56:28Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-21T21:56:28Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-21T21:56:28Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-21T21:56:28Z [testwallet] Fee Calculation: Fee:8180 Bytes:818 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-21T21:56:28Z [testwallet] Fee non-grouped = 1410, grouped = 8180, using non-grouped
+2025-08-21T21:56:28Z [testwallet] CommitTransaction:
+CTransaction(hash=fe415f91a4, ver=2, vin.size=1, vout.size=2, nLockTime=0)
+    CTxIn(COutPoint(848d68406c, 0), scriptSig=, nSequence=4294967293)
+    CScriptWitness(3044022079a9c40de9f0ba13550ffb269c3e21bf9e57ef7e202077b3b4eba20e3abe170d02201cebd95374025913662a199b815e956ea4d97493621eebad53d726037512ae2601, 02310df3898f889b03b3cdef6ea271dc68943104522183dc8d7b0778be8060f878)
+    CTxOut(nValue=44.99998590, scriptPubKey=0014b8d9ba84e89adbcade5e82aa79)
+    CTxOut(nValue=5.00000000, scriptPubKey=00145f85e0e41624c0a73546d20fe1)
+2025-08-21T21:56:28Z [testwallet] AddToWallet fe415f91a4c69cd21815855dcd8731406864941703e3b3a851a6865c8af1eeb6  newupdate Inactive (abandoned=0)
+2025-08-21T21:56:28Z [testwallet] Submitting wtx fe415f91a4c69cd21815855dcd8731406864941703e3b3a851a6865c8af1eeb6 to mempool for relay
+2025-08-21T21:56:28Z [testwallet] AddToWallet fe415f91a4c69cd21815855dcd8731406864941703e3b3a851a6865c8af1eeb6   InMempool
+2025-08-21T21:56:32Z CreateNewBlock(): block weight: 3403 txs: 4 fees: 5605 sigops 405
+2025-08-21T21:56:32Z Leaving InitialBlockDownload (latching to false)
+2025-08-21T21:56:32Z UpdateTip: new best=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e height=113 version=0x20000000 log2_work=7.832890 tx=125 date='2025-08-21T21:56:32Z' progress=1.000000 cache=0.3MiB(125txo)
+2025-08-21T21:56:32Z [testwallet] AddToWallet cae4a77414b62a5ab486cacdfba54ef5bfccbc38e7076362f9a4765782689f7c  new Confirmed (block=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e, height=113, index=0)
+2025-08-21T21:56:32Z [testwallet] AddToWallet aead22807d3f95d5d77d8b752970c77f285723f975bb2c1a9393b160aba78535  update Confirmed (block=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e, height=113, index=1)
+2025-08-21T21:56:32Z [testwallet] AddToWallet ea0191e284cd5498aa3cde55302554e662776f2697b60d980bcf8ad4a237f38b  update Confirmed (block=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e, height=113, index=2)
+2025-08-21T21:56:32Z [testwallet] AddToWallet fe415f91a4c69cd21815855dcd8731406864941703e3b3a851a6865c8af1eeb6  update Confirmed (block=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e, height=113, index=3)
+2025-08-21T21:56:33Z [testwallet] AddToWallet ed95ef03989ee17925d5e9ab74dc3ebc0330acd23b600ae615d521e3acb7bbab  update Confirmed (block=0b4034188fe4eecaa57dcd11c5543447e90486806e270bd521d5c58d5f9c0f9e, height=113, index=4)
+2025-08-21T21:56:55Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-21T21:56:55Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-21T21:56:55Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-21T21:56:55Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-21T21:56:55Z [testwallet] Fee non-grouped = 1410, grouped = 1410, using grouped
+2025-08-21T21:56:55Z [testwallet] CommitTransaction:
+CTransaction(hash=ab4e2f433d, ver=2, vin.size=1, vout.size=2, nLockTime=113)
+    CTxIn(COutPoint(fe415f91a4, 0), scriptSig=, nSequence=4294967293)
+    CScriptWitness(3044022074ff791986a9a691860996f0d01c3e714c4f1b01985e615b8f3eb6540f24b60102200c5317e43af1d009742e73f2bfff40c2db12f9f85bdb136ffe296ec9302a41ab01, 025975ba9b44d696878cc1c4d7f9ec9cb64d888345fea0b951214fdd4415763ee6)
+    CTxOut(nValue=1.00000000, scriptPubKey=001460bcf9390c34af559fb16b3fc0)
+    CTxOut(nValue=43.99997180, scriptPubKey=00148f048ede61b179c8bfa3759653)
+2025-08-21T21:56:55Z [testwallet] AddToWallet ab4e2f433d9aa458b002c9fb9c982f6858b92e8f0283184872679606599132a0  newupdate Inactive (abandoned=0)
+2025-08-21T21:56:55Z [testwallet] Submitting wtx ab4e2f433d9aa458b002c9fb9c982f6858b92e8f0283184872679606599132a0 to mempool for relay
+2025-08-21T21:56:55Z [testwallet] AddToWallet ab4e2f433d9aa458b002c9fb9c982f6858b92e8f0283184872679606599132a0   InMempool
+2025-08-21T21:56:57Z CreateNewBlock(): block weight: 1449 txs: 1 fees: 1410 sigops 401
+2025-08-21T21:56:57Z Saw new header hash=7f491404c67c81c491e45430672b169105f7dc37109308f2d17e796233f77b41 height=114
+2025-08-21T21:56:57Z UpdateTip: new best=7f491404c67c81c491e45430672b169105f7dc37109308f2d17e796233f77b41 height=114 version=0x20000000 log2_work=7.845490 tx=127 date='2025-08-21T21:56:57Z' progress=1.000000 cache=0.3MiB(127txo)
+2025-08-21T21:56:57Z [testwallet] AddToWallet a91a73e91840ec73b9e65335292dfe94577e1dd7794ac2f49aa516fd043c4ee8  new Confirmed (block=7f491404c67c81c491e45430672b169105f7dc37109308f2d17e796233f77b41, height=114, index=0)
+2025-08-21T21:56:57Z [testwallet] AddToWallet ab4e2f433d9aa458b002c9fb9c982f6858b92e8f0283184872679606599132a0  update Confirmed (block=7f491404c67c81c491e45430672b169105f7dc37109308f2d17e796233f77b41, height=114, index=1)
+2025-08-21T21:58:58Z CreateNewBlock(): block weight: 888 txs: 0 fees: 0 sigops 400
+2025-08-21T21:58:58Z Saw new header hash=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1 height=115
+2025-08-21T21:58:58Z UpdateTip: new best=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1 height=115 version=0x20000000 log2_work=7.857981 tx=128 date='2025-08-21T21:58:58Z' progress=1.000000 cache=0.3MiB(128txo)
+2025-08-21T21:58:58Z [testwallet] AddToWallet 684a27318e3cea44c3f9abb056da363eb5244f3b6cfdba6f2a33a4400aa69d40  new Confirmed (block=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1, height=115, index=0)
