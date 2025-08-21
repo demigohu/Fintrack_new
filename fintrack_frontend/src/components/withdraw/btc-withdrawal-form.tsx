@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useBtcWithdrawal } from "@/hooks/useData"
+import { bitcoinService } from "@/services/backend"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Loader2, CheckCircle, XCircle, AlertCircle, Calculator } from "lucide-react"
 
 interface BtcWithdrawalFormProps {
   onSuccess?: (blockIndex: string) => void
@@ -16,7 +17,37 @@ interface BtcWithdrawalFormProps {
 export function BtcWithdrawalForm({ onSuccess }: BtcWithdrawalFormProps) {
   const [address, setAddress] = useState("")
   const [amount, setAmount] = useState("")
+  const [feePreview, setFeePreview] = useState<any>(null)
+  const [feeLoading, setFeeLoading] = useState(false)
   const { withdrawalStatus, error, blockIndex, withdrawBtc, resetWithdrawal, isLoading } = useBtcWithdrawal()
+
+  // Calculate fee preview when amount changes
+  useEffect(() => {
+    const calculateFee = async () => {
+      if (!amount || !address || parseFloat(amount) <= 0) {
+        setFeePreview(null)
+        return
+      }
+      
+      setFeeLoading(true)
+      try {
+        const amountInSats = BigInt(parseFloat(amount) * 100_000_000)
+        const result = await bitcoinService.previewBtcFee(address, amountInSats)
+        if (result.success) {
+          setFeePreview(result.data)
+        } else {
+          setFeePreview(null)
+        }
+      } catch (error) {
+        setFeePreview(null)
+      } finally {
+        setFeeLoading(false)
+      }
+    }
+
+    const timeoutId = setTimeout(calculateFee, 500) // Debounce
+    return () => clearTimeout(timeoutId)
+  }, [amount, address])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,9 +73,15 @@ export function BtcWithdrawalForm({ onSuccess }: BtcWithdrawalFormProps) {
         <CardHeader className="text-center">
           <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
           <CardTitle className="text-green-600">Withdrawal Successful!</CardTitle>
-          <CardDescription>
-            Your BTC withdrawal has been processed successfully.
-          </CardDescription>
+                  <CardDescription>
+          Your BTC withdrawal has been processed successfully.
+        </CardDescription>
+        <div className="mt-2 text-sm text-gray-600">
+          <p>Amount withdrawn: {amount} BTC</p>
+          {feePreview && (
+            <p>Fee paid: {(feePreview.estimatedFeeSats / 100_000_000).toFixed(8)} BTC</p>
+          )}
+        </div>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <div className="bg-gray-50 p-3 rounded-lg">
@@ -131,6 +168,40 @@ export function BtcWithdrawalForm({ onSuccess }: BtcWithdrawalFormProps) {
             <p className="text-xs text-gray-500">
               Minimum withdrawal: 0.000001 BTC
             </p>
+            
+            {/* Fee Preview */}
+            {feeLoading && (
+              <div className="flex items-center gap-2 text-xs text-blue-500">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Calculating fees...
+              </div>
+            )}
+            
+            {feePreview && (
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calculator className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-medium text-blue-700">Fee Preview</span>
+                </div>
+                <div className="space-y-1 text-xs text-blue-600">
+                  <div className="flex justify-between">
+                    <span>Amount to withdraw:</span>
+                    <span>{parseFloat(amount).toFixed(8)} BTC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Estimated fee:</span>
+                    <span>{(feePreview.estimatedFeeSats / 100_000_000).toFixed(8)} BTC</span>
+                  </div>
+                  <div className="flex justify-between font-medium border-t pt-1">
+                    <span>You will receive:</span>
+                    <span>{(parseFloat(amount) - (feePreview.estimatedFeeSats / 100_000_000)).toFixed(8)} BTC</span>
+                  </div>
+                  <div className="text-xs text-blue-500 mt-1">
+                    Confirmation time: {feePreview.confirmationTimeEstimate}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <Button 

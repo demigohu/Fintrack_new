@@ -10,17 +10,19 @@
 ## 🌟 Key Features
 
 ### 🔗 Cross-Chain Bridge Operations
-- **BTC Bridge**: Deposit BTC → Convert to ckBTC → Transfer via Chain Fusion
-- **ETH Bridge**: Deposit ETH → Convert to ckETH → Transfer on Ethereum network
 - **ckBTC Integration**: Full Bitcoin support through Internet Computer
 - **ckETH Integration**: Full Ethereum support with smart contract integration
 - **Chain Fusion**: Advanced cross-chain transfer technology for Bitcoin network
+- **Native Asset Transfers**: Direct BTC/ETH transfers on native blockchains
+- **Fee Preview**: Real-time fee estimation for all transfers
 
 ### 💼 Asset Management & Portfolio
 - **Real-time Balance Tracking**: Monitor balances across all chains (BTC, ETH, ckBTC, ckETH, ICP)
-- **Transaction History**: Complete deposit, withdrawal, and transfer logs
+- **Transaction History**: Complete deposit, withdrawal, and transfer logs with native asset support
 - **Portfolio Dashboard**: Visual representation of cross-chain asset distribution
 - **Performance Analytics**: Track portfolio performance across different blockchains
+- **Native Asset Balances**: Real-time BTC and ETH balances on native blockchains
+- **Multi-Chain Transaction View**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
 
 ### 🎯 DeFi Features (Coming Soon)
 - **ckAsset Swapping**: Swap between different ckAssets (ckBTC ↔ ckETH)
@@ -28,6 +30,8 @@
 
 ### 🔐 Security & Authentication
 - **Internet Identity**: Decentralized authentication via Internet Computer
+- **ECDSA Signing**: Secure transaction signing via Internet Computer management canister
+- **Multi-Chain Address Derivation**: Deterministic address generation from Principal
 
 
 ## 🏗️ System Architecture
@@ -40,10 +44,11 @@ fintrack_backend/
 │   └── services/
 │       ├── btc.rs            # Bitcoin bridge service (ckBTC integration)
 │       ├── eth.rs            # Ethereum bridge service (ckETH integration)
-│       ├── transfer.rs       # Cross-chain transfer logic & Chain Fusion
-│       ├── transactions.rs   # Transaction management & history
+│       ├── btctransfer.rs    # Native BTC transfer service (Chain Fusion)
+│       ├── ethtransfer.rs    # Native ETH transfer service (EVM RPC)
+│       ├── transactions.rs   # Transaction management & history with HTTP outcalls
 │       ├── rates.rs          # Crypto rates & price feeds
-│       ├── address.rs        # Address derivation (ECDSA)
+│       ├── address.rs        # Address derivation (ECDSA) for BTC/ETH
 │       ├── utils.rs          # Utility functions
 │       └── evm_rpc_canister.rs # EVM RPC integration for ETH operations
 ```
@@ -55,9 +60,10 @@ fintrack_frontend/
 │   ├── app/                  # Next.js 15 App Router
 │   │   ├── (with-nav)/      # Protected routes with navigation
 │   │   │   ├── portfolio/   # Cross-chain portfolio dashboard
-│   │   │   ├── bridge/      # Bridge operations interface
 │   │   │   ├── deposits/    # Deposit management (BTC/ETH → ckAssets)
 │   │   │   ├── withdraw/    # Withdrawal interface (ckAssets → BTC/ETH)
+│   │   │   ├── transfer/    # Native BTC/ETH transfer interface
+│   │   │   ├── transactions/ # Multi-chain transaction history
 │   │   │   └── swap/        # ckAsset swapping (coming soon)
 │   │   └── (without-nav)/   # Public routes (login, landing)
 │   ├── components/           # Reusable UI components
@@ -67,9 +73,10 @@ fintrack_frontend/
 ```
 
 ### Blockchain Integration
-- **Bitcoin Network**: Native BTC blockchain for deposits and withdrawals Powered by Chain Fusion
-- **Ethereum Network**: Native ETH blockchain for deposits and withdrawals Powered by Chain Fusion
+- **Bitcoin Network**: Native BTC blockchain for deposits, withdrawals, and direct transfers via Chain Fusion
+- **Ethereum Network**: Native ETH blockchain for deposits, withdrawals, and direct transfers via EVM RPC
 - **Internet Computer (ICP)**: ckAssets (ckBTC, ckETH) and platform services
+- **HTTP Outcalls**: Integration with Alchemy (ETH) and BlockCypher (BTC) for transaction history
 
 ## 🚀 Getting Started
 
@@ -108,8 +115,10 @@ dfx start --clean --enable-bitcoin --bitcoin-node 127.0.0.1:18444
 # Deploy canisters
 dfx deploy
 
-# Start frontend development server
-npm run dev
+# Set api key for evm_rpc
+dfx canister call evm_rpc updateApiKeys '(vec { record { 5 : nat64; opt "YOUR_API" } } )'
+
+dfx canister call evm_rpc updateApiKeys '(vec { record { 9 : nat64; opt "YOUR_API" } } )'
 ```
 
 ## 📱 Usage
@@ -120,6 +129,8 @@ npm run dev
 - **Cross-Chain Swapping**: Swap ckETH ↔ ckBTC (DeFi feature)
 - **BTC Withdrawals**: Burn ckBTC → Send BTC on Bitcoin Network
 - **ETH Withdrawals**: Burn ckETH → Send ETH on Ethereum network
+- **Native BTC Transfers**: Direct BTC transfers on Bitcoin network with fee preview
+- **Native ETH Transfers**: Direct ETH transfers on Ethereum network with gas estimation
 
 **Complete Cross-Chain Flow Example:**
 1. **Deposit ETH** → Get ckETH on Internet Computer
@@ -132,6 +143,8 @@ npm run dev
 - **Cross-Chain Overview**: Total portfolio value across all blockchains
 - **Asset Distribution**: Visual representation of BTC, ETH, ckBTC, ckETH holdings
 - **Transaction History**: Complete bridge operation logs with status tracking
+- **Native Asset Balances**: Real-time BTC and ETH balances on native blockchains
+- **Multi-Chain Transaction View**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
 
 ### DeFi Features (Coming Soon)
 - **ckAsset Swapping**: Swap between ckBTC, ckETH
@@ -147,18 +160,42 @@ npm run dev
 - `btc_get_balance(owner?, subaccount?)` - Get ckBTC balance
 - `btc_transfer(request)` - Transfer BTC via Chain Fusion
 - `btc_get_utxos(address)` - Get UTXOs for address
+- `btc_get_native_balance(address)` - Get native BTC balance on Bitcoin network
+- `btc_preview_fee(destination, amount, owner?)` - Preview BTC transfer fees
 
 #### Ethereum Bridge Operations
 - `eth_get_deposit_address(subaccount?)` - Get Helper Contract address
 - `eth_get_balance(owner?, subaccount?)` - Get ckETH balance
 - `eth_estimate_withdrawal_fee()` - Estimate withdrawal fees
+- `eth_get_native_balance(address)` - Get native ETH balance on Ethereum network
+- `eth_transfer(destination, amount)` - Transfer ETH on Ethereum network
+- `eth_preview_fee(destination, amount, gas_limit?)` - Preview ETH transfer fees
 
 #### Portfolio Management
-- `get_user_balances(user)` - Get user balances across all chains
-- `get_transaction_history(user, limit?, offset?)` - Get bridge transaction history
+- `get_user_balances(user)` - Get user balances across all chains including native assets
+- `get_transaction_history(user, limit?, offset?)` - Get bridge transaction history with native transactions
 - `get_crypto_usd_rate(crypto_id)` - Get current crypto rates
+- `btc_derive_address(owner?)` - Derive native BTC address from Principal
+- `eth_derive_address(owner?)` - Derive native ETH address from Principal
 
 
+
+## 🆕 Recent Updates & Features
+
+### ✅ Implemented Features
+- **Native Asset Transfers**: Direct BTC and ETH transfers on native blockchains
+- **Fee Preview System**: Real-time fee estimation for BTC and ETH transfers
+- **Multi-Chain Transaction History**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
+- **HTTP Outcall Integration**: Alchemy API for ETH transaction history, BlockCypher for BTC
+- **ECDSA Address Derivation**: Deterministic BTC/ETH address generation from Internet Computer Principal
+- **Real-time Balance Updates**: Native BTC and ETH balances integrated into portfolio dashboard
+
+### 🔧 Technical Improvements
+- **Stable Storage**: Using `ic-stable-structures` for persistent transaction history
+- **EVM RPC Integration**: Direct Ethereum network interaction via EVM RPC canister
+- **Chain Fusion Technology**: Advanced Bitcoin transfer protocol with UTXO management
+- **Error Handling**: Comprehensive error handling and user feedback
+- **Performance Optimization**: Efficient data fetching and caching strategies
 
 ## 📄 License
 
@@ -171,6 +208,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [Radix UI](https://www.radix-ui.com/) - UI components
+- [Alchemy](https://www.alchemy.com/) - Ethereum API for transaction history
+- [BlockCypher](https://www.blockcypher.com/) - Bitcoin API for transaction data
 
 ---
 

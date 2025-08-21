@@ -109,6 +109,20 @@ export const transactionService = {
 }
 
 export const bitcoinService = {
+  // Derive BTC native address via backend
+  deriveBtcAddress: async (owner?: string): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const arg: [] | [Principal] = owner
+        ? [Principal.fromText(owner)] as [Principal]
+        : []
+      const res = await a.btc_derive_address(arg)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to derive BTC address" }
+    }
+  },
   getBtcBalance: async (): Promise<Result<bigint>> => {
     try {
       const a = await ensureActor()
@@ -148,6 +162,95 @@ export const bitcoinService = {
       return { success: false, error: res.Err }
     } catch (e: any) {
       return { success: false, error: e?.message || "Failed to refresh BTC balance" }
+    }
+  },
+
+  // Native BTC balance (satoshis) for a given address
+  getNativeBtcBalance: async (address: string): Promise<Result<bigint>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.btc_get_native_balance(address)
+      if ("Ok" in res) return { success: true, data: BigInt(res.Ok) }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get native BTC balance" }
+    }
+  },
+
+  // UTXOs for a given address (debug/helper)
+  getUtxosForAddress: async (address: string): Promise<Result<any[]>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.btc_get_utxos_for_address(address)
+      if ("Ok" in res) return { success: true, data: res.Ok as any[] }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get UTXOs" }
+    }
+  },
+
+  // Native BTC transfer (Regtest)
+  transferNativeBtc: async (
+    destinationAddress: string,
+    amountInSats: bigint,
+    ownerPrincipalText?: string,
+  ): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const ownerOpt = ownerPrincipalText ? [Principal.fromText(ownerPrincipalText)] : []
+      const req = {
+        destination_address: destinationAddress,
+        amount_in_satoshi: Number(amountInSats), // candid nat64 → JS number fits up to 2^53-1
+        owner: ownerOpt,
+      } as any
+      const res = await a.btc_transfer(req)
+      if ("Ok" in res) {
+        const out = res.Ok
+        if (out.success && out.transaction_id?.length) return { success: true, data: out.transaction_id[0] }
+        return { success: false, error: out.error?.[0] ?? "BTC transfer failed" }
+      }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to transfer BTC" }
+    }
+  },
+
+  // Preview BTC transfer fee
+  previewBtcFee: async (
+    destinationAddress: string,
+    amountInSats: bigint,
+    ownerPrincipalText?: string
+  ): Promise<Result<{
+    estimatedFeeSats: number
+    feeRateSatsPerVb: number
+    estimatedTxSizeVb: number
+    confirmationTimeEstimate: string
+    totalAmountWithFee: number
+    changeAmount: number
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const ownerOpt: [] | [Principal] = ownerPrincipalText
+        ? [Principal.fromText(ownerPrincipalText)] as [Principal]
+        : []
+      const res = await a.btc_preview_fee(destinationAddress, amountInSats, ownerOpt)
+      if ("Ok" in res) {
+        const fee = res.Ok
+        return {
+          success: true,
+          data: {
+            estimatedFeeSats: Number(fee.estimated_fee_sats),
+            feeRateSatsPerVb: Number(fee.fee_rate_sats_per_vb),
+            estimatedTxSizeVb: Number(fee.estimated_tx_size_vb),
+            confirmationTimeEstimate: fee.confirmation_time_estimate,
+            totalAmountWithFee: Number(fee.total_amount_with_fee),
+            changeAmount: Number(fee.change_amount)
+          }
+        }
+      }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to preview BTC fee" }
     }
   },
   
@@ -274,7 +377,8 @@ export const bitcoinService = {
   getBtcWithdrawalFee: async (): Promise<Result<bigint>> => {
     try {
       const a = await ensureActor()
-      const res = await a.btc_get_current_fee_percentiles()
+      // Updated endpoint name in backend: btc_get_fee_percentiles
+      const res = await a.btc_get_fee_percentiles()
       if ("Ok" in res) {
         // Use 50th percentile (median) fee for withdrawal
         const fees = res.Ok
@@ -294,6 +398,21 @@ export const bitcoinService = {
 }
 
 export const ethereumService = {
+  // Derive ETH native address via backend
+  deriveEthAddress: async (owner?: string): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const arg: [] | [Principal] = owner
+        ? [Principal.fromText(owner)] as [Principal]
+        : []
+      const res = await a.evm_derive_address(arg)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to derive ETH address" }
+    }
+  },
+  // ckETH (ledger) balance via backend endpoint
   getEthBalance: async (): Promise<Result<bigint>> => {
     try {
       const a = await ensureActor()
@@ -305,6 +424,113 @@ export const ethereumService = {
       return { success: false, error: res.Err }
     } catch (e: any) {
       return { success: false, error: e?.message || "Failed to get ETH balance" }
+    }
+  },
+
+  // Native ETH balance via backend endpoint (EVM RPC), address optional
+  getNativeEthBalance: async (address?: string): Promise<Result<bigint>> => {
+    try {
+      const a = await ensureActor()
+      const arg: [] | [string] = address
+        ? [address] as [string]
+        : []
+      const res = await a.eth_get_native_balance(arg)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get native ETH balance" }
+    }
+  },
+
+  // Native ETH transfer (EIP-1559)
+  transferNativeEth: async (
+    destinationAddress: string,
+    amountWei: bigint,
+    options?: {
+      ownerPrincipalText?: string
+      gasLimit?: bigint
+      maxFeePerGas?: bigint
+      maxPriorityFeePerGas?: bigint
+    }
+  ): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        destination_address: destinationAddress,
+        amount: amountWei,
+        owner: options?.ownerPrincipalText ? [Principal.fromText(options.ownerPrincipalText)] : [],
+        gas_limit: options?.gasLimit !== undefined ? [options.gasLimit] : [],
+        max_fee_per_gas: options?.maxFeePerGas !== undefined ? [options.maxFeePerGas] : [],
+        max_priority_fee_per_gas: options?.maxPriorityFeePerGas !== undefined ? [options.maxPriorityFeePerGas] : [],
+      } as any
+      const res = await a.eth_transfer(req)
+      if ("Ok" in res) {
+        const out = res.Ok
+        if (out.success && out.transaction_hash?.length) return { success: true, data: out.transaction_hash[0] }
+        return { success: false, error: out.error?.[0] ?? "ETH transfer failed" }
+      }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to transfer ETH" }
+    }
+  },
+
+  // Nonce (transaction count)
+  getTransactionCount: async (ownerPrincipalText?: string, block?: "latest"|"finalized"|"earliest"|"pending"): Promise<Result<number>> => {
+    try {
+      const a = await ensureActor()
+      const ownerOpt: [] | [Principal] = ownerPrincipalText
+        ? [Principal.fromText(ownerPrincipalText)] as [Principal]
+        : []
+      const blockOpt: [] | [string] = block
+        ? [block] as [string]
+        : []
+      const res = await a.eth_get_transaction_count(ownerOpt, blockOpt)
+      if ("Ok" in res) return { success: true, data: Number(res.Ok) }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get transaction count" }
+    }
+  },
+
+  // Preview ETH transfer fee
+  previewEthFee: async (
+    destinationAddress: string,
+    amountWei: bigint,
+    gasLimit?: bigint
+  ): Promise<Result<{
+    estimatedGasLimit: bigint
+    baseFeePerGas: bigint
+    maxPriorityFeePerGas: bigint
+    maxFeePerGas: bigint
+    totalFeeWei: bigint
+    totalFeeEth: number
+    gasPrice: bigint
+    transactionSpeed: string
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const gasLimitOpt: [] | [bigint] = gasLimit !== undefined ? [gasLimit] : []
+      const res = await a.eth_preview_fee(destinationAddress, amountWei, gasLimitOpt)
+      if ("Ok" in res) {
+        const fee = res.Ok
+        return {
+          success: true,
+          data: {
+            estimatedGasLimit: fee.estimated_gas_limit,
+            baseFeePerGas: fee.base_fee_per_gas,
+            maxPriorityFeePerGas: fee.max_priority_fee_per_gas,
+            maxFeePerGas: fee.max_fee_per_gas,
+            totalFeeWei: fee.total_fee_wei,
+            totalFeeEth: Number(fee.total_fee_eth),
+            gasPrice: fee.gas_price,
+            transactionSpeed: fee.transaction_speed
+          }
+        }
+      }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to preview ETH fee" }
     }
   },
   

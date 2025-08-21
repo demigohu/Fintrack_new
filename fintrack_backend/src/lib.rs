@@ -2,6 +2,8 @@ mod services;
 
 use candid::{Nat, Principal};
 use ic_cdk::api::management_canister::http_request::{TransformArgs, HttpResponse};
+use crate::services::evm_rpc_canister::BlockTag;
+use crate::services::ethtransfer::InitArg;
 
 // -------------------------
 // BTC service endpoints
@@ -48,10 +50,13 @@ async fn eth_refresh_balance(subaccount: Option<Vec<u8>>) -> Result<(), String> 
     services::eth::refresh_balance(subaccount).await
 }
 
+// ckETH balance (ledger)
 #[ic_cdk::update]
 async fn eth_get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) -> Result<Nat, String> {
     services::eth::get_balance(owner, subaccount).await
 }
+
+
 
 // eth_withdraw_with_approval removed: user calls minter directly after approve
 
@@ -93,6 +98,26 @@ async fn evm_derive_address(owner: Option<Principal>) -> Result<String, String> 
     services::address::get_eth_address(owner).await
 }
 
+
+
+#[ic_cdk::update]
+async fn eth_get_native_balance(address: Option<String>) -> Result<Nat, String> {
+    services::ethtransfer::get_native_eth_balance(address).await
+}
+
+#[ic_cdk::query]
+async fn eth_get_transaction_count(owner: Option<Principal>, block: Option<String>) -> Result<u64, String> {
+    let block_tag = match block.as_deref() {
+        Some("latest") => Some(BlockTag::Latest),
+        Some("finalized") => Some(BlockTag::Finalized),
+        Some("earliest") => Some(BlockTag::Earliest),
+        Some("pending") => Some(BlockTag::Pending),
+        Some(_) => None,
+        None => None,
+    };
+    Ok(services::ethtransfer::get_transaction_count(owner, block_tag).await)
+}
+
 #[ic_cdk::update]
 async fn btc_derive_address(owner: Option<Principal>) -> Result<String, String> {
     services::address::get_btc_address(owner).await
@@ -103,18 +128,50 @@ async fn btc_derive_address(owner: Option<Principal>) -> Result<String, String> 
 // -------------------------
 
 #[ic_cdk::update]
-async fn btc_transfer(request: services::transfer::BtcTransferRequest) -> Result<services::transfer::BtcTransferResponse, String> {
-    services::transfer::transfer_btc(request).await
+async fn btc_transfer(request: services::btctransfer::BtcTransferRequest) -> Result<services::btctransfer::BtcTransferResponse, String> {
+    services::btctransfer::transfer_btc(request).await
+}
+
+#[ic_cdk::update]
+async fn eth_transfer(request: services::ethtransfer::EthTransferRequest) -> Result<services::ethtransfer::EthTransferResponse, String> {
+    services::ethtransfer::transfer_eth(request).await
 }
 
 #[ic_cdk::update]
 async fn btc_get_utxos_for_address(address: String) -> Result<Vec<ic_cdk::bitcoin_canister::Utxo>, String> {
-    services::transfer::get_utxos_for_address(address).await
+    services::btctransfer::get_utxos_for_address(address).await
 }
 
 #[ic_cdk::update]
 async fn btc_get_fee_percentiles() -> Result<Vec<ic_cdk::bitcoin_canister::MillisatoshiPerByte>, String> {
-    services::transfer::get_current_fee_percentiles().await
+    services::btctransfer::get_current_fee_percentiles().await
+}
+
+#[ic_cdk::update]
+async fn btc_get_native_balance(address: String) -> Result<u64, String> {
+    services::btctransfer::get_native_btc_balance(address).await
+}
+
+// -------------------------
+// Fee Preview endpoints
+// -------------------------
+
+#[ic_cdk::update]
+async fn eth_preview_fee(
+    destination_address: String,
+    amount: Nat,
+    gas_limit: Option<u128>
+) -> Result<services::ethtransfer::EthFeePreview, String> {
+    services::ethtransfer::preview_eth_fee(destination_address, amount, gas_limit).await
+}
+
+#[ic_cdk::update]
+async fn btc_preview_fee(
+    destination_address: String,
+    amount_in_satoshi: u64,
+    owner: Option<Principal>
+) -> Result<services::btctransfer::BtcFeePreview, String> {
+    services::btctransfer::preview_btc_fee(destination_address, amount_in_satoshi, owner).await
 }
 
 // -------------------------
@@ -130,7 +187,7 @@ async fn get_transaction_history(
     services::transactions::get_user_transaction_history(user, limit, offset).await
 }
 
-#[ic_cdk::query]
+#[ic_cdk::update]
 async fn get_user_balances(user: Principal) -> Result<services::transactions::UserBalances, String> {
     services::transactions::get_user_balances(user).await
 }

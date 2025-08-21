@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { balanceService, bitcoinService, ethereumService, currencyService } from "@/services/backend"
+import { balanceService, currencyService } from "@/services/backend"
 
 type PortfolioStats = {
   title: string
@@ -27,20 +27,20 @@ export function PortfolioOverview() {
     setError(null)
     
     try {
-      // Get balances from different services
-      const btcRes = await bitcoinService.getBtcBalance()
-      const ethRes = await ethereumService.getEthBalance()
+      // Ambil ringkasan saldo gabungan (ck + native)
       const portfolioRes = await balanceService.getPortfolioSummary()
-      
-      if (!btcRes.success || !ethRes.success) {
-        setError("Failed to load balance data")
+      if (!portfolioRes.success) {
+        setError("Failed to load portfolio summary")
         return
       }
-      
-      const btcSats = typeof btcRes.data === "bigint" ? Number(btcRes.data) : Number(btcRes.data ?? 0)
-      const ethWei = typeof ethRes.data === "bigint" ? Number(ethRes.data) : Number(ethRes.data ?? 0)
-      const btcBalance = btcSats / 100000000 // Convert satoshis to BTC
-      const ethBalance = ethWei / 1000000000000000000 // Convert wei to ETH
+      const sum = portfolioRes.data as any
+      const ckbtcSats = Number(sum.ckbtc_balance ?? 0)
+      const ckethWei = Number(sum.cketh_balance ?? 0)
+      const btcNativeSats = Number(sum.btc_native_balance ?? 0)
+      const ethNativeWei = Number(sum.eth_native_balance ?? 0)
+
+      const btcBalance = (ckbtcSats + btcNativeSats) / 1e8
+      const ethBalance = (ckethWei + ethNativeWei) / 1e18
       
       // Get live USD rates from backend
       const ratesRes = await currencyService.getCurrencyRates()
@@ -93,8 +93,8 @@ export function PortfolioOverview() {
         {
           title: "Available Balance",
           value: `${btcBalance.toFixed(4)} BTC + ${ethBalance.toFixed(4)} ETH`,
-          change: "Crypto Assets",
-          changePercent: "for trading",
+          change: `ckBTC: ${(ckbtcSats/1e8).toFixed(4)} • BTC: ${(btcNativeSats/1e8).toFixed(4)}  |  ckETH: ${(ckethWei/1e18).toFixed(4)} • ETH: ${(ethNativeWei/1e18).toFixed(4)}`,
+          changePercent: "Breakdown",
           isPositive: null,
           icon: DollarSign,
         },

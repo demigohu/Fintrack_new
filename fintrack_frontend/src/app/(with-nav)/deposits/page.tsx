@@ -48,7 +48,8 @@ const cryptoAssets = [
     symbol: "BTC",
     name: "Bitcoin",
     network: "Bitcoin",
-    address: "",
+    ckAddress: "",
+    nativeAddress: "",
     minDeposit: "0.0001",
     confirmations: 3,
   },
@@ -56,7 +57,8 @@ const cryptoAssets = [
     symbol: "ETH",
     name: "Ethereum",
     network: "Ethereum (ERC-20)",
-    address: "",
+    ckAddress: "",
+    nativeAddress: "",
     minDeposit: "0.01",
     confirmations: 12,
   },
@@ -97,22 +99,40 @@ export default function DepositPage() {
       setLoading(true)
       setError(null)
       try {
-        // Use the correct service functions
-        const btcResult = await bitcoinService.getBtcDepositAddress()
-        const ethResult = await ethereumService.getEthDepositAddress()
+        // ckAsset deposit addresses
+        const btcCk = await bitcoinService.getBtcDepositAddress()
+        const ethCk = await ethereumService.getEthDepositAddress()
 
-        if (btcResult.success) {
-          cryptoAssets[0].address = btcResult.data
+        if (btcCk.success) {
+          cryptoAssets[0].ckAddress = btcCk.data
         } else {
-          console.error("BTC address error:", btcResult.error)
-          cryptoAssets[0].address = "Address unavailable"
+          console.error("BTC ck address error:", btcCk.error)
+          cryptoAssets[0].ckAddress = "Address unavailable"
         }
 
-        if (ethResult.success) {
-          cryptoAssets[1].address = ethResult.data
+        if (ethCk.success) {
+          cryptoAssets[1].ckAddress = ethCk.data
         } else {
-          console.error("ETH address error:", ethResult.error)
-          cryptoAssets[1].address = "Address unavailable"
+          console.error("ETH ck address error:", ethCk.error)
+          cryptoAssets[1].ckAddress = "Address unavailable"
+        }
+
+        // native addresses derived via backend
+        const btcNat = await bitcoinService.deriveBtcAddress()
+        const ethNat = await ethereumService.deriveEthAddress()
+
+        if (btcNat.success) {
+          cryptoAssets[0].nativeAddress = btcNat.data
+        } else {
+          console.error("BTC native address error:", btcNat.error)
+          cryptoAssets[0].nativeAddress = "Address unavailable"
+        }
+
+        if (ethNat.success) {
+          cryptoAssets[1].nativeAddress = ethNat.data
+        } else {
+          console.error("ETH native address error:", ethNat.error)
+          cryptoAssets[1].nativeAddress = "Address unavailable"
         }
 
         // Force refresh selected asset object
@@ -250,22 +270,47 @@ export default function DepositPage() {
               </div>
 
               {/* Address */}
-              <div className="space-y-3">
-                <Label className="text-slate-300">Wallet Address</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={selectedAsset.address || (loading ? "Loading..." : error ? "Unavailable" : "")}
-                    readOnly
-                    placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
-                    className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
-                  />
-                  <Button
-                    onClick={() => selectedAsset.address && copyToClipboard(selectedAsset.address)}
-                    className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
-                    disabled={!selectedAsset.address}
-                  >
-                    {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+              <div className="space-y-5">
+                {/* ckAsset deposit (minter) */}
+                <div className="space-y-2">
+                  <Label className="text-slate-300">ck{selectedAsset.symbol} Deposit Address (Minter)</Label>
+                  <div className="text-xs text-slate-400">Network: {selectedAsset.symbol === "BTC" ? "Internet Computer / ckBTC" : "Internet Computer / ckETH"}</div>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={(selectedAsset as any).ckAddress || (loading ? "Loading..." : error ? "Unavailable" : "")}
+                      readOnly
+                      placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
+                      className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
+                    />
+                    <Button
+                      onClick={() => (selectedAsset as any).ckAddress && copyToClipboard((selectedAsset as any).ckAddress)}
+                      className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
+                      disabled={!(selectedAsset as any).ckAddress}
+                    >
+                      {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Native deposit */}
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Native {selectedAsset.symbol} Deposit Address</Label>
+                  <div className="text-xs text-slate-400">Network: {selectedAsset.symbol === "BTC" ? "Bitcoin (native)" : "Ethereum (native)"}</div>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={(selectedAsset as any).nativeAddress || (loading ? "Loading..." : error ? "Unavailable" : "")}
+                      readOnly
+                      placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
+                      className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
+                    />
+                    <Button
+                      onClick={() => (selectedAsset as any).nativeAddress && copyToClipboard((selectedAsset as any).nativeAddress)}
+                      className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
+                      disabled={!(selectedAsset as any).nativeAddress}
+                    >
+                      {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 {error && (
                   <p className="text-red-400 text-sm">
@@ -286,9 +331,10 @@ export default function DepositPage() {
                   <AlertTriangle className="h-5 w-5 text-yellow-400 mt-0.5" />
                   <div>
                     <div className="text-yellow-400 font-semibold text-sm">Important</div>
-                    <div className="text-yellow-300 text-sm">
-                      Only send {selectedAsset.name} to this address on the {selectedAsset.network} network. Sending
-                      other assets or using wrong network will result in permanent loss.
+                    <div className="text-yellow-300 text-sm space-y-1">
+                      <div>• Send to the correct address type: ckAsset vs Native.</div>
+                      <div>• ckAsset (minter) address is for minting ck{selectedAsset.symbol} on Internet Computer.</div>
+                      <div>• Native address is for on-chain {selectedAsset.symbol} on its original network.</div>
                     </div>
                   </div>
                 </div>

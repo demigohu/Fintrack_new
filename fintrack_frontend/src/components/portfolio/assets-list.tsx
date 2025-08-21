@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Coins, TrendingUp, TrendingDown, MoreHorizontal, RefreshCw } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { bitcoinService, ethereumService, currencyService } from "@/services/backend"
+import { balanceService, currencyService } from "@/services/backend"
 
 type Asset = {
   symbol: string
@@ -30,20 +30,24 @@ export function AssetsList() {
     setError(null)
     
     try {
-      // Get BTC and ETH balances
-      const btcRes = await bitcoinService.getBtcBalance()
-      const ethRes = await ethereumService.getEthBalance()
-      
-      if (!btcRes.success || !ethRes.success) {
-        setError("Failed to load balance data")
+      // Get combined portfolio summary (ck assets + native)
+      const summaryRes = await balanceService.getPortfolioSummary()
+      if (!summaryRes.success) {
+        setError("Failed to load portfolio summary")
         return
       }
-      
-      const btcSats = typeof btcRes.data === "bigint" ? Number(btcRes.data) : Number(btcRes.data ?? 0)
-      const ethWei = typeof ethRes.data === "bigint" ? Number(ethRes.data) : Number(ethRes.data ?? 0)
-      const btcBalance = btcSats / 100000000 // Convert satoshis to BTC
-      const ethBalance = ethWei / 1000000000000000000 // Convert wei to ETH
-      
+      const sum = summaryRes.data as any
+
+      const ckbtcSats = Number(sum.ckbtc_balance ?? 0)
+      const ckethWei = Number(sum.cketh_balance ?? 0)
+      const btcNativeSats = Number(sum.btc_native_balance ?? 0)
+      const ethNativeWei = Number(sum.eth_native_balance ?? 0)
+
+      const ckbtcAmount = ckbtcSats / 1e8
+      const btcAmount = btcNativeSats / 1e8
+      const ckethAmount = ckethWei / 1e18
+      const ethAmount = ethNativeWei / 1e18
+
       // Live USD rates from backend
       const ratesRes = await currencyService.getCurrencyRates()
       if (!ratesRes.success) {
@@ -53,8 +57,10 @@ export function AssetsList() {
       const btcPrice = ratesRes.data.btc_to_usd
       const ethPrice = ratesRes.data.eth_to_usd
       
-      const btcValue = btcBalance * btcPrice
-      const ethValue = ethBalance * ethPrice
+      const btcValue = btcAmount * btcPrice
+      const ethValue = ethAmount * ethPrice
+      const ckbtcValue = ckbtcAmount * btcPrice
+      const ckethValue = ckethAmount * ethPrice
       
       // Mock 24h changes (in real app, these would come from price API)
       const btcChange = 2.45
@@ -62,11 +68,11 @@ export function AssetsList() {
       
       const newAssets: Asset[] = []
       
-      if (btcBalance > 0) {
+      if (btcAmount > 0) {
         newAssets.push({
           symbol: "BTC",
           name: "Bitcoin",
-          amount: btcBalance.toFixed(4),
+          amount: btcAmount.toFixed(4),
           value: `$${btcValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           price: `$${btcPrice.toLocaleString()}`,
           change: `${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%`,
@@ -75,15 +81,41 @@ export function AssetsList() {
         })
       }
       
-      if (ethBalance > 0) {
+      if (ckbtcAmount > 0) {
+        newAssets.push({
+          symbol: "ckBTC",
+          name: "ckBitcoin",
+          amount: ckbtcAmount.toFixed(4),
+          value: `$${ckbtcValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          price: `$${btcPrice.toLocaleString()}`,
+          change: `${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(2)}%`,
+          changeValue: `${btcChange >= 0 ? '+' : ''}$${(ckbtcValue * btcChange / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          isPositive: btcChange >= 0,
+        })
+      }
+
+      if (ethAmount > 0) {
         newAssets.push({
           symbol: "ETH",
           name: "Ethereum",
-          amount: ethBalance.toFixed(4),
+          amount: ethAmount.toFixed(4),
           value: `$${ethValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           price: `$${ethPrice.toLocaleString()}`,
           change: `${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}%`,
           changeValue: `${ethChange >= 0 ? '+' : ''}$${(ethValue * ethChange / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          isPositive: ethChange >= 0,
+        })
+      }
+
+      if (ckethAmount > 0) {
+        newAssets.push({
+          symbol: "ckETH",
+          name: "ckEthereum",
+          amount: ckethAmount.toFixed(4),
+          value: `$${ckethValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          price: `$${ethPrice.toLocaleString()}`,
+          change: `${ethChange >= 0 ? '+' : ''}${ethChange.toFixed(2)}%`,
+          changeValue: `${ethChange >= 0 ? '+' : ''}$${(ckethValue * ethChange / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           isPositive: ethChange >= 0,
         })
       }

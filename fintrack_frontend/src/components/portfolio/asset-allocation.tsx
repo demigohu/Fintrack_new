@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { useAuth } from "@/contexts/AuthContext"
-import { bitcoinService, ethereumService, currencyService } from "@/services/backend"
+import { balanceService, currencyService } from "@/services/backend"
 import { RefreshCw } from "lucide-react"
 
 type AssetAllocation = {
@@ -28,19 +28,20 @@ export function AssetAllocation() {
     setError(null)
     
     try {
-      // Get BTC and ETH balances
-      const btcRes = await bitcoinService.getBtcBalance()
-      const ethRes = await ethereumService.getEthBalance()
-      
-      if (!btcRes.success || !ethRes.success) {
-        setError("Failed to load balance data")
+      // Gunakan ringkasan saldo gabungan (ck + native)
+      const summaryRes = await balanceService.getPortfolioSummary()
+      if (!summaryRes.success) {
+        setError("Failed to load portfolio summary")
         return
       }
-      
-      const btcSats = typeof btcRes.data === "bigint" ? Number(btcRes.data) : Number(btcRes.data ?? 0)
-      const ethWei = typeof ethRes.data === "bigint" ? Number(ethRes.data) : Number(ethRes.data ?? 0)
-      const btcBalance = btcSats / 100000000 // Convert satoshis to BTC
-      const ethBalance = ethWei / 1000000000000000000 // Convert wei to ETH
+      const sum = summaryRes.data as any
+      const ckbtcSats = Number(sum.ckbtc_balance ?? 0)
+      const ckethWei = Number(sum.cketh_balance ?? 0)
+      const btcNativeSats = Number(sum.btc_native_balance ?? 0)
+      const ethNativeWei = Number(sum.eth_native_balance ?? 0)
+
+      const btcBalance = (ckbtcSats + btcNativeSats) / 1e8
+      const ethBalance = (ckethWei + ethNativeWei) / 1e18
       
       // Live USD rates from backend
       const ratesRes = await currencyService.getCurrencyRates()
@@ -59,20 +60,8 @@ export function AssetAllocation() {
       
       if (currentTotalValue > 0) {
         const newAllocations: AssetAllocation[] = [
-          {
-            symbol: "BTC",
-            name: "Bitcoin",
-            percentage: (btcValue / currentTotalValue) * 100,
-            value: btcValue,
-            color: "#f97316"
-          },
-          {
-            symbol: "ETH",
-            name: "Ethereum",
-            percentage: (ethValue / currentTotalValue) * 100,
-            value: ethValue,
-            color: "#3b82f6"
-          }
+          { symbol: "BTC", name: "Bitcoin", percentage: (btcValue / currentTotalValue) * 100, value: btcValue, color: "#f97316" },
+          { symbol: "ETH", name: "Ethereum", percentage: (ethValue / currentTotalValue) * 100, value: ethValue, color: "#3b82f6" },
         ]
         
         // Only show assets with balance > 0

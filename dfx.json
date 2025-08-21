@@ -3,7 +3,11 @@
     "fintrack_backend": {
       "candid": "fintrack_backend/fintrack_backend.did",
       "package": "fintrack_backend",
-      "type": "rust"
+      "type": "rust",
+      "http": {
+        "enabled": true,
+        "domains": ["127.0.0.1:18443"]
+      }
     },
     "fintrack_frontend": {
       "frontend": {
