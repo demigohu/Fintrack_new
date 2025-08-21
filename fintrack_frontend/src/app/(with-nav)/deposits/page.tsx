@@ -443,7 +443,7 @@ export default function DepositPage() {
         )}
 
         {/* ETH Deposit Section - Only show for ETH */}
-        {selectedAsset.symbol === "ETH" && selectedAsset.address && selectedAsset.address !== "Address unavailable" && (
+        {selectedAsset.symbol === "ETH" && selectedAsset.ckAddress && selectedAsset.ckAddress !== "Address unavailable" && (
           <div className="mt-6">
             <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
               <div className="flex items-center justify-between mb-4">
@@ -451,7 +451,7 @@ export default function DepositPage() {
                 <Button
                   onClick={() => {
                     if (customAmount && customAmount !== "" && user) {
-                      depositEth(customAmount, selectedAsset.address)
+                      depositEth(customAmount, selectedAsset.ckAddress)
                     }
                   }}
                   disabled={depositing || !customAmount || customAmount === "" || !user}
