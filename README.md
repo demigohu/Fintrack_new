@@ -177,7 +177,7 @@ dfx canister call evm_rpc updateApiKeys '(vec { record { 9 : nat64; opt "YOUR_AP
 - **Transaction History**: Complete bridge operation logs with status tracking
 - **Native Asset Balances**: Real-time BTC and ETH balances on native blockchains
 - **Multi-Chain Transaction View**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
-- **Personal Finance Overview**: Budget tracking, expense categories, and financial goals
+- **Personal Finance Overview**: Budget tracking and financial goals
 - **Goal Progress Tracking**: Visual progress bars for savings and investment targets
 - **Expense Analytics**: Spending patterns and insights across all financial activities
 
