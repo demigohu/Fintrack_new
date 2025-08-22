@@ -1598,3 +1598,20 @@ CTransaction(hash=ab4e2f433d, ver=2, vin.size=1, vout.size=2, nLockTime=113)
 2025-08-21T21:58:58Z Saw new header hash=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1 height=115
 2025-08-21T21:58:58Z UpdateTip: new best=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1 height=115 version=0x20000000 log2_work=7.857981 tx=128 date='2025-08-21T21:58:58Z' progress=1.000000 cache=0.3MiB(128txo)
 2025-08-21T21:58:58Z [testwallet] AddToWallet 684a27318e3cea44c3f9abb056da363eb5244f3b6cfdba6f2a33a4400aa69d40  new Confirmed (block=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1, height=115, index=0)
+2025-08-21T22:30:40Z Potential stale tip detected, will try using extra outbound peer (last tip update: 1902 seconds ago)
+2025-08-21T22:30:58Z tor: Thread interrupt
+2025-08-21T22:30:58Z torcontrol thread exit
+2025-08-21T22:30:58Z addcon thread exit
+2025-08-21T22:30:58Z opencon thread exit
+2025-08-21T22:30:58Z Shutdown: In progress...
+2025-08-21T22:30:58Z msghand thread exit
+2025-08-21T22:30:58Z net thread exit
+2025-08-21T22:30:58Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-08-21T22:30:58Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-08-21T22:30:58Z scheduler thread exit
+2025-08-21T22:30:58Z Writing 0 mempool transactions to file...
+2025-08-21T22:30:58Z Writing 0 unbroadcast transactions to file.
+2025-08-21T22:30:58Z Dumped mempool: 0.000s to copy, 0.003s to dump, 27 bytes dumped to file
+2025-08-21T22:30:58Z Flushed fee estimates to fee_estimates.dat.
+2025-08-21T22:30:58Z [testwallet] Releasing wallet testwallet..
+2025-08-21T22:30:58Z Shutdown: done
