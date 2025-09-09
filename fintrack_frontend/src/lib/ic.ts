@@ -1,6 +1,7 @@
 "use client"
 
 import { HttpAgent, type Identity } from "@dfinity/agent"
+import type { ActorSubclass } from "@dfinity/agent"
 
 // Import generated declarations from the workspace root.
 // Note: We enable externalDir in next.config.ts to allow this import.
@@ -25,9 +26,18 @@ export const getBackendActor = async (identity?: Identity) => {
   const canisterId = getBackendCanisterId()
   if (!canisterId) throw new Error("FINTRACK_BACKEND canister id is not set")
 
+  const agent = await getAgent(identity)
+  return createBackendActor(canisterId, { agent })
+}
+
+// Helper to wrap candid Opt parameters
+export const none = <T,>(): Optional<T> => []
+export const some = <T,>(val: T): Optional<T> => [val]
+
+// Create a shared agent (same host and root-key behavior as backend actor)
+export const getAgent = async (identity?: Identity): Promise<HttpAgent> => {
   const host = getIcHost()
   const agent = new HttpAgent({ host, identity })
-
   if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
     try {
       await agent.fetchRootKey()
@@ -36,12 +46,18 @@ export const getBackendActor = async (identity?: Identity) => {
       console.warn("Unable to fetch root key. Is local replica running at", host, e)
     }
   }
-
-  return createBackendActor(canisterId, { agent })
+  return agent
 }
 
-// Helper to wrap candid Opt parameters
-export const none = <T,>(): Optional<T> => []
-export const some = <T,>(val: T): Optional<T> => [val]
+// Helper to create arbitrary canister actors (e.g., ckBTC/ckETH ledgers/minters)
+export const createExternalActor = async <T = unknown>(
+  canisterId: string,
+  idlFactory: any,
+  identity?: Identity,
+): Promise<ActorSubclass<T>> => {
+  const agent = await getAgent(identity)
+  const { Actor } = await import("@dfinity/agent")
+  return Actor.createActor(idlFactory, { agent, canisterId }) as unknown as ActorSubclass<T>
+}
 
 

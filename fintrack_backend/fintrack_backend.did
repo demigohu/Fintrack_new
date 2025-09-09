@@ -1,3 +1,6 @@
+type Account = record { owner : principal; subaccount : opt blob };
+type AssetKind = variant { CkBtc; CkEth };
+type AssetKind_1 = variant { CkBtc; CkEth };
 type BitcoinTransaction = record {
   fee : nat64;
   confirmations : nat32;
@@ -23,6 +26,86 @@ type BtcTransferRequest = record {
 };
 type BtcTransferResponse = record {
   transaction_id : opt text;
+  error : opt text;
+  success : bool;
+};
+type BudgetAccrualPreview = record {
+  now_ns : nat64;
+  projected_locked_balance : nat;
+  projected_available : nat;
+  period_start_ns : nat64;
+  projected_unlocked : nat;
+  period_end_ns : nat64;
+};
+type BudgetAmountRequirements = record {
+  required_user_balance : nat;
+  allowance : nat;
+  estimated_fee : nat;
+};
+type BudgetCreateRequest = record {
+  asset_kind : AssetKind;
+  name : text;
+  asset_canister : principal;
+  amount_to_lock : nat;
+  period_start_ns : nat64;
+  period_end_ns : nat64;
+};
+type BudgetEvent = record {
+  kind : BudgetEventKind;
+  note : opt text;
+  at_time_ns : nat64;
+  amount : opt nat;
+};
+type BudgetEventKind = variant {
+  Withdraw;
+  LockSucceeded;
+  LockFailed;
+  PeriodCompleted;
+};
+type BudgetInfo = record {
+  id : text;
+  unlocked_so_far : nat;
+  status : BudgetStatus;
+  decimals : nat32;
+  owner : principal;
+  name : text;
+  locked_balance : nat;
+  period_locked : nat;
+  next_lock_at_ns : nat64;
+  updated_at_ns : nat64;
+  next_unlock_at_ns : nat64;
+  created_at_ns : nat64;
+  available_to_withdraw : nat;
+  asset_canister : principal;
+  amount_to_lock : nat;
+  period_start_ns : nat64;
+  period_end_ns : nat64;
+};
+type BudgetSchedulePreviewItem = record {
+  kind : text;
+  at_time_ns : nat64;
+  amount : nat;
+};
+type BudgetStatus = variant { Failed; Paused; Active; Archived; Completed };
+type BudgetUpdateRequest = record {
+  status : opt BudgetStatus;
+  name : opt text;
+  amount_to_lock : opt nat;
+};
+type CkTransferFeePreview = record {
+  asset_type : AssetKind;
+  transfer_fee : nat;
+  total_amount_with_fee : nat;
+};
+type CkTransferRequest = record {
+  to_principal : principal;
+  asset_type : AssetKind;
+  memo : opt text;
+  from_subaccount : opt blob;
+  amount : nat;
+};
+type CkTransferResponse = record {
+  block_index : opt nat;
   error : opt text;
   success : bool;
 };
@@ -67,6 +150,52 @@ type EthereumTransaction = record {
   amount : nat;
   gas_price : nat;
 };
+type GoalCreateRequest = record {
+  asset_kind : AssetKind_1;
+  start_ns : nat64;
+  name : text;
+  initial_amount : opt nat;
+  asset_canister : principal;
+  amount_to_lock : nat;
+  end_ns : nat64;
+};
+type GoalEvent = record {
+  kind : GoalEventKind;
+  note : opt text;
+  at_time_ns : nat64;
+  amount : opt nat;
+};
+type GoalEventKind = variant {
+  Withdraw;
+  InitialLock;
+  Failed;
+  AddFunds;
+  TargetReached;
+  CliffUnlocked;
+};
+type GoalInfo = record {
+  id : text;
+  status : GoalStatus;
+  decimals : nat32;
+  owner : principal;
+  start_ns : nat64;
+  name : text;
+  locked_balance : nat;
+  updated_at_ns : nat64;
+  created_at_ns : nat64;
+  available_to_withdraw : nat;
+  asset_canister : principal;
+  amount_to_lock : nat;
+  end_ns : nat64;
+};
+type GoalProgress = record {
+  current_locked : nat;
+  progress_percentage : float64;
+  goal_id : text;
+  target_amount : nat;
+  is_target_reached : bool;
+};
+type GoalStatus = variant { Failed; Active; Archived; Completed };
 type HttpHeader = record { value : text; name : text };
 type HttpResponse = record {
   status : nat;
@@ -87,19 +216,31 @@ type InitArg = record { ethereum_network : opt EthereumNetwork };
 type Outpoint = record { txid : blob; vout : nat32 };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : nat; Err : text };
-type Result_10 = variant { Ok : EthTransferResponse; Err : text };
-type Result_11 = variant { Ok : float64; Err : text };
-type Result_12 = variant { Ok : CryptoRates; Err : text };
-type Result_13 = variant { Ok : vec Transaction; Err : text };
-type Result_14 = variant { Ok : UserBalances; Err : text };
+type Result_10 = variant { Ok : Account; Err : text };
+type Result_11 = variant { Ok : vec BudgetEvent; Err : text };
+type Result_12 = variant { Ok : BudgetAccrualPreview; Err : text };
+type Result_13 = variant { Ok : BudgetAmountRequirements; Err : text };
+type Result_14 = variant { Ok : vec BudgetSchedulePreviewItem; Err : text };
+type Result_15 = variant { Ok : nat8; Err : text };
+type Result_16 = variant { Ok : CkTransferFeePreview; Err : text };
+type Result_17 = variant { Ok : CkTransferResponse; Err : text };
+type Result_18 = variant { Ok : EthFeePreview; Err : text };
+type Result_19 = variant { Ok : EthTransferResponse; Err : text };
 type Result_2 = variant { Ok : vec nat64; Err : text };
+type Result_20 = variant { Ok : float64; Err : text };
+type Result_21 = variant { Ok : CryptoRates; Err : text };
+type Result_22 = variant { Ok : vec Transaction; Err : text };
+type Result_23 = variant { Ok : UserBalances; Err : text };
+type Result_24 = variant { Ok : GoalInfo; Err : text };
+type Result_25 = variant { Ok : GoalProgress; Err : text };
+type Result_26 = variant { Ok : vec GoalEvent; Err : text };
 type Result_3 = variant { Ok : nat64; Err : text };
 type Result_4 = variant { Ok : vec SimplifiedUtxo; Err : text };
 type Result_5 = variant { Ok : vec Utxo; Err : text };
 type Result_6 = variant { Ok : BtcFeePreview; Err : text };
 type Result_7 = variant { Ok; Err : text };
 type Result_8 = variant { Ok : BtcTransferResponse; Err : text };
-type Result_9 = variant { Ok : EthFeePreview; Err : text };
+type Result_9 = variant { Ok : BudgetInfo; Err : text };
 type SimplifiedUtxo = record { confirmations : nat32; hash : text };
 type Transaction = record {
   id : TransactionId;
@@ -133,6 +274,32 @@ service : (opt InitArg) -> {
   btc_preview_fee : (text, nat64, opt principal) -> (Result_6);
   btc_refresh_balance : (opt principal, opt blob) -> (Result_7);
   btc_transfer : (BtcTransferRequest) -> (Result_8);
+  budget_create : (BudgetCreateRequest) -> (Result_9);
+  budget_create_and_lock : (BudgetCreateRequest) -> (Result_9);
+  budget_delete : (text) -> (Result_7);
+  budget_get : (text) -> (opt BudgetInfo) query;
+  budget_get_escrow_account : (text) -> (Result_10) query;
+  budget_list : (opt principal) -> (vec BudgetInfo) query;
+  budget_list_by_asset : (opt principal, principal) -> (vec BudgetInfo) query;
+  budget_list_events : (text, opt nat32, opt nat32) -> (Result_11) query;
+  budget_pause : (text) -> (Result_7);
+  budget_preview_accrual : (text) -> (Result_12) query;
+  budget_preview_requirements : (principal, AssetKind, nat) -> (Result_13);
+  budget_preview_schedule : (text) -> (Result_14) query;
+  budget_refresh_accrual : (text) -> (Result_9);
+  budget_refresh_accrual_step : (text, opt nat) -> (Result_9);
+  budget_required_allowance : (text) -> (Result_1) query;
+  budget_required_amounts : (text) -> (Result_13);
+  budget_resume : (text) -> (Result_7);
+  budget_trigger_lock_now : (text) -> (Result_7);
+  budget_update : (text, BudgetUpdateRequest) -> (Result_9);
+  budget_withdraw : (text, nat, opt blob) -> (Result_1);
+  cktransfer_get_balance : (principal, AssetKind, opt blob) -> (Result_1);
+  cktransfer_get_decimals : (AssetKind) -> (Result_15);
+  cktransfer_get_fee : (AssetKind) -> (Result_1);
+  cktransfer_get_fee_preview : (AssetKind, nat) -> (Result_16);
+  cktransfer_get_symbol : (AssetKind) -> (Result);
+  cktransfer_transfer : (CkTransferRequest) -> (Result_17);
   clear_user_transactions : (principal) -> ();
   eth_estimate_withdrawal_fee : () -> (Result) query;
   // Returns the historical fee data to estimate gas prices for Ethereum transactions
@@ -143,15 +310,23 @@ service : (opt InitArg) -> {
   eth_get_minter_info : () -> (Result) query;
   eth_get_native_balance : (opt text) -> (Result_1);
   eth_get_transaction_count : (opt principal, opt text) -> (Result_3) query;
-  eth_preview_fee : (text, nat, opt nat) -> (Result_9);
+  eth_preview_fee : (text, nat, opt nat) -> (Result_18);
   eth_refresh_balance : (opt blob) -> (Result_7);
-  eth_transfer : (EthTransferRequest) -> (Result_10);
+  eth_transfer : (EthTransferRequest) -> (Result_19);
   evm_derive_address : (opt principal) -> (Result);
-  get_crypto_usd_rate : (text) -> (Result_11);
-  get_rates_summary : () -> (Result_12);
+  get_crypto_usd_rate : (text) -> (Result_20);
+  get_rates_summary : () -> (Result_21);
   get_transaction_count : (principal) -> (nat32) query;
-  get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_13);
-  get_user_balances : (principal) -> (Result_14);
+  get_transaction_history : (principal, opt nat32, opt nat32) -> (Result_22);
+  get_user_balances : (principal) -> (Result_23);
+  goals_add_funds : (text, nat) -> (Result_24);
+  goals_create_and_lock : (GoalCreateRequest) -> (Result_24);
+  goals_get : (text) -> (opt GoalInfo) query;
+  goals_get_progress : (text) -> (Result_25) query;
+  goals_list : (opt principal) -> (vec GoalInfo) query;
+  goals_list_events : (text, opt nat32, opt nat32) -> (Result_26) query;
+  goals_refresh : (text) -> (Result_24);
+  goals_withdraw : (text, nat) -> (Result_1);
   principal_to_bytes32 : (text) -> (Result) query;
   transform : (TransformArgs) -> (HttpResponse) query;
 }

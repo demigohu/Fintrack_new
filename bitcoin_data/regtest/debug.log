@@ -1615,3 +1615,609 @@ CTransaction(hash=ab4e2f433d, ver=2, vin.size=1, vout.size=2, nLockTime=113)
 2025-08-21T22:30:58Z Flushed fee estimates to fee_estimates.dat.
 2025-08-21T22:30:58Z [testwallet] Releasing wallet testwallet..
 2025-08-21T22:30:58Z Shutdown: done
+
+
+
+
+
+2025-08-22T12:43:39Z Bitcoin Core version v29.0.0 (release build)
+2025-08-22T12:43:39Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-08-22T12:43:39Z Using RdSeed as an additional entropy source
+2025-08-22T12:43:39Z Using RdRand as an additional entropy source
+2025-08-22T12:43:39Z Default data directory /home/demigohu/.bitcoin
+2025-08-22T12:43:39Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-08-22T12:43:39Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-08-22T12:43:39Z Config file arg: fallbackfee="0.0001"
+2025-08-22T12:43:39Z Config file arg: regtest="1"
+2025-08-22T12:43:39Z Config file arg: rpcauth=****
+2025-08-22T12:43:39Z Config file arg: rpcpassword=****
+2025-08-22T12:43:39Z Config file arg: rpcuser=****
+2025-08-22T12:43:39Z Config file arg: txindex="1"
+2025-08-22T12:43:39Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-08-22T12:43:39Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-08-22T12:43:39Z Command-line arg: port="18444"
+2025-08-22T12:43:39Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-08-22T12:43:39Z scheduler thread start
+2025-08-22T12:43:39Z Binding RPC on address ::1 port 18443
+2025-08-22T12:43:39Z Binding RPC on address 127.0.0.1 port 18443
+2025-08-22T12:43:39Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-08-22T12:43:39Z Using rpcauth authentication.
+2025-08-22T12:43:39Z Starting HTTP server with 16 worker threads
+2025-08-22T12:43:39Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-08-22T12:43:39Z init message: Verifying wallet(s)…
+2025-08-22T12:43:39Z Using /16 prefix for IP bucketing
+2025-08-22T12:43:39Z init message: Loading P2P addresses…
+2025-08-22T12:43:39Z Loaded 0 addresses from peers.dat  2ms
+2025-08-22T12:43:39Z init message: Loading banlist…
+2025-08-22T12:43:39Z SetNetworkActive: true
+2025-08-22T12:43:39Z Cache configuration:
+2025-08-22T12:43:39Z * Using 2.0 MiB for block index database
+2025-08-22T12:43:39Z * Using 56.2 MiB for transaction index database
+2025-08-22T12:43:39Z * Using 8.0 MiB for chain state database
+2025-08-22T12:43:39Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-08-22T12:43:39Z Script verification uses 15 additional threads
+2025-08-22T12:43:39Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-08-22T12:43:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-08-22T12:43:39Z Opened LevelDB successfully
+2025-08-22T12:43:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-08-22T12:43:39Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-08-22T12:43:39Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-08-22T12:43:39Z init message: Loading block index…
+2025-08-22T12:43:39Z Validating signatures for all blocks.
+2025-08-22T12:43:39Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-08-22T12:43:39Z LoadBlockIndexDB: last block file = 0
+2025-08-22T12:43:39Z LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=116, size=32645, heights=0...115, time=2011-02-02...2025-08-21)
+2025-08-22T12:43:39Z Checking all blk files are present...
+2025-08-22T12:43:39Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-08-22T12:43:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-08-22T12:43:39Z Opened LevelDB successfully
+2025-08-22T12:43:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-08-22T12:43:39Z Loaded best chain: hashBestChain=24414806871d8142b7b533211e4104fbf9d4ac82b671d4208af4c9ea309960d1 height=115 date=2025-08-21T21:58:58Z progress=1.000000
+2025-08-22T12:43:39Z init message: Verifying blocks…
+2025-08-22T12:43:39Z Verifying last 6 blocks at level 3
+2025-08-22T12:43:39Z Verification progress: 0%
+2025-08-22T12:43:39Z Verification progress: 16%
+2025-08-22T12:43:39Z Verification progress: 33%
+2025-08-22T12:43:39Z Verification progress: 50%
+2025-08-22T12:43:39Z Verification progress: 66%
+2025-08-22T12:43:39Z Verification progress: 83%
+2025-08-22T12:43:39Z Verification progress: 99%
+2025-08-22T12:43:39Z Verification: No coin database inconsistencies in last 6 blocks (14 transactions)
+2025-08-22T12:43:39Z Block index and chainstate loaded
+2025-08-22T12:43:39Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-08-22T12:43:39Z Opened LevelDB successfully
+2025-08-22T12:43:39Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex: 0000000000000000
+2025-08-22T12:43:39Z Setting NODE_NETWORK on non-prune mode
+2025-08-22T12:43:39Z block tree size = 117
+2025-08-22T12:43:39Z nBestHeight = 115
+2025-08-22T12:43:39Z initload thread start
+2025-08-22T12:43:39Z Loading 0 mempool transactions from file...
+2025-08-22T12:43:39Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-08-22T12:43:39Z initload thread exit
+2025-08-22T12:43:39Z torcontrol thread start
+2025-08-22T12:43:39Z txindex thread start
+2025-08-22T12:43:39Z txindex is enabled at height 115
+2025-08-22T12:43:39Z txindex thread exit
+2025-08-22T12:43:39Z Bound to 127.0.0.1:18445
+2025-08-22T12:43:39Z Bound to [::]:18444
+2025-08-22T12:43:39Z Bound to 0.0.0.0:18444
+2025-08-22T12:43:39Z Loaded 0 addresses from "anchors.dat"
+2025-08-22T12:43:39Z 0 block-relay-only anchors will be tried for connections.
+2025-08-22T12:43:39Z init message: Starting network threads…
+2025-08-22T12:43:39Z net thread start
+2025-08-22T12:43:39Z addcon thread start
+2025-08-22T12:43:39Z init message: Done loading
+2025-08-22T12:43:39Z opencon thread start
+2025-08-22T12:43:39Z msghand thread start
+2025-08-22T12:43:39Z dnsseed thread start
+2025-08-22T12:43:39Z Loading addresses from DNS seed dummySeed.invalid.
+2025-08-22T12:43:39Z 0 addresses found from DNS seeds
+2025-08-22T12:43:39Z dnsseed thread exit
+2025-08-22T12:44:05Z Leaving InitialBlockDownload (latching to false)
+2025-08-22T12:44:40Z Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network
+2025-08-22T12:44:40Z Added 0 fixed seeds from reachable networks.
+2025-08-22T12:47:25Z Using SQLite Version 3.46.1
+2025-08-22T12:47:25Z Using wallet /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets/testwallet
+2025-08-22T12:47:25Z init message: Loading wallet…
+2025-08-22T12:47:25Z [testwallet] Wallet file version = 10500, last client version = 290000
+2025-08-22T12:47:25Z [testwallet] Descriptors: 8, Descriptor Keys: 1 plaintext, 0 encrypted, 1 total.
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = 16898009de45c538fbefec8a246c87cdf3079c277151036fe3d02e81a83f54c8, type = legacy, internal = false
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = 0fd92b8d6fc270cdece16fecc8edd59c9e72548403014da5a32c883bb7086455, type = p2sh-segwit, internal = false
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = 0a3e9736c9c2cf1113b1631156f0dc559f45769c74e10d2f85a1e7b4ed65e3b5, type = bech32, internal = false
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = 525a6d3c603724261b0373660f85b880f78ef0b34b250417f4301e668c2b7b2a, type = bech32m, internal = false
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = e91e4a99e3de2d148842ab787ac86a4e99e17b824064a59bbf893b796b54ad8c, type = legacy, internal = true
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = ab921ecc98f3fb7d89848048796ad003b6708d5aa25540485511f08815f0fa49, type = p2sh-segwit, internal = true
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = 3d11a234e863750b405c3a38d98f196584250e816c46e3f3cf5cc444888e0cab, type = bech32, internal = true
+2025-08-22T12:47:25Z [testwallet] Setting spkMan to active: id = e95ef4b9c39aea234ac31e50c8f0fc9cf02685a0505cba1c1db558a1ae14cf71, type = bech32m, internal = true
+2025-08-22T12:47:25Z [testwallet] Wallet completed loading in             243ms
+2025-08-22T12:47:25Z [testwallet] setKeyPool.size() = 8000
+2025-08-22T12:47:25Z [testwallet] mapWallet.size() = 133
+2025-08-22T12:47:25Z [testwallet] m_address_book.size() = 2
+2025-08-22T12:47:25Z [testwallet] Submitting wtx 7f40a8141223880e70ed96594d501c6f76a6eb112481a5c64e2be46fca57484b to mempool for relay
+2025-08-22T12:47:25Z [testwallet] ResubmitWalletTransactions: resubmit 1 unconfirmed transactions
+2025-08-22T12:47:25Z [testwallet] AddToWallet 7f40a8141223880e70ed96594d501c6f76a6eb112481a5c64e2be46fca57484b   InMempool
+2025-08-22T12:47:25Z [testwallet] AddToWallet 7f40a8141223880e70ed96594d501c6f76a6eb112481a5c64e2be46fca57484b   InMempool
+2025-08-22T12:47:40Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-22T12:47:40Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-22T12:47:40Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-22T12:47:40Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-22T12:47:40Z [testwallet] Fee non-grouped = 1410, grouped = 1410, using grouped
+2025-08-22T12:47:40Z [testwallet] CommitTransaction:
+CTransaction(hash=478f6910fc, ver=2, vin.size=1, vout.size=2, nLockTime=0)
+    CTxIn(COutPoint(ab4e2f433d, 1), scriptSig=, nSequence=4294967293)
+    CScriptWitness(304402206c3fcfb2429226368084d7af214f2a5a7801a5af640747c172dee1f4411464b50220371ad40dc3ccd75aa2391dd9b4f00fb2a7a037191581950d079e7fcd263ac0c701, 020134dcc7a08f0c72dd12f322348f2a8e9b9a7123eb2363f6564f13808f576ab9)
+    CTxOut(nValue=1.00000000, scriptPubKey=001419ae994250210c0f55db615ecb)
+    CTxOut(nValue=42.99995770, scriptPubKey=00145d43f65053dbc3546d09fec37a)
+2025-08-22T12:47:40Z [testwallet] AddToWallet 478f6910fc447bad0faa6d8388fd2d4c52ac8df369fa2910617bc4924a78c86c  newupdate Inactive (abandoned=0)
+2025-08-22T12:47:40Z [testwallet] Submitting wtx 478f6910fc447bad0faa6d8388fd2d4c52ac8df369fa2910617bc4924a78c86c to mempool for relay
+2025-08-22T12:47:40Z [testwallet] AddToWallet 478f6910fc447bad0faa6d8388fd2d4c52ac8df369fa2910617bc4924a78c86c   InMempool
+2025-08-22T12:47:50Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-22T12:47:50Z [testwallet] Fee Calculation: Fee:1410 Bytes:141 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-22T12:47:50Z [testwallet] Coin Selection: Algorithm:knapsack, Waste Metric Score:990
+2025-08-22T12:47:50Z [testwallet] Fee Calculation: Fee:9540 Bytes:954 Tgt:6 (requested 6) Reason:"Half Target 60% Threshold" Decay 0.96200: Estimation: (4764.94 - 1e+99) 100.00% 14.8/(14.8 0 mem 0.0 out) Fail: (0 - 4764.94) 0.00% 0.0/(0.0 0 mem 0.0 out)
+2025-08-22T12:47:50Z [testwallet] Fee non-grouped = 1410, grouped = 9540, using non-grouped
+2025-08-22T12:47:50Z [testwallet] CommitTransaction:
+CTransaction(hash=b182597dc0, ver=2, vin.size=1, vout.size=2, nLockTime=0)
+    CTxIn(COutPoint(36290876c7, 0), scriptSig=, nSequence=4294967293)
+    CScriptWitness(3044022041ded6b8a026107ae20bda2f3e53e11670af988a533e777892b32f5e959b4b1d02201765c9d57c8af04e54fae1be6a83e2c9c3c5dcbbdcd5e7acd7c56fb0a629f0a801, 02310df3898f889b03b3cdef6ea271dc68943104522183dc8d7b0778be8060f878)
+    CTxOut(nValue=48.99998590, scriptPubKey=00146239e8242c5b11fa363de781d0)
+    CTxOut(nValue=1.00000000, scriptPubKey=0014b4fae98d1e8132b687e8b3fce0)
+2025-08-22T12:47:50Z [testwallet] AddToWallet b182597dc0a0901f0146aec26f655580a7275914d40731a500019be2b517a3ec  newupdate Inactive (abandoned=0)
+2025-08-22T12:47:50Z [testwallet] Submitting wtx b182597dc0a0901f0146aec26f655580a7275914d40731a500019be2b517a3ec to mempool for relay
+2025-08-22T12:47:50Z [testwallet] AddToWallet b182597dc0a0901f0146aec26f655580a7275914d40731a500019be2b517a3ec   InMempool
+2025-08-22T12:47:55Z CreateNewBlock(): block weight: 2571 txs: 3 fees: 4230 sigops 403
+2025-08-22T12:47:55Z Saw new header hash=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3 height=116
+2025-08-22T12:47:55Z UpdateTip: new best=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3 height=116 version=0x20000000 log2_work=7.870365 tx=132 date='2025-08-22T12:47:55Z' progress=1.000000 cache=0.3MiB(10txo)
+2025-08-22T12:47:55Z [testwallet] AddToWallet deb675231cec82caf0ab4188820fa07ad99cc760505da7a7b1af93f63e4a4a28  new Confirmed (block=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3, height=116, index=0)
+2025-08-22T12:47:55Z [testwallet] AddToWallet 7f40a8141223880e70ed96594d501c6f76a6eb112481a5c64e2be46fca57484b  update Confirmed (block=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3, height=116, index=1)
+2025-08-22T12:47:55Z [testwallet] AddToWallet 478f6910fc447bad0faa6d8388fd2d4c52ac8df369fa2910617bc4924a78c86c  update Confirmed (block=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3, height=116, index=2)
+2025-08-22T12:47:55Z [testwallet] AddToWallet b182597dc0a0901f0146aec26f655580a7275914d40731a500019be2b517a3ec  update Confirmed (block=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3, height=116, index=3)
+2025-08-22T13:25:17Z Potential stale tip detected, will try using extra outbound peer (last tip update: 2242 seconds ago)
+2025-08-22T13:26:35Z tor: Thread interrupt
+2025-08-22T13:26:35Z opencon thread exit
+2025-08-22T13:26:35Z Shutdown: In progress...
+2025-08-22T13:26:35Z torcontrol thread exit
+2025-08-22T13:26:35Z addcon thread exit
+2025-08-22T13:26:35Z net thread exit
+2025-08-22T13:26:35Z msghand thread exit
+2025-08-22T13:26:35Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-08-22T13:26:35Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-08-22T13:26:35Z scheduler thread exit
+2025-08-22T13:26:35Z Writing 0 mempool transactions to file...
+2025-08-22T13:26:35Z Writing 0 unbroadcast transactions to file.
+2025-08-22T13:26:35Z Dumped mempool: 0.000s to copy, 0.003s to dump, 27 bytes dumped to file
+2025-08-22T13:26:35Z Flushed fee estimates to fee_estimates.dat.
+2025-08-22T13:26:35Z [testwallet] Releasing wallet testwallet..
+2025-08-22T13:26:35Z Shutdown: done
+
+
+
+
+
+2025-09-08T13:52:53Z Bitcoin Core version v29.0.0 (release build)
+2025-09-08T13:52:53Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-09-08T13:52:53Z Using RdSeed as an additional entropy source
+2025-09-08T13:52:53Z Using RdRand as an additional entropy source
+2025-09-08T13:52:53Z Default data directory /home/demigohu/.bitcoin
+2025-09-08T13:52:53Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-09-08T13:52:53Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-09-08T13:52:53Z Config file arg: fallbackfee="0.0001"
+2025-09-08T13:52:53Z Config file arg: regtest="1"
+2025-09-08T13:52:53Z Config file arg: rpcauth=****
+2025-09-08T13:52:53Z Config file arg: rpcpassword=****
+2025-09-08T13:52:53Z Config file arg: rpcuser=****
+2025-09-08T13:52:53Z Config file arg: txindex="1"
+2025-09-08T13:52:53Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-09-08T13:52:53Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-09-08T13:52:53Z Command-line arg: port="18444"
+2025-09-08T13:52:53Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-09-08T13:52:53Z scheduler thread start
+2025-09-08T13:52:53Z Binding RPC on address ::1 port 18443
+2025-09-08T13:52:53Z Binding RPC on address 127.0.0.1 port 18443
+2025-09-08T13:52:53Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-09-08T13:52:53Z Using rpcauth authentication.
+2025-09-08T13:52:53Z Starting HTTP server with 16 worker threads
+2025-09-08T13:52:53Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-09-08T13:52:53Z init message: Verifying wallet(s)…
+2025-09-08T13:52:53Z Using /16 prefix for IP bucketing
+2025-09-08T13:52:53Z init message: Loading P2P addresses…
+2025-09-08T13:52:53Z Loaded 0 addresses from peers.dat  1ms
+2025-09-08T13:52:53Z init message: Loading banlist…
+2025-09-08T13:52:53Z SetNetworkActive: true
+2025-09-08T13:52:53Z Fee estimation file /home/demigohu/Fintrack_new/bitcoin_data/regtest/fee_estimates.dat too old (age=408 > 60 hours) and will not be used to avoid serving stale estimates.
+2025-09-08T13:52:53Z Cache configuration:
+2025-09-08T13:52:53Z * Using 2.0 MiB for block index database
+2025-09-08T13:52:53Z * Using 56.2 MiB for transaction index database
+2025-09-08T13:52:53Z * Using 8.0 MiB for chain state database
+2025-09-08T13:52:53Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-08T13:52:53Z Script verification uses 15 additional threads
+2025-09-08T13:52:53Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-09-08T13:52:53Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-09-08T13:52:53Z Opened LevelDB successfully
+2025-09-08T13:52:53Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-09-08T13:52:53Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-08T13:52:53Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-08T13:52:53Z init message: Loading block index…
+2025-09-08T13:52:53Z Validating signatures for all blocks.
+2025-09-08T13:52:53Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-09-08T13:52:53Z LoadBlockIndexDB: last block file = 0
+2025-09-08T13:52:53Z LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=117, size=33568, heights=0...116, time=2011-02-02...2025-08-22)
+2025-09-08T13:52:53Z Checking all blk files are present...
+2025-09-08T13:52:53Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-08T13:52:53Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-09-08T13:52:53Z Opened LevelDB successfully
+2025-09-08T13:52:53Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-09-08T13:52:53Z Loaded best chain: hashBestChain=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3 height=116 date=2025-08-22T12:47:55Z progress=1.000000
+2025-09-08T13:52:53Z init message: Verifying blocks…
+2025-09-08T13:52:53Z Verifying last 6 blocks at level 3
+2025-09-08T13:52:53Z Verification progress: 0%
+2025-09-08T13:52:53Z Verification progress: 16%
+2025-09-08T13:52:53Z Verification progress: 33%
+2025-09-08T13:52:53Z Verification progress: 50%
+2025-09-08T13:52:53Z Verification progress: 66%
+2025-09-08T13:52:53Z Verification progress: 83%
+2025-09-08T13:52:53Z Verification progress: 99%
+2025-09-08T13:52:53Z Verification: No coin database inconsistencies in last 6 blocks (16 transactions)
+2025-09-08T13:52:53Z Block index and chainstate loaded
+2025-09-08T13:52:53Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-09-08T13:52:53Z Opened LevelDB successfully
+2025-09-08T13:52:53Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex: 0000000000000000
+2025-09-08T13:52:53Z Setting NODE_NETWORK on non-prune mode
+2025-09-08T13:52:53Z block tree size = 118
+2025-09-08T13:52:53Z nBestHeight = 116
+2025-09-08T13:52:53Z initload thread start
+2025-09-08T13:52:53Z Loading 0 mempool transactions from file...
+2025-09-08T13:52:53Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-09-08T13:52:53Z initload thread exit
+2025-09-08T13:52:53Z torcontrol thread start
+2025-09-08T13:52:53Z txindex thread start
+2025-09-08T13:52:53Z txindex is enabled at height 116
+2025-09-08T13:52:53Z txindex thread exit
+2025-09-08T13:52:53Z Bound to 127.0.0.1:18445
+2025-09-08T13:52:53Z Bound to [::]:18444
+2025-09-08T13:52:53Z Bound to 0.0.0.0:18444
+2025-09-08T13:52:53Z Loaded 0 addresses from "anchors.dat"
+2025-09-08T13:52:53Z 0 block-relay-only anchors will be tried for connections.
+2025-09-08T13:52:53Z init message: Starting network threads…
+2025-09-08T13:52:53Z net thread start
+2025-09-08T13:52:53Z dnsseed thread start
+2025-09-08T13:52:53Z opencon thread start
+2025-09-08T13:52:53Z init message: Done loading
+2025-09-08T13:52:53Z msghand thread start
+2025-09-08T13:52:53Z addcon thread start
+2025-09-08T13:52:53Z Loading addresses from DNS seed dummySeed.invalid.
+2025-09-08T13:52:53Z 0 addresses found from DNS seeds
+2025-09-08T13:52:53Z dnsseed thread exit
+2025-09-08T13:53:54Z Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network
+2025-09-08T13:53:54Z Added 0 fixed seeds from reachable networks.
+2025-09-08T14:01:04Z tor: Thread interrupt
+2025-09-08T14:01:04Z torcontrol thread exit
+2025-09-08T14:01:04Z Shutdown: In progress...
+2025-09-08T14:01:04Z opencon thread exit
+2025-09-08T14:01:04Z addcon thread exit
+2025-09-08T14:01:04Z net thread exit
+2025-09-08T14:01:04Z msghand thread exit
+2025-09-08T14:01:04Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-09-08T14:01:04Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-09-08T14:01:04Z scheduler thread exit
+2025-09-08T14:01:04Z Writing 0 mempool transactions to file...
+2025-09-08T14:01:04Z Writing 0 unbroadcast transactions to file.
+2025-09-08T14:01:04Z Dumped mempool: 0.000s to copy, 0.003s to dump, 27 bytes dumped to file
+2025-09-08T14:01:04Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T14:01:04Z Shutdown: done
+
+
+
+
+
+2025-09-08T14:01:07Z Bitcoin Core version v29.0.0 (release build)
+2025-09-08T14:01:07Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-09-08T14:01:07Z Using RdSeed as an additional entropy source
+2025-09-08T14:01:07Z Using RdRand as an additional entropy source
+2025-09-08T14:01:07Z Default data directory /home/demigohu/.bitcoin
+2025-09-08T14:01:07Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-09-08T14:01:07Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-09-08T14:01:07Z Config file arg: fallbackfee="0.0001"
+2025-09-08T14:01:07Z Config file arg: regtest="1"
+2025-09-08T14:01:07Z Config file arg: rpcauth=****
+2025-09-08T14:01:07Z Config file arg: rpcpassword=****
+2025-09-08T14:01:07Z Config file arg: rpcuser=****
+2025-09-08T14:01:07Z Config file arg: txindex="1"
+2025-09-08T14:01:07Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-09-08T14:01:07Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-09-08T14:01:07Z Command-line arg: port="18444"
+2025-09-08T14:01:07Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-09-08T14:01:07Z scheduler thread start
+2025-09-08T14:01:07Z Binding RPC on address ::1 port 18443
+2025-09-08T14:01:07Z Binding RPC on address 127.0.0.1 port 18443
+2025-09-08T14:01:07Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-09-08T14:01:07Z Using rpcauth authentication.
+2025-09-08T14:01:07Z Starting HTTP server with 16 worker threads
+2025-09-08T14:01:07Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-09-08T14:01:07Z init message: Verifying wallet(s)…
+2025-09-08T14:01:07Z Using /16 prefix for IP bucketing
+2025-09-08T14:01:07Z init message: Loading P2P addresses…
+2025-09-08T14:01:07Z Loaded 0 addresses from peers.dat  0ms
+2025-09-08T14:01:07Z init message: Loading banlist…
+2025-09-08T14:01:07Z SetNetworkActive: true
+2025-09-08T14:01:07Z Cache configuration:
+2025-09-08T14:01:07Z * Using 2.0 MiB for block index database
+2025-09-08T14:01:07Z * Using 56.2 MiB for transaction index database
+2025-09-08T14:01:07Z * Using 8.0 MiB for chain state database
+2025-09-08T14:01:07Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-08T14:01:07Z Script verification uses 15 additional threads
+2025-09-08T14:01:07Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-09-08T14:01:07Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-09-08T14:01:07Z Opened LevelDB successfully
+2025-09-08T14:01:07Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-09-08T14:01:07Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-08T14:01:07Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-08T14:01:07Z init message: Loading block index…
+2025-09-08T14:01:07Z Validating signatures for all blocks.
+2025-09-08T14:01:07Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-09-08T14:01:07Z LoadBlockIndexDB: last block file = 0
+2025-09-08T14:01:07Z LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=117, size=33568, heights=0...116, time=2011-02-02...2025-08-22)
+2025-09-08T14:01:07Z Checking all blk files are present...
+2025-09-08T14:01:07Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-08T14:01:07Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-09-08T14:01:07Z Opened LevelDB successfully
+2025-09-08T14:01:07Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-09-08T14:01:07Z Loaded best chain: hashBestChain=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3 height=116 date=2025-08-22T12:47:55Z progress=1.000000
+2025-09-08T14:01:07Z init message: Verifying blocks…
+2025-09-08T14:01:07Z Verifying last 6 blocks at level 3
+2025-09-08T14:01:07Z Verification progress: 0%
+2025-09-08T14:01:07Z Verification progress: 16%
+2025-09-08T14:01:07Z Verification progress: 33%
+2025-09-08T14:01:07Z Verification progress: 50%
+2025-09-08T14:01:07Z Verification progress: 66%
+2025-09-08T14:01:07Z Verification progress: 83%
+2025-09-08T14:01:07Z Verification progress: 99%
+2025-09-08T14:01:07Z Verification: No coin database inconsistencies in last 6 blocks (16 transactions)
+2025-09-08T14:01:07Z Block index and chainstate loaded
+2025-09-08T14:01:07Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-09-08T14:01:07Z Opened LevelDB successfully
+2025-09-08T14:01:07Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex: 0000000000000000
+2025-09-08T14:01:07Z Setting NODE_NETWORK on non-prune mode
+2025-09-08T14:01:07Z block tree size = 118
+2025-09-08T14:01:07Z nBestHeight = 116
+2025-09-08T14:01:07Z initload thread start
+2025-09-08T14:01:07Z torcontrol thread start
+2025-09-08T14:01:07Z txindex thread start
+2025-09-08T14:01:07Z txindex is enabled at height 116
+2025-09-08T14:01:07Z txindex thread exit
+2025-09-08T14:01:07Z Loading 0 mempool transactions from file...
+2025-09-08T14:01:07Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-09-08T14:01:07Z Bound to 127.0.0.1:18445
+2025-09-08T14:01:07Z initload thread exit
+2025-09-08T14:01:07Z Bound to [::]:18444
+2025-09-08T14:01:07Z Bound to 0.0.0.0:18444
+2025-09-08T14:01:07Z Loaded 0 addresses from "anchors.dat"
+2025-09-08T14:01:07Z 0 block-relay-only anchors will be tried for connections.
+2025-09-08T14:01:07Z init message: Starting network threads…
+2025-09-08T14:01:07Z net thread start
+2025-09-08T14:01:07Z dnsseed thread start
+2025-09-08T14:01:07Z Loading addresses from DNS seed dummySeed.invalid.
+2025-09-08T14:01:07Z addcon thread start
+2025-09-08T14:01:07Z opencon thread start
+2025-09-08T14:01:07Z init message: Done loading
+2025-09-08T14:01:07Z msghand thread start
+2025-09-08T14:01:07Z 0 addresses found from DNS seeds
+2025-09-08T14:01:07Z dnsseed thread exit
+2025-09-08T14:02:08Z Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network
+2025-09-08T14:02:08Z Added 0 fixed seeds from reachable networks.
+2025-09-08T14:33:04Z Potential stale tip detected, will try using extra outbound peer (last tip update: 1868 seconds ago)
+2025-09-08T14:43:22Z Potential stale tip detected, will try using extra outbound peer (last tip update: 2486 seconds ago)
+2025-09-08T14:53:41Z Potential stale tip detected, will try using extra outbound peer (last tip update: 3105 seconds ago)
+2025-09-08T15:04:09Z Potential stale tip detected, will try using extra outbound peer (last tip update: 3733 seconds ago)
+2025-09-08T15:04:56Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T15:14:40Z Potential stale tip detected, will try using extra outbound peer (last tip update: 4364 seconds ago)
+2025-09-08T15:25:13Z Potential stale tip detected, will try using extra outbound peer (last tip update: 4997 seconds ago)
+2025-09-08T15:35:37Z Potential stale tip detected, will try using extra outbound peer (last tip update: 5621 seconds ago)
+2025-09-08T15:46:04Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6248 seconds ago)
+2025-09-08T15:56:31Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6875 seconds ago)
+2025-09-08T16:07:08Z Potential stale tip detected, will try using extra outbound peer (last tip update: 7512 seconds ago)
+2025-09-08T16:09:33Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T16:17:40Z Potential stale tip detected, will try using extra outbound peer (last tip update: 8144 seconds ago)
+2025-09-08T16:28:10Z Potential stale tip detected, will try using extra outbound peer (last tip update: 8774 seconds ago)
+2025-09-08T16:38:38Z Potential stale tip detected, will try using extra outbound peer (last tip update: 9402 seconds ago)
+2025-09-08T16:49:07Z Potential stale tip detected, will try using extra outbound peer (last tip update: 10031 seconds ago)
+2025-09-08T16:59:46Z Potential stale tip detected, will try using extra outbound peer (last tip update: 10670 seconds ago)
+2025-09-08T17:10:24Z Potential stale tip detected, will try using extra outbound peer (last tip update: 11308 seconds ago)
+2025-09-08T17:14:30Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T17:21:05Z Potential stale tip detected, will try using extra outbound peer (last tip update: 11949 seconds ago)
+2025-09-08T17:31:47Z Potential stale tip detected, will try using extra outbound peer (last tip update: 12591 seconds ago)
+2025-09-08T17:42:30Z Potential stale tip detected, will try using extra outbound peer (last tip update: 13234 seconds ago)
+2025-09-08T17:53:08Z Potential stale tip detected, will try using extra outbound peer (last tip update: 13872 seconds ago)
+2025-09-08T18:03:45Z Potential stale tip detected, will try using extra outbound peer (last tip update: 14509 seconds ago)
+2025-09-08T18:14:22Z Potential stale tip detected, will try using extra outbound peer (last tip update: 15146 seconds ago)
+2025-09-08T18:20:03Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T18:25:01Z Potential stale tip detected, will try using extra outbound peer (last tip update: 15785 seconds ago)
+2025-09-08T18:35:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 16426 seconds ago)
+2025-09-08T18:46:27Z Potential stale tip detected, will try using extra outbound peer (last tip update: 17071 seconds ago)
+2025-09-08T18:57:13Z Potential stale tip detected, will try using extra outbound peer (last tip update: 17717 seconds ago)
+2025-09-08T19:07:57Z Potential stale tip detected, will try using extra outbound peer (last tip update: 18361 seconds ago)
+2025-09-08T19:18:40Z Potential stale tip detected, will try using extra outbound peer (last tip update: 19004 seconds ago)
+2025-09-08T19:25:59Z Flushed fee estimates to fee_estimates.dat.
+2025-09-08T19:29:13Z Potential stale tip detected, will try using extra outbound peer (last tip update: 19637 seconds ago)
+2025-09-08T19:39:51Z Potential stale tip detected, will try using extra outbound peer (last tip update: 20275 seconds ago)
+2025-09-08T19:50:31Z Potential stale tip detected, will try using extra outbound peer (last tip update: 20915 seconds ago)
+
+
+
+
+
+2025-09-09T12:05:10Z Bitcoin Core version v29.0.0 (release build)
+2025-09-09T12:05:10Z Using the 'x86_shani(1way,2way)' SHA256 implementation
+2025-09-09T12:05:10Z Using RdSeed as an additional entropy source
+2025-09-09T12:05:10Z Using RdRand as an additional entropy source
+2025-09-09T12:05:10Z Default data directory /home/demigohu/.bitcoin
+2025-09-09T12:05:10Z Using data directory /home/demigohu/Fintrack_new/bitcoin_data/regtest
+2025-09-09T12:05:10Z Config file: /home/demigohu/Fintrack_new/bitcoin.conf
+2025-09-09T12:05:10Z Config file arg: fallbackfee="0.0001"
+2025-09-09T12:05:10Z Config file arg: regtest="1"
+2025-09-09T12:05:10Z Config file arg: rpcauth=****
+2025-09-09T12:05:10Z Config file arg: rpcpassword=****
+2025-09-09T12:05:10Z Config file arg: rpcuser=****
+2025-09-09T12:05:10Z Config file arg: txindex="1"
+2025-09-09T12:05:10Z Command-line arg: conf="/home/demigohu/Fintrack_new/bitcoin.conf"
+2025-09-09T12:05:10Z Command-line arg: datadir="/home/demigohu/Fintrack_new/bitcoin_data"
+2025-09-09T12:05:10Z Command-line arg: port="18444"
+2025-09-09T12:05:10Z Using at most 125 automatic connections (1048576 file descriptors available)
+2025-09-09T12:05:10Z scheduler thread start
+2025-09-09T12:05:10Z Binding RPC on address ::1 port 18443
+2025-09-09T12:05:10Z Binding RPC on address 127.0.0.1 port 18443
+2025-09-09T12:05:10Z Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.
+2025-09-09T12:05:10Z Using rpcauth authentication.
+2025-09-09T12:05:10Z Starting HTTP server with 16 worker threads
+2025-09-09T12:05:10Z Using wallet directory /home/demigohu/Fintrack_new/bitcoin_data/regtest/wallets
+2025-09-09T12:05:10Z init message: Verifying wallet(s)…
+2025-09-09T12:05:10Z Using /16 prefix for IP bucketing
+2025-09-09T12:05:10Z init message: Loading P2P addresses…
+2025-09-09T12:05:10Z Loaded 0 addresses from peers.dat  2ms
+2025-09-09T12:05:10Z init message: Loading banlist…
+2025-09-09T12:05:10Z SetNetworkActive: true
+2025-09-09T12:05:10Z Cache configuration:
+2025-09-09T12:05:10Z * Using 2.0 MiB for block index database
+2025-09-09T12:05:10Z * Using 56.2 MiB for transaction index database
+2025-09-09T12:05:10Z * Using 8.0 MiB for chain state database
+2025-09-09T12:05:10Z * Using 383.8 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-09T12:05:10Z Script verification uses 15 additional threads
+2025-09-09T12:05:10Z Using obfuscation key for blocksdir *.dat files (/home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks): '0000000000000000'
+2025-09-09T12:05:10Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index
+2025-09-09T12:05:10Z Opened LevelDB successfully
+2025-09-09T12:05:10Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/blocks/index: 0000000000000000
+2025-09-09T12:05:10Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-09T12:05:10Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-09T12:05:10Z init message: Loading block index…
+2025-09-09T12:05:10Z Validating signatures for all blocks.
+2025-09-09T12:05:10Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-09-09T12:05:10Z LoadBlockIndexDB: last block file = 0
+2025-09-09T12:05:10Z LoadBlockIndexDB: last block file info: CBlockFileInfo(blocks=117, size=33568, heights=0...116, time=2011-02-02...2025-08-22)
+2025-09-09T12:05:10Z Checking all blk files are present...
+2025-09-09T12:05:10Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-09T12:05:10Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate
+2025-09-09T12:05:10Z Opened LevelDB successfully
+2025-09-09T12:05:10Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/chainstate: 859ae2e5d5ce0762
+2025-09-09T12:05:10Z Loaded best chain: hashBestChain=3023833d2a410598444388e3973681e22216a400ad30cb3fe01387c289c5e7d3 height=116 date=2025-08-22T12:47:55Z progress=1.000000
+2025-09-09T12:05:10Z init message: Verifying blocks…
+2025-09-09T12:05:10Z Verifying last 6 blocks at level 3
+2025-09-09T12:05:10Z Verification progress: 0%
+2025-09-09T12:05:10Z Verification progress: 16%
+2025-09-09T12:05:10Z Verification progress: 33%
+2025-09-09T12:05:10Z Verification progress: 50%
+2025-09-09T12:05:10Z Verification progress: 66%
+2025-09-09T12:05:10Z Verification progress: 83%
+2025-09-09T12:05:10Z Verification progress: 99%
+2025-09-09T12:05:10Z Verification: No coin database inconsistencies in last 6 blocks (16 transactions)
+2025-09-09T12:05:10Z Block index and chainstate loaded
+2025-09-09T12:05:10Z Opening LevelDB in /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex
+2025-09-09T12:05:10Z Opened LevelDB successfully
+2025-09-09T12:05:10Z Using obfuscation key for /home/demigohu/Fintrack_new/bitcoin_data/regtest/indexes/txindex: 0000000000000000
+2025-09-09T12:05:10Z Setting NODE_NETWORK on non-prune mode
+2025-09-09T12:05:10Z block tree size = 118
+2025-09-09T12:05:10Z nBestHeight = 116
+2025-09-09T12:05:10Z initload thread start
+2025-09-09T12:05:10Z torcontrol thread start
+2025-09-09T12:05:10Z Loading 0 mempool transactions from file...
+2025-09-09T12:05:10Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-09-09T12:05:10Z initload thread exit
+2025-09-09T12:05:10Z txindex thread start
+2025-09-09T12:05:10Z txindex is enabled at height 116
+2025-09-09T12:05:10Z txindex thread exit
+2025-09-09T12:05:10Z Bound to 127.0.0.1:18445
+2025-09-09T12:05:10Z Bound to [::]:18444
+2025-09-09T12:05:10Z Bound to 0.0.0.0:18444
+2025-09-09T12:05:10Z 0 block-relay-only anchors will be tried for connections.
+2025-09-09T12:05:10Z init message: Starting network threads…
+2025-09-09T12:05:10Z net thread start
+2025-09-09T12:05:10Z dnsseed thread start
+2025-09-09T12:05:10Z Loading addresses from DNS seed dummySeed.invalid.
+2025-09-09T12:05:10Z addcon thread start
+2025-09-09T12:05:10Z init message: Done loading
+2025-09-09T12:05:10Z msghand thread start
+2025-09-09T12:05:10Z opencon thread start
+2025-09-09T12:05:10Z 0 addresses found from DNS seeds
+2025-09-09T12:05:10Z dnsseed thread exit
+2025-09-09T12:06:11Z Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network
+2025-09-09T12:06:11Z Added 0 fixed seeds from reachable networks.
+2025-09-09T12:37:29Z Potential stale tip detected, will try using extra outbound peer (last tip update: 1894 seconds ago)
+2025-09-09T12:47:52Z Potential stale tip detected, will try using extra outbound peer (last tip update: 2517 seconds ago)
+2025-09-09T12:58:19Z Potential stale tip detected, will try using extra outbound peer (last tip update: 3144 seconds ago)
+2025-09-09T13:08:51Z Potential stale tip detected, will try using extra outbound peer (last tip update: 3776 seconds ago)
+2025-09-09T13:09:39Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T13:19:20Z Potential stale tip detected, will try using extra outbound peer (last tip update: 4405 seconds ago)
+2025-09-09T13:29:41Z Potential stale tip detected, will try using extra outbound peer (last tip update: 5026 seconds ago)
+2025-09-09T13:40:05Z Potential stale tip detected, will try using extra outbound peer (last tip update: 5650 seconds ago)
+2025-09-09T13:50:26Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6271 seconds ago)
+2025-09-09T14:00:59Z Potential stale tip detected, will try using extra outbound peer (last tip update: 6904 seconds ago)
+2025-09-09T14:11:31Z Potential stale tip detected, will try using extra outbound peer (last tip update: 7536 seconds ago)
+2025-09-09T14:13:57Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T14:22:04Z Potential stale tip detected, will try using extra outbound peer (last tip update: 8169 seconds ago)
+2025-09-09T14:32:36Z Potential stale tip detected, will try using extra outbound peer (last tip update: 8801 seconds ago)
+2025-09-09T14:43:04Z Potential stale tip detected, will try using extra outbound peer (last tip update: 9429 seconds ago)
+2025-09-09T14:53:33Z Potential stale tip detected, will try using extra outbound peer (last tip update: 10058 seconds ago)
+2025-09-09T15:04:01Z Potential stale tip detected, will try using extra outbound peer (last tip update: 10686 seconds ago)
+2025-09-09T15:14:30Z Potential stale tip detected, will try using extra outbound peer (last tip update: 11315 seconds ago)
+2025-09-09T15:18:33Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T15:25:00Z Potential stale tip detected, will try using extra outbound peer (last tip update: 11945 seconds ago)
+2025-09-09T15:35:34Z Potential stale tip detected, will try using extra outbound peer (last tip update: 12579 seconds ago)
+2025-09-09T15:46:09Z Potential stale tip detected, will try using extra outbound peer (last tip update: 13214 seconds ago)
+2025-09-09T15:56:36Z Potential stale tip detected, will try using extra outbound peer (last tip update: 13841 seconds ago)
+2025-09-09T16:07:09Z Potential stale tip detected, will try using extra outbound peer (last tip update: 14474 seconds ago)
+2025-09-09T16:17:44Z Potential stale tip detected, will try using extra outbound peer (last tip update: 15109 seconds ago)
+2025-09-09T16:23:26Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T16:28:21Z Potential stale tip detected, will try using extra outbound peer (last tip update: 15746 seconds ago)
+2025-09-09T16:38:55Z Potential stale tip detected, will try using extra outbound peer (last tip update: 16380 seconds ago)
+2025-09-09T16:49:21Z Potential stale tip detected, will try using extra outbound peer (last tip update: 17006 seconds ago)
+2025-09-09T16:59:58Z Potential stale tip detected, will try using extra outbound peer (last tip update: 17643 seconds ago)
+2025-09-09T17:10:34Z Potential stale tip detected, will try using extra outbound peer (last tip update: 18279 seconds ago)
+2025-09-09T17:21:03Z Potential stale tip detected, will try using extra outbound peer (last tip update: 18908 seconds ago)
+2025-09-09T17:28:19Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T17:31:30Z Potential stale tip detected, will try using extra outbound peer (last tip update: 19535 seconds ago)
+2025-09-09T17:42:08Z Potential stale tip detected, will try using extra outbound peer (last tip update: 20173 seconds ago)
+2025-09-09T17:52:44Z Potential stale tip detected, will try using extra outbound peer (last tip update: 20809 seconds ago)
+2025-09-09T18:03:20Z Potential stale tip detected, will try using extra outbound peer (last tip update: 21445 seconds ago)
+2025-09-09T18:14:00Z Potential stale tip detected, will try using extra outbound peer (last tip update: 22085 seconds ago)
+2025-09-09T18:24:37Z Potential stale tip detected, will try using extra outbound peer (last tip update: 22722 seconds ago)
+2025-09-09T18:33:35Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T18:35:14Z Potential stale tip detected, will try using extra outbound peer (last tip update: 23359 seconds ago)
+2025-09-09T18:45:55Z Potential stale tip detected, will try using extra outbound peer (last tip update: 24000 seconds ago)
+2025-09-09T18:56:43Z Potential stale tip detected, will try using extra outbound peer (last tip update: 24648 seconds ago)
+2025-09-09T19:07:33Z Potential stale tip detected, will try using extra outbound peer (last tip update: 25298 seconds ago)
+2025-09-09T19:18:22Z Potential stale tip detected, will try using extra outbound peer (last tip update: 25947 seconds ago)
+2025-09-09T19:28:23Z Potential stale tip detected, will try using extra outbound peer (last tip update: 26548 seconds ago)
+2025-09-09T19:39:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 27197 seconds ago)
+2025-09-09T19:40:01Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T19:49:35Z Potential stale tip detected, will try using extra outbound peer (last tip update: 27820 seconds ago)
+2025-09-09T20:00:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 28457 seconds ago)
+2025-09-09T20:10:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 29087 seconds ago)
+2025-09-09T20:21:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 29717 seconds ago)
+2025-09-09T20:31:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 30347 seconds ago)
+2025-09-09T20:40:42Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T20:42:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 30977 seconds ago)
+2025-09-09T20:52:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 31607 seconds ago)
+2025-09-09T21:03:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 32237 seconds ago)
+2025-09-09T21:13:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 32867 seconds ago)
+2025-09-09T21:24:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 33497 seconds ago)
+2025-09-09T21:34:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 34127 seconds ago)
+2025-09-09T21:40:42Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T21:45:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 34757 seconds ago)
+2025-09-09T21:55:42Z Potential stale tip detected, will try using extra outbound peer (last tip update: 35387 seconds ago)
+2025-09-09T22:06:12Z Potential stale tip detected, will try using extra outbound peer (last tip update: 36017 seconds ago)
+2025-09-09T22:16:44Z Potential stale tip detected, will try using extra outbound peer (last tip update: 36649 seconds ago)
+2025-09-09T22:27:23Z Potential stale tip detected, will try using extra outbound peer (last tip update: 37288 seconds ago)
+2025-09-09T22:32:56Z tor: Thread interrupt
+2025-09-09T22:32:56Z torcontrol thread exit
+2025-09-09T22:32:56Z addcon thread exit
+2025-09-09T22:32:56Z opencon thread exit
+2025-09-09T22:32:56Z Shutdown: In progress...
+2025-09-09T22:32:56Z net thread exit
+2025-09-09T22:32:56Z msghand thread exit
+2025-09-09T22:32:56Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-09-09T22:32:56Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-09-09T22:32:56Z scheduler thread exit
+2025-09-09T22:32:56Z Writing 0 mempool transactions to file...
+2025-09-09T22:32:56Z Writing 0 unbroadcast transactions to file.
+2025-09-09T22:32:56Z Dumped mempool: 0.000s to copy, 0.005s to dump, 27 bytes dumped to file
+2025-09-09T22:32:56Z Flushed fee estimates to fee_estimates.dat.
+2025-09-09T22:32:56Z Shutdown: done

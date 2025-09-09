@@ -4,6 +4,8 @@ use candid::{Nat, Principal};
 use ic_cdk::api::management_canister::http_request::{TransformArgs, HttpResponse};
 use crate::services::evm_rpc_canister::BlockTag;
 use crate::services::ethtransfer::InitArg;
+use services::budget as budget;
+use services::goals as goals;
 
 // -------------------------
 // BTC service endpoints
@@ -215,5 +217,161 @@ async fn get_crypto_usd_rate(crypto_id: String) -> Result<f64, String> {
 async fn get_rates_summary() -> Result<services::rates::CryptoRates, String> {
     services::rates::get_rates_summary().await
 }
+
+
+
+// -------------------------
+// Budgeting endpoints
+// -------------------------
+
+#[ic_cdk::update]
+async fn budget_create(req: budget::BudgetCreateRequest) -> Result<budget::BudgetInfo, String> {
+    budget::create_budget(req).await
+}
+
+#[ic_cdk::query]
+fn budget_list(owner: Option<Principal>) -> Vec<budget::BudgetInfo> {
+    budget::list_budgets(owner)
+}
+
+#[ic_cdk::query]
+fn budget_list_by_asset(owner: Option<Principal>, asset: Principal) -> Vec<budget::BudgetInfo> {
+    budget::list_budgets_by_asset(owner, asset)
+}
+
+#[ic_cdk::query]
+fn budget_get(id: String) -> Option<budget::BudgetInfo> {
+    budget::get_budget(id)
+}
+
+#[ic_cdk::query]
+fn budget_list_events(id: String, limit: Option<u32>, offset: Option<u32>) -> Result<Vec<budget::BudgetEvent>, String> {
+    budget::budget_list_events(id, limit, offset)
+}
+
+#[ic_cdk::query]
+fn budget_preview_accrual(id: String) -> Result<budget::BudgetAccrualPreview, String> {
+    budget::budget_preview_accrual(id)
+}
+
+#[ic_cdk::update]
+async fn budget_refresh_accrual_step(id: String, max_delta: Option<Nat>) -> Result<budget::BudgetInfo, String> {
+    budget::budget_refresh_accrual_step(id, max_delta)
+}
+
+#[ic_cdk::update]
+async fn budget_refresh_accrual(id: String) -> Result<budget::BudgetInfo, String> {
+    budget::budget_refresh_accrual(id)
+}
+
+#[ic_cdk::query]
+fn budget_get_escrow_account(id: String) -> Result<budget::Account, String> {
+    budget::get_escrow_account(id)
+}
+
+#[ic_cdk::update]
+fn budget_pause(id: String) -> Result<(), String> {
+    budget::pause_budget(id)
+}
+
+#[ic_cdk::update]
+fn budget_resume(id: String) -> Result<(), String> {
+    budget::resume_budget(id)
+}
+
+#[ic_cdk::update]
+async fn budget_delete(id: String) -> Result<(), String> {
+    budget::delete_budget(id).await
+}
+
+#[ic_cdk::update]
+async fn budget_update(id: String, upd: budget::BudgetUpdateRequest) -> Result<budget::BudgetInfo, String> {
+    // pure state mutation, no await inside
+    budget::update_budget(id, upd)
+}
+
+#[ic_cdk::update]
+async fn budget_trigger_lock_now(id: String) -> Result<(), String> {
+    budget::trigger_lock_now(id).await
+}
+
+// removed budget_trigger_unlock_now: linear vesting accrues on write
+
+#[ic_cdk::query]
+fn budget_preview_schedule(id: String) -> Result<Vec<budget::BudgetSchedulePreviewItem>, String> {
+    budget::budget_preview_schedule(id)
+}
+
+#[ic_cdk::query]
+fn budget_required_allowance(id: String) -> Result<Nat, String> {
+    budget::budget_required_allowance(id)
+}
+
+#[ic_cdk::update]
+async fn budget_required_amounts(id: String) -> Result<budget::BudgetAmountRequirements, String> {
+    budget::budget_required_amounts(id).await
+}
+
+#[ic_cdk::update]
+async fn budget_preview_requirements(
+    asset_canister: Principal,
+    asset_kind: budget::AssetKind,
+    amount_to_lock: Nat,
+) -> Result<budget::BudgetAmountRequirements, String> {
+    budget::budget_preview_requirements(asset_canister, asset_kind, amount_to_lock).await
+}
+
+#[ic_cdk::update]
+async fn budget_create_and_lock(req: budget::BudgetCreateRequest) -> Result<budget::BudgetInfo, String> {
+    budget::budget_create_and_lock(req).await
+}
+
+#[ic_cdk::update]
+async fn budget_withdraw(id: String, amount: Nat, to_subaccount: Option<Vec<u8>>) -> Result<Nat, String> {
+    budget::budget_withdraw(id, amount, to_subaccount).await
+}
+
+#[ic_cdk::pre_upgrade]
+fn pre_upgrade() {
+    budget::pre_upgrade();
+}
+
+#[ic_cdk::post_upgrade]
+fn post_upgrade() {
+    budget::post_upgrade();
+}
+
+
+
+// -------------------------
+// Goals endpoints
+// -------------------------
+
+#[ic_cdk::update]
+async fn goals_create_and_lock(req: goals::GoalCreateRequest) -> Result<goals::GoalInfo, String> {
+    goals::goals_create_and_lock(req).await
+}
+
+#[ic_cdk::query]
+fn goals_get(id: String) -> Option<goals::GoalInfo> { goals::goals_get(id) }
+
+#[ic_cdk::query]
+fn goals_list(owner: Option<Principal>) -> Vec<goals::GoalInfo> { goals::goals_list(owner) }
+
+#[ic_cdk::query]
+fn goals_get_progress(id: String) -> Result<goals::GoalProgress, String> { goals::goals_get_progress(id) }
+
+#[ic_cdk::update]
+fn goals_refresh(id: String) -> Result<goals::GoalInfo, String> { goals::goals_refresh(id) }
+
+#[ic_cdk::update]
+async fn goals_add_funds(id: String, amount: Nat) -> Result<goals::GoalInfo, String> { goals::goals_add_funds(id, amount).await }
+
+#[ic_cdk::update]
+async fn goals_withdraw(id: String, amount: Nat) -> Result<Nat, String> { goals::goals_withdraw(id, amount).await }
+
+#[ic_cdk::query]
+fn goals_list_events(id: String, limit: Option<u32>, offset: Option<u32>) -> Result<Vec<goals::GoalEvent>, String> { goals::goals_list_events(id, limit, offset) }
+
 
 ic_cdk::export_candid!();

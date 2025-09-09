@@ -3,7 +3,7 @@
 import { AuthClient } from "@dfinity/auth-client"
 import { type ActorSubclass } from "@dfinity/agent"
 import { Principal } from "@dfinity/principal"
-import { getBackendActor } from "@/lib/ic"
+import { getBackendActor, getAgent, createExternalActor } from "@/lib/ic"
 import type { _SERVICE } from "../../../src/declarations/fintrack_backend/fintrack_backend.did"
 
 type Result<T> = { success: true; data: T } | { success: false; error: string }
@@ -265,29 +265,9 @@ export const bitcoinService = {
       const ckbtcMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_MINTER || "ml52i-qqaaa-aaaar-qaaba-cai"
       
       // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
-        try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
-        }
-      }
-      
-      // Create actor for ckBTC ledger
-      const { Actor } = await import("@dfinity/agent")
       const { idlFactory: ckbtcLedgerIdlFactory } = await import("../../../src/declarations/ckbtc_ledger")
-      
-      const ckbtcLedgerActor = Actor.createActor(ckbtcLedgerIdlFactory, {
-        agent,
-        canisterId: ckbtcLedgerCanisterId,
-      })
+      const agent = await getAgent(identity)
+      const ckbtcLedgerActor: any = await createExternalActor(ckbtcLedgerCanisterId, ckbtcLedgerIdlFactory, identity)
       
       // Fetch ledger transfer fee to use for approval (ICRC-1 fee)
       let ledgerFee: bigint | null = null
@@ -332,29 +312,8 @@ export const bitcoinService = {
       const ckbtcMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_MINTER || "ml52i-qqaaa-aaaar-qaaba-cai"
       
       // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
-        try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
-        }
-      }
-      
-      // Create actor for ckBTC minter
-      const { Actor } = await import("@dfinity/agent")
       const { idlFactory: ckbtcMinterIdlFactory } = await import("../../../src/declarations/ckbtc_minter")
-      
-      const ckbtcMinterActor = Actor.createActor(ckbtcMinterIdlFactory, {
-        agent,
-        canisterId: ckbtcMinterCanisterId,
-      })
+      const ckbtcMinterActor: any = await createExternalActor(ckbtcMinterCanisterId, ckbtcMinterIdlFactory, identity)
       
       // Call retrieve_btc_with_approval on ckBTC minter
       const withdrawResult = await ckbtcMinterActor.retrieve_btc_with_approval({
@@ -568,29 +527,8 @@ export const ethereumService = {
       const ckethMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_MINTER || "jzenf-aiaaa-aaaar-qaa7q-cai"
       
       // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
-        try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
-        }
-      }
-      
-      // Create actor for ckETH ledger
-      const { Actor } = await import("@dfinity/agent")
       const { idlFactory: ckethLedgerIdlFactory } = await import("../../../src/declarations/cketh_ledger")
-      
-      const ckethLedgerActor = Actor.createActor(ckethLedgerIdlFactory, {
-        agent,
-        canisterId: ckethLedgerCanisterId,
-      })
+      const ckethLedgerActor: any = await createExternalActor(ckethLedgerCanisterId, ckethLedgerIdlFactory, identity)
       
       // Call icrc2_approve on ckETH ledger
       const approveResult = await ckethLedgerActor.icrc2_approve({
@@ -627,29 +565,8 @@ export const ethereumService = {
       const ckethMinterCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_MINTER || "jzenf-aiaaa-aaaar-qaa7q-cai"
       
       // Create HttpAgent with authenticated identity
-      const { HttpAgent } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ 
-        identity,
-        host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
-      })
-      
-      // Fetch root key for local development
-      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
-        try {
-          await agent.fetchRootKey()
-        } catch (e) {
-          console.warn("Unable to fetch root key. Is local replica running?", e)
-        }
-      }
-      
-      // Create actor for ckETH minter
-      const { Actor } = await import("@dfinity/agent")
       const { idlFactory: ckethMinterIdlFactory } = await import("../../../src/declarations/cketh_minter")
-      
-      const ckethMinterActor = Actor.createActor(ckethMinterIdlFactory, {
-        agent,
-        canisterId: ckethMinterCanisterId,
-      })
+      const ckethMinterActor: any = await createExternalActor(ckethMinterCanisterId, ckethMinterIdlFactory, identity)
       
       // Call withdraw_eth on ckETH minter
       const withdrawResult = await ckethMinterActor.withdraw_eth({
@@ -726,6 +643,433 @@ export const currencyService = {
   },
   fetchRealTimeRates: async (): Promise<Result<any>> => {
     return { success: false, error: "Not implemented on backend" }
+  },
+}
+
+// ---------------- Budgets (single period lock + linear vesting) ----------------
+export type AssetKind = "CkBtc" | "CkEth"
+
+export const budgetService = {
+  listByAsset: async (assetCanister: string, owner?: string): Promise<Result<any[]>> => {
+    try {
+      const a = await ensureActor()
+      const ownerOpt: [] | [Principal] = owner ? [Principal.fromText(owner)] : []
+      const res = await a.budget_list_by_asset(ownerOpt, Principal.fromText(assetCanister))
+      return { success: true, data: res as any[] }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to list budgets" }
+    }
+  },
+
+  previewRequirements: async (assetCanister: string, assetKind: AssetKind, amountToLock: bigint): Promise<Result<{ allowance: bigint; estimated_fee: bigint; required_user_balance: bigint }>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.budget_preview_requirements(Principal.fromText(assetCanister), { [assetKind]: null } as any, amountToLock)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to preview requirements" }
+    }
+  },
+
+  createAndLock: async (params: { assetCanister: string; assetKind: AssetKind; name: string; amountToLock: bigint; periodStartNs: bigint; periodEndNs: bigint }): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        asset_canister: Principal.fromText(params.assetCanister),
+        asset_kind: { [params.assetKind]: null } as any,
+        name: params.name,
+        amount_to_lock: params.amountToLock,
+        period_start_ns: params.periodStartNs,
+        period_end_ns: params.periodEndNs,
+      } as any
+      const res = await a.budget_create_and_lock(req)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to create budget" }
+    }
+  },
+
+  previewAccrual: async (id: string): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.budget_preview_accrual(id)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to preview accrual" }
+    }
+  },
+
+  get: async (id: string): Promise<Result<any | null>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.budget_get(id)
+      return { success: true, data: (res as any) ?? null }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get budget" }
+    }
+  },
+
+  refreshAccrualStep: async (id: string, maxDelta?: bigint): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const md: [] | [bigint] = maxDelta !== undefined ? [maxDelta] : []
+      const res = await a.budget_refresh_accrual_step(id, md)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to refresh accrual" }
+    }
+  },
+
+  withdraw: async (id: string, amount: bigint, toSub?: Uint8Array): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const sub: [] | [Uint8Array] = toSub ? [toSub] : []
+      // If amount is zero or negative, block early
+      if (amount <= BigInt(0)) return { success: false, error: "Amount must be > 0" }
+      const res = await a.budget_withdraw(id, amount, sub)
+      if ("Ok" in res) return { success: true, data: (res.Ok as bigint).toString() }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to withdraw" }
+    }
+  },
+
+  listEvents: async (id: string, limit = 50, offset = 0): Promise<Result<any[]>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.budget_list_events(id, [limit], [offset])
+      if ("Ok" in res) return { success: true, data: res.Ok as any[] }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to list events" }
+    }
+  },
+
+  // ICRC-2 approve for budgeting canister to lock funds from user's account (ckBTC)
+  approveForLockCkbtc: async (amount: bigint, fromSubaccount?: Uint8Array): Promise<Result<null>> => {
+    try {
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+
+      const backendEnvId = process.env.NEXT_PUBLIC_CANISTER_ID_FINTRACK_BACKEND
+      let backendCanisterId = backendEnvId || ""
+      if (!backendCanisterId) {
+        try {
+          const decl = await import("../../../src/declarations/fintrack_backend")
+          backendCanisterId = (decl as any).canisterId || ""
+        } catch (_) {}
+      }
+      if (!backendCanisterId) return { success: false, error: "Missing backend canister ID" }
+
+      const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mc6ru-gyaaa-aaaar-qaaaq-cai"
+
+      const { HttpAgent, Actor } = await import("@dfinity/agent")
+      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943" })
+      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
+        try { await agent.fetchRootKey() } catch {}
+      }
+
+      const { idlFactory: ckbtcLedgerIdlFactory } = await import("../../../src/declarations/ckbtc_ledger")
+      const ckbtcLedgerActor: any = Actor.createActor(ckbtcLedgerIdlFactory, { agent, canisterId: ckbtcLedgerCanisterId })
+
+      let fee: bigint | null = null
+      try { fee = await ckbtcLedgerActor.icrc1_fee() as bigint } catch {}
+
+      const res = await ckbtcLedgerActor.icrc2_approve({
+        spender: {
+          owner: Principal.fromText(backendCanisterId),
+          subaccount: [],
+        },
+        amount,
+        from_subaccount: fromSubaccount ? [fromSubaccount] : [],
+        expected_allowance: [],
+        expires_at: [],
+        fee: fee !== null ? [fee] : [],
+        memo: [],
+        created_at_time: [],
+      }) as { Ok: bigint } | { Err: any }
+
+      if ("Ok" in res) return { success: true, data: null }
+      return { success: false, error: `Approve failed: ${res.Err}` }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to approve ckBTC allowance" }
+    }
+  },
+
+  // ICRC-2 approve for budgeting canister to lock funds from user's account (ckETH)
+  approveForLockCketh: async (amount: bigint, fromSubaccount?: Uint8Array): Promise<Result<null>> => {
+    try {
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+
+      const backendEnvId = process.env.NEXT_PUBLIC_CANISTER_ID_FINTRACK_BACKEND
+      let backendCanisterId = backendEnvId || ""
+      if (!backendCanisterId) {
+        try {
+          const decl = await import("../../../src/declarations/fintrack_backend")
+          backendCanisterId = (decl as any).canisterId || ""
+        } catch (_) {}
+      }
+      if (!backendCanisterId) return { success: false, error: "Missing backend canister ID" }
+
+      const ckethLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_LEDGER || "apia6-jaaaa-aaaar-qabma-cai"
+
+      const { HttpAgent, Actor } = await import("@dfinity/agent")
+      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943" })
+      if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
+        try { await agent.fetchRootKey() } catch {}
+      }
+
+      const { idlFactory: ckethLedgerIdlFactory } = await import("../../../src/declarations/cketh_ledger")
+      const ckethLedgerActor: any = Actor.createActor(ckethLedgerIdlFactory, { agent, canisterId: ckethLedgerCanisterId })
+
+      const res = await ckethLedgerActor.icrc2_approve({
+        spender: {
+          owner: Principal.fromText(backendCanisterId),
+          subaccount: [],
+        },
+        amount,
+        from_subaccount: fromSubaccount ? [fromSubaccount] : [],
+        expected_allowance: [],
+        expires_at: [],
+        fee: [],
+        memo: [],
+        created_at_time: [],
+      }) as { Ok: bigint } | { Err: any }
+
+      if ("Ok" in res) return { success: true, data: null }
+      return { success: false, error: `Approve failed: ${res.Err}` }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to approve ckETH allowance" }
+    }
+  },
+
+  // Fetch ICRC-1 transfer fee from the asset ledger
+  getLedgerFee: async (assetCanister: string, assetKind: AssetKind): Promise<Result<bigint>> => {
+    try {
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+      if (assetKind === "CkBtc") {
+        const { idlFactory } = await import("../../../src/declarations/ckbtc_ledger")
+        const actor: any = await createExternalActor(assetCanister, idlFactory, identity)
+        const fee = await actor.icrc1_fee() as bigint
+        return { success: true, data: fee }
+      } else {
+        const { idlFactory } = await import("../../../src/declarations/cketh_ledger")
+        const actor: any = await createExternalActor(assetCanister, idlFactory, identity)
+        const fee = await actor.icrc1_fee() as bigint
+        return { success: true, data: fee }
+      }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get ledger fee" }
+    }
+  },
+}
+
+// ---------------- Goals (cicilan/savings with cliff unlock) ----------------
+export const goalsService = {
+  // Create goal with optional initial transfer
+  createAndLock: async (params: { 
+    assetCanister: string; 
+    assetKind: AssetKind; 
+    name: string; 
+    amountToLock: bigint; 
+    startNs: bigint; 
+    endNs: bigint;
+    initialAmount?: bigint;
+  }): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        asset_canister: Principal.fromText(params.assetCanister),
+        asset_kind: { [params.assetKind]: null } as any,
+        name: params.name,
+        amount_to_lock: params.amountToLock,
+        start_ns: params.startNs,
+        end_ns: params.endNs,
+        initial_amount: params.initialAmount ? [params.initialAmount] : [],
+      } as any
+      const res = await a.goals_create_and_lock(req)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to create goal" }
+    }
+  },
+
+  // Get goal details
+  get: async (id: string): Promise<Result<any | null>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.goals_get(id)
+      return { success: true, data: (res as any) ?? null }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get goal" }
+    }
+  },
+
+  // List goals for user
+  list: async (owner?: string): Promise<Result<any[]>> => {
+    try {
+      const a = await ensureActor()
+      const ownerOpt: [] | [Principal] = owner ? [Principal.fromText(owner)] : []
+      const res = await a.goals_list(ownerOpt)
+      return { success: true, data: res as any[] }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to list goals" }
+    }
+  },
+
+  // Get goal progress (percentage towards target)
+  getProgress: async (id: string): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.goals_get_progress(id)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get goal progress" }
+    }
+  },
+
+  // Add funds to goal (cicilan)
+  addFunds: async (id: string, amount: bigint): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.goals_add_funds(id, amount)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to add funds" }
+    }
+  },
+
+  // Refresh goal (unlock cliff after end time)
+  refresh: async (id: string): Promise<Result<any>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.goals_refresh(id)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to refresh goal" }
+    }
+  },
+
+  // Withdraw from goal
+  withdraw: async (id: string, amount: bigint): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      if (amount <= BigInt(0)) return { success: false, error: "Amount must be > 0" }
+      const res = await a.goals_withdraw(id, amount)
+      if ("Ok" in res) return { success: true, data: (res.Ok as bigint).toString() }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to withdraw from goal" }
+    }
+  },
+
+  // List goal events
+  listEvents: async (id: string, limit = 50, offset = 0): Promise<Result<any[]>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.goals_list_events(id, [limit], [offset])
+      if ("Ok" in res) return { success: true, data: res.Ok as any[] }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to list goal events" }
+    }
+  },
+
+  // ICRC-2 approve for goals canister to add funds from user's account (ckBTC)
+  approveForAddFundsCkbtc: async (amount: bigint, fromSubaccount?: Uint8Array): Promise<Result<null>> => {
+    try {
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+
+      const backendEnvId = process.env.NEXT_PUBLIC_CANISTER_ID_FINTRACK_BACKEND
+      let backendCanisterId = backendEnvId || ""
+      if (!backendCanisterId) {
+        try {
+          const decl = await import("../../../src/declarations/fintrack_backend")
+          backendCanisterId = (decl as any).canisterId || ""
+        } catch (_) {}
+      }
+      if (!backendCanisterId) return { success: false, error: "Missing backend canister ID" }
+
+      const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mc6ru-gyaaa-aaaar-qaaaq-cai"
+
+      const { idlFactory: ckbtcLedgerIdlFactory } = await import("../../../src/declarations/ckbtc_ledger")
+      const ckbtcLedgerActor: any = await createExternalActor(ckbtcLedgerCanisterId, ckbtcLedgerIdlFactory, identity)
+
+      let fee: bigint | null = null
+      try { fee = await ckbtcLedgerActor.icrc1_fee() as bigint } catch {}
+
+      const res = await ckbtcLedgerActor.icrc2_approve({
+        spender: {
+          owner: Principal.fromText(backendCanisterId),
+          subaccount: [],
+        },
+        amount,
+        from_subaccount: fromSubaccount ? [fromSubaccount] : [],
+        expected_allowance: [],
+        expires_at: [],
+        fee: fee !== null ? [fee] : [],
+        memo: [],
+        created_at_time: [],
+      }) as { Ok: bigint } | { Err: any }
+
+      if ("Ok" in res) return { success: true, data: null }
+      return { success: false, error: `Approve failed: ${res.Err}` }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to approve ckBTC allowance for goals" }
+    }
+  },
+
+  // ICRC-2 approve for goals canister to add funds from user's account (ckETH)
+  approveForAddFundsCketh: async (amount: bigint, fromSubaccount?: Uint8Array): Promise<Result<null>> => {
+    try {
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+
+      const backendEnvId = process.env.NEXT_PUBLIC_CANISTER_ID_FINTRACK_BACKEND
+      let backendCanisterId = backendEnvId || ""
+      if (!backendCanisterId) {
+        try {
+          const decl = await import("../../../src/declarations/fintrack_backend")
+          backendCanisterId = (decl as any).canisterId || ""
+        } catch (_) {}
+      }
+      if (!backendCanisterId) return { success: false, error: "Missing backend canister ID" }
+
+      const ckethLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_LEDGER || "apia6-jaaaa-aaaar-qabma-cai"
+
+      const { idlFactory: ckethLedgerIdlFactory } = await import("../../../src/declarations/cketh_ledger")
+      const ckethLedgerActor: any = await createExternalActor(ckethLedgerCanisterId, ckethLedgerIdlFactory, identity)
+
+      const res = await ckethLedgerActor.icrc2_approve({
+        spender: {
+          owner: Principal.fromText(backendCanisterId),
+          subaccount: [],
+        },
+        amount,
+        from_subaccount: fromSubaccount ? [fromSubaccount] : [],
+        expected_allowance: [],
+        expires_at: [],
+        fee: [],
+        memo: [],
+        created_at_time: [],
+      }) as { Ok: bigint } | { Err: any }
+
+      if ("Ok" in res) return { success: true, data: null }
+      return { success: false, error: `Approve failed: ${res.Err}` }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to approve ckETH allowance for goals" }
+    }
   },
 }
 

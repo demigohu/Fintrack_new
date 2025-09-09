@@ -125,7 +125,17 @@ pub struct IndexTransaction {
     pub mint: Option<Mint>,
     pub approve: Option<Approve>,
     pub timestamp: u64,
-    pub transfer: Option<()>,
+    pub transfer: Option<Transfer>,
+}
+#[derive(CandidType, candid::Deserialize, Debug)]
+pub struct Transfer {
+    pub to: Account,
+    pub fee: Option<Nat>,
+    pub from: Account,
+    pub memo: Option<ByteBuf>,
+    pub created_at_time: Option<u64>,
+    pub amount: Nat,
+    pub spender: Option<Account>,
 }
 
 #[derive(CandidType, Deserialize, Debug)]
@@ -703,6 +713,63 @@ fn convert_index_transaction_to_transaction(
             // Skip approve transactions for now as they're not deposits/withdrawals
             None
         },
+        "transfer" => {
+            if let Some(tr) = &tx.transfer {
+                // Determine direction relative to user (based on indices: we only have user principal by context in caller
+                // Here, we cannot access the user directly; infer via description using accounts. We'll keep both from/to.
+                // Detect budgeting and goals by memo
+                let memo_text = tr.memo.as_ref().and_then(|b| String::from_utf8(b.clone().into_vec()).ok()).unwrap_or_default();
+                let operation = if memo_text == "budget_monthly_lock" {
+                    "BUDGET_LOCK"
+                } else if memo_text == "budget_user_withdraw" {
+                    "BUDGET_WITHDRAW"
+                } else if memo_text == "goals_initial_lock" {
+                    "GOALS_INITIAL_LOCK"
+                } else if memo_text == "goals_add_funds" {
+                    "GOALS_ADD_FUNDS"
+                } else if memo_text == "goals_user_withdraw" {
+                    "GOALS_WITHDRAW"
+                } else {
+                    "TRANSFER"
+                };
+
+                let description = if operation == "BUDGET_LOCK" {
+                    format!("Budget lock {} {}", format_nat_as_token(&tr.amount, token), token)
+                } else if operation == "BUDGET_WITHDRAW" {
+                    format!("Budget withdraw {} {}", format_nat_as_token(&tr.amount, token), token)
+                } else if operation == "GOALS_INITIAL_LOCK" {
+                    format!("Goals initial lock {} {}", format_nat_as_token(&tr.amount, token), token)
+                } else if operation == "GOALS_ADD_FUNDS" {
+                    format!("Goals add funds {} {}", format_nat_as_token(&tr.amount, token), token)
+                } else if operation == "GOALS_WITHDRAW" {
+                    format!("Goals withdraw {} {}", format_nat_as_token(&tr.amount, token), token)
+                } else {
+                    format!("Transfer {} {}", format_nat_as_token(&tr.amount, token), token)
+                };
+
+                Some(Transaction {
+                    id: TransactionId {
+                        chain: chain.to_string(),
+                        tx_hash: tx_record.id.0.to_string(),
+                        timestamp: tx.timestamp,
+                    },
+                    icp_tx: Some(IcpTransaction {
+                        block_index: tx_record.id.0.to_u64().unwrap_or(0),
+                        from: tr.from.owner,
+                        to: tr.to.owner,
+                        amount: tr.amount.clone(),
+                        fee: tr.fee.clone().unwrap_or_else(|| Nat::from(0u64)),
+                        timestamp: tx.timestamp,
+                        operation: operation.to_string(),
+                        token: token.to_string(),
+                    }),
+                    btc_tx: None,
+                    eth_tx: None,
+                    status: "CONFIRMED".to_string(),
+                    description,
+                })
+            } else { None }
+        }
         _ => None
     }
 }
