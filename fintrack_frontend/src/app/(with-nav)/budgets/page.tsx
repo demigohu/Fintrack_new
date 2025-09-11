@@ -175,7 +175,7 @@ export default function BudgetsPage() {
   async function onApprove() {
     setError(null)
     try {
-      // Pastikan sudah preview agar kita bisa mengambil fee
+      // Ensure preview is done so we can get the fee
       if (!reqPreview) {
         await onPreviewRequirements()
       }
@@ -205,13 +205,13 @@ export default function BudgetsPage() {
       }
       toast({
         title: "Success!",
-        description: "Approve berhasil.",
+        description: "Approve successful.",
         variant: "success"
       })
     } catch (e: any) {
       toast({
         title: "Error",
-        description: e?.message || "Approve gagal",
+        description: e?.message || "Approve failed",
         variant: "destructive"
       })
     }
@@ -241,14 +241,14 @@ export default function BudgetsPage() {
       }
       toast({
         title: "Success!",
-        description: "Budget dibuat.",
+        description: "Budget created.",
         variant: "success"
       })
       await loadBudgets()
     } catch (e: any) {
       toast({
         title: "Error",
-        description: e?.message || "Gagal membuat budget",
+        description: e?.message || "Failed to create budget",
         variant: "destructive"
       })
     } finally {
@@ -332,7 +332,7 @@ export default function BudgetsPage() {
       if (!p.success) return setError(p.error)
       const available = BigInt(p.data.projected_available || 0)
       if (available <= BigInt(0)) {
-        return setError("Tidak ada balance tersedia untuk withdraw.")
+        return setError("No balance available for withdrawal.")
       }
       // If user typed custom amount, use it; else withdraw all available
       const typed = withdrawInput[b.id]
@@ -340,7 +340,7 @@ export default function BudgetsPage() {
       if (amount > available) return setError("Amount melebihi available.")
       await onWithdraw(b.id, amount)
     } catch (e: any) {
-      setError(e?.message || "Withdraw gagal")
+      setError(e?.message || "Withdraw failed")
     }
   }
 
@@ -409,27 +409,27 @@ export default function BudgetsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">Budgets</h1>
-            <p className="text-gray-300 mt-1">Hard-lock + linear vesting menggunakan ckAssets</p>
+            <p className="text-gray-300 mt-1">Hard-lock + linear vesting using ckAssets</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-              <h3 className="font-semibold text-white text-lg mb-4">Pilih Aset</h3>
+              <h3 className="font-semibold text-white text-lg mb-4">Choose Asset</h3>
               <Tabs defaultValue={activeAssetTab} onValueChange={(v) => setActiveAssetTab(v as any)}>
                 <TabsList className="grid w-full grid-cols-2 bg-slate-800/50">
                   <TabsTrigger value="BTC" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:glow-purple">BTC</TabsTrigger>
                   <TabsTrigger value="ETH" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:glow-purple">ETH</TabsTrigger>
                 </TabsList>
-                <TabsContent value="BTC" className="mt-4 text-slate-300 text-sm">Gunakan ckBTC ledger</TabsContent>
-                <TabsContent value="ETH" className="mt-4 text-slate-300 text-sm">Gunakan ckETH ledger</TabsContent>
+                <TabsContent value="BTC" className="mt-4 text-slate-300 text-sm">Use ckBTC ledger</TabsContent>
+                <TabsContent value="ETH" className="mt-4 text-slate-300 text-sm">Use ckETH ledger</TabsContent>
               </Tabs>
               {/* Balances summary */}
               <div className="mt-4">
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
                   <div className="text-slate-400 text-xs">
-                    {activeAssetTab === "BTC" ? "Saldo ckBTC" : "Saldo ckETH"}
+                    {activeAssetTab === "BTC" ? "ckBTC Balance" : "ckETH Balance"}
                   </div>
                   <div className="text-white font-mono text-sm">
                     {activeAssetTab === "BTC" 
@@ -452,17 +452,17 @@ export default function BudgetsPage() {
             </Card>
 
             <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-              <h3 className="font-semibold text-white text-lg mb-4">Buat Budget</h3>
+              <h3 className="font-semibold text-white text-lg mb-4">Create Budget</h3>
               <div className="space-y-4">
                 <div>
-                  <Label className="text-slate-300">Nama</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Contoh: Bulanan" className="bg-slate-800/50 border-slate-600 text-white mt-2" />
+                  <Label className="text-slate-300">Name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Example: Monthly" className="bg-slate-800/50 border-slate-600 text-white mt-2" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-slate-300">Amount (USD)</Label>
                     <Input value={amountUsd} onChange={(e) => setAmountUsd(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="e.g. 100.00" className="bg-slate-800/50 border-slate-600 text-white mt-2" />
-                    <div className="text-xs text-slate-400 mt-1">Akan dikonversi ke {symbol} base unit (decimals {decimals})</div>
+                    <div className="text-xs text-slate-400 mt-1">Will be converted to {symbol} base unit (decimals {decimals})</div>
                     <div className="text-xs text-slate-500 mt-1">Preview: <span className="font-mono text-slate-300">{toDecimalStringNat(amountBaseUnit, decimals)} {symbol}</span>
                       <span className="ml-2">{rates ? (
                         assetKind === "CkBtc"
@@ -516,7 +516,7 @@ export default function BudgetsPage() {
                         ) : ""}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Total saldo dibutuhkan:</span> <span className="text-white font-mono">{toDecimalStringNat(BigInt(reqPreview.required_user_balance), decimals)} {symbol}</span>
+                        <span className="text-slate-400">Total balance required:</span> <span className="text-white font-mono">{toDecimalStringNat(BigInt(reqPreview.required_user_balance), decimals)} {symbol}</span>
                         <span className="ml-2 text-slate-500">{rates ? (
                           assetKind === "CkBtc"
                             ? `(${formatUsdPrecise((Number(reqPreview.required_user_balance)/1e8) * (rates.btc_to_usd||0))})`
@@ -533,7 +533,7 @@ export default function BudgetsPage() {
           <div className="space-y-6">
             <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-white text-lg">Daftar Budgets</h3>
+                <h3 className="font-semibold text-white text-lg">Budget List</h3>
                 <Button onClick={loadBudgets} disabled={loadingList} className="bg-purple-600 hover:bg-purple-700 glow-purple">
                   {loadingList ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Loading</>) : (<><RefreshCw className="h-4 w-4 mr-2" />Refresh</>)}
                 </Button>
@@ -593,7 +593,7 @@ export default function BudgetsPage() {
                             value={(withdrawInput[b.id] ? toDecimalStringNat(BigInt(withdrawInput[b.id]), Number(b.decimals)) : "")}
                             onChange={(e)=>{
                               const val = e.target.value
-                              // simpan sebagai base units, tapi input human-readable
+                              // save as base units, but input human-readable
                               const base = parseDecimalToBaseUnits(val, Number(b.decimals))
                               setWithdrawInput(v=>({ ...v, [b.id]: base.toString() }))
                             }}
@@ -636,10 +636,10 @@ export default function BudgetsPage() {
               <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-white text-lg">Events</h3>
-                  <Button size="sm" onClick={() => { setEvents(null); setEventsBudget(null) }} className="bg-slate-700 hover:bg-slate-600">Tutup</Button>
+                  <Button size="sm" onClick={() => { setEvents(null); setEventsBudget(null) }} className="bg-slate-700 hover:bg-slate-600">Close</Button>
                 </div>
                 <div className="space-y-2 text-sm">
-                  {events.length === 0 && <div className="text-slate-400">Tidak ada event</div>}
+                  {events.length === 0 && <div className="text-slate-400">No events</div>}
                   {events.map((e, idx) => {
                     const dec = Number(eventsBudget?.decimals ?? (assetKind === "CkBtc" ? 8 : 18))
                     const sym = eventsBudget ? (eventsBudget.decimals === 8 ? "ckBTC" : "ckETH") : symbol

@@ -315,14 +315,37 @@ pub async fn get_user_transaction_history(
 ) -> Result<Vec<Transaction>, String> {
     let max_results = limit.unwrap_or(50);
     
-    // Get ckBTC transactions
-    let ckbtc_txs = get_ckbtc_transactions(user, max_results).await?;
+    // Get ckBTC transactions (with error handling)
+    let ckbtc_txs = match get_ckbtc_transactions(user, max_results).await {
+        Ok(txs) => txs,
+        Err(e) => {
+            ic_cdk::println!("Warning: Failed to load ckBTC transactions: {}", e);
+            Vec::new()
+        }
+    };
     
-    // Get ckETH transactions
-    let cketh_txs = get_cketh_transactions(user, max_results).await?;
+    // Get ckETH transactions (with error handling)
+    let cketh_txs = match get_cketh_transactions(user, max_results).await {
+        Ok(txs) => txs,
+        Err(e) => {
+            ic_cdk::println!("Warning: Failed to load ckETH transactions: {}", e);
+            Vec::new()
+        }
+    };
     
     // Get native ETH transactions via Alchemy (HTTP outcall)
-    let native_txs = get_native_transactions(user, max_results).await?;
+    let native_txs = match get_native_transactions(user, max_results).await {
+        Ok(txs) => txs,
+        Err(e) => {
+            ic_cdk::println!("Warning: Failed to load native transactions: {}", e);
+            Vec::new()
+        }
+    };
+    
+    // Store lengths before moving the vectors
+    let ckbtc_count = ckbtc_txs.len();
+    let cketh_count = cketh_txs.len();
+    let native_count = native_txs.len();
     
     // Combine and sort all transactions
     let mut all_transactions = Vec::new();
@@ -354,6 +377,9 @@ pub async fn get_user_transaction_history(
             all_transactions = Vec::new();
         }
     }
+    
+    ic_cdk::println!("Transaction summary for user {}: ckBTC={}, ckETH={}, native={}, total={}", 
+        user, ckbtc_count, cketh_count, native_count, all_transactions.len());
     
     Ok(all_transactions)
 }
@@ -436,8 +462,13 @@ async fn get_cketh_transactions(user: Principal, max_results: u32) -> Result<Vec
 
 async fn get_native_transactions(user: Principal, max_results: u32) -> Result<Vec<Transaction>, String> {
     // Get user's ETH address (native address)
-    let eth_address = crate::services::address::get_eth_address(Some(user)).await
-        .map_err(|e| format!("Failed to get user ETH address: {}", e))?;
+    let eth_address = match crate::services::address::get_eth_address(Some(user)).await {
+        Ok(addr) => addr,
+        Err(_) => {
+            // If no ETH address, return empty list instead of error
+            return Ok(Vec::new());
+        }
+    };
 
     // Get transactions from Etherscan (both incoming/outgoing)
     match fetch_eth_transfers_for_address(&eth_address, max_results).await {
@@ -446,14 +477,15 @@ async fn get_native_transactions(user: Principal, max_results: u32) -> Result<Ve
             let _ = store_native_txs(user, &txs);
             Ok(txs)
         }
-        Err(e) => {
+        Err(_) => {
             // Fallback to stored data
             if let Some(mut txs) = load_native_txs(user) {
                 txs.sort_by(|a, b| b.id.timestamp.cmp(&a.id.timestamp));
                 txs.truncate(max_results as usize);
                 Ok(txs)
             } else {
-                Err(e)
+                // If no stored data and API fails, return empty list instead of error
+                Ok(Vec::new())
             }
         }
     }

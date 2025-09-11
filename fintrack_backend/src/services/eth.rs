@@ -1,4 +1,6 @@
 use candid::{CandidType, Nat, Principal};
+use serde::Deserialize;
+use num_traits::ToPrimitive;
 use ic_cdk::api::call::call;
 use ic_cdk::api::call::call_with_payment;
 
@@ -65,10 +67,23 @@ pub async fn get_minter_address() -> Result<String, String> {
 
 pub async fn get_minter_info() -> Result<String, String> {
     let minter = cketh_minter_principal();
-    let (info,): (String,) = call(minter, "get_minter_info", ())
+    #[derive(CandidType, Deserialize)]
+    struct MinterInfoPartial {
+        last_observed_block_number: Option<Nat>,
+        last_eth_scraped_block_number: Option<Nat>,
+    }
+    let (info,): (MinterInfoPartial,) = ic_cdk::call(minter, "get_minter_info", ())
         .await
         .map_err(|e| format!("get_minter_info failed: {:?}", e))?;
-    Ok(info)
+
+    let finalized = info.last_observed_block_number.and_then(|n| n.0.to_u64());
+    let scraped = info.last_eth_scraped_block_number.and_then(|n| n.0.to_u64());
+    let json = format!(
+        "{{\"eth_finalized_block_height\":{},\"last_scraped_block_number\":{}}}",
+        finalized.map(|x| x.to_string()).unwrap_or("null".to_string()),
+        scraped.map(|x| x.to_string()).unwrap_or("null".to_string())
+    );
+    Ok(json)
 }
 
 pub async fn estimate_withdrawal_fee() -> Result<String, String> {

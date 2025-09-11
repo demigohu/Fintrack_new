@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { TrendingUp, PieChart, ArrowDownToLine, ArrowUpFromLine, Home, GalleryVerticalEnd, History, Send, CalendarCheck, Target } from "lucide-react"
+import { TrendingUp, PieChart, ArrowDownToLine, Home, GalleryVerticalEnd, History, Send, CalendarCheck, Target, Zap } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -51,9 +51,9 @@ const navItems = [
     icon: Target,
   },
   {
-    title: "Withdraw",
-    url: "/withdraw",
-    icon: ArrowUpFromLine,
+    title: "Bridge",
+    url: "/bridge",
+    icon: Zap,
   },
   {
     title: "Transfer",

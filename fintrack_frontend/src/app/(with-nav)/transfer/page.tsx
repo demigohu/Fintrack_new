@@ -109,7 +109,7 @@ export default function TransferPage() {
 
         {!isLoggedIn && (
           <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
-            <div className="text-slate-400">Silakan login terlebih dahulu</div>
+            <div className="text-slate-400">Please login first</div>
           </Card>
         )}
 

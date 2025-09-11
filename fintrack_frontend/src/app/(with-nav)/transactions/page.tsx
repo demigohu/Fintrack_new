@@ -54,12 +54,8 @@ export default function TransactionsPage() {
     try {
       const v = typeof value === "bigint" ? value : BigInt(String(value ?? 0))
       const decimals = token === "ckETH" ? 18 : 8
-      const s = v.toString()
-      if (decimals <= 0) return s
-      if (s.length <= decimals) return `0.${"0".repeat(decimals - s.length)}${s}`.replace(/\.?0+$/, "")
-      const head = s.slice(0, s.length - decimals)
-      const tail = s.slice(s.length - decimals).replace(/0+$/, "")
-      return tail ? `${head}.${tail}` : head
+      const amount = Number(v) / (decimals === 18 ? 1e18 : 1e8)
+      return amount.toFixed(4)
     } catch {
       return String(value ?? "-")
     }
@@ -195,7 +191,7 @@ export default function TransactionsPage() {
                                : operation
         
         const statusLabel = btc && typeof btc.confirmations === "number" && btc.confirmations > 0 ? "CONFIRMED" : "PENDING"
-        const amountBtc = btc ? String((Number(btc.amount || 0) / 1e8).toFixed(8)) : "-"
+        const amountBtc = btc ? String((Number(btc.amount || 0) / 1e8).toFixed(4)) : "-"
 
         const opClass = displayOperation === "DEPOSIT"
           ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"

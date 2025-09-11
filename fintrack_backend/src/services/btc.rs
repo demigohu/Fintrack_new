@@ -1,7 +1,7 @@
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::api::call::call;
 use ic_cdk::{
-    bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest},
+    bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, bitcoin_get_block_headers, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest, GetBlockHeadersRequest, GetBlockHeadersResponse},
 };
 
 // Simplified UTXO structure for frontend consumption - only hash and confirmations
@@ -184,6 +184,42 @@ pub async fn get_current_fee_percentiles() -> Result<Vec<u64>, String> {
         .collect();
     
     Ok(fees)
+}
+
+#[derive(CandidType, serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct BtcNetworkInfo {
+    pub last_seen_utxo_height: u32,
+    pub current_block_height: u32,
+}
+
+/// Returns network info including current block height and highest seen UTXO height
+pub async fn get_network_info(address: Option<String>) -> Result<BtcNetworkInfo, String> {
+    let network = ic_cdk::bitcoin_canister::Network::Regtest;
+
+    let mut utxo_height: u32 = 0;
+    let mut current_block_height: u32 = 0;
+
+    if let Some(addr) = address {
+        let utxo_request = GetUtxosRequest { address: addr, network, filter: None };
+        let utxo_response: GetUtxosResponse = bitcoin_get_utxos(&utxo_request)
+            .await
+            .map_err(|e| format!("Failed to get UTXOs: {:?}", e))?;
+
+        // Highest UTXO height for this address
+        for utxo in utxo_response.utxos.into_iter() {
+            if utxo.height > utxo_height {
+                utxo_height = utxo.height;
+            }
+        }
+
+        // Ambil block height terbaru langsung dari tip_height
+        current_block_height = utxo_response.tip_height;
+    }
+
+    Ok(BtcNetworkInfo { 
+        last_seen_utxo_height: utxo_height,
+        current_block_height,
+    })
 }
 
 

@@ -108,6 +108,80 @@ export const transactionService = {
   },
 }
 
+export const networkService = {
+  getEthNetworkStatus: async (): Promise<Result<{ eth_finalized: number | null; last_scraped: number | null }>> => {
+    try {
+      // Primary attempt using existing declarations (may be query/update depending on build)
+      try {
+        const a = await ensureActor()
+        const res = await (a as any).eth_get_minter_info()
+        if ("Ok" in res) {
+          const parsed = JSON.parse(res.Ok)
+          return { success: true, data: { eth_finalized: parsed.eth_finalized_block_height ?? null, last_scraped: parsed.last_scraped_block_number ?? null } }
+        } else {
+          // Fallthrough to force-update variant
+          throw new Error(res.Err)
+        }
+      } catch (_primaryErr) {
+        // Fallback: create a minimal actor with eth_get_minter_info as UPDATE explicitly
+        try {
+          const client = await ensureAuthClient()
+          const identity = client.getIdentity()
+          const backendEnvId = process.env.NEXT_PUBLIC_CANISTER_ID_FINTRACK_BACKEND
+          let backendCanisterId = backendEnvId || ""
+          if (!backendCanisterId) {
+            try {
+              const decl = await import("../../../src/declarations/fintrack_backend")
+              backendCanisterId = (decl as any).canisterId || ""
+            } catch {}
+          }
+          if (!backendCanisterId) return { success: false, error: "Missing backend canister ID" }
+
+          const { IDL } = await import("@dfinity/candid")
+          const idlFactory = ({ IDL: I }: any) => {
+            const Result = I.Variant({ Ok: I.Text, Err: I.Text })
+            return I.Service({
+              // update function returning Result<Text, Text>
+              eth_get_minter_info: I.Func([], [Result], []),
+            })
+          }
+          const actor: any = await createExternalActor<any>(backendCanisterId, (idlFactory as any), identity)
+          const res2 = await actor.eth_get_minter_info() as { Ok?: string; Err?: string }
+          if (res2 && "Ok" in res2) {
+            const parsed = JSON.parse(res2.Ok as string)
+            return { success: true, data: { eth_finalized: parsed.eth_finalized_block_height ?? null, last_scraped: parsed.last_scraped_block_number ?? null } }
+          }
+          return { success: false, error: (res2 as any)?.Err || "Failed to call eth_get_minter_info (update)" }
+        } catch (fallbackErr: any) {
+          return { success: false, error: fallbackErr?.message || "Failed to get ETH network status" }
+        }
+      }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get ETH network status" }
+    }
+  },
+  getBtcNetworkStatus: async (address?: string): Promise<Result<{ last_seen_utxo_height: number | null; current_block_height: number | null }>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).btc_get_network_info(address ? [address] : [])
+      if ("Ok" in res) {
+        const utxo_h = Number((res.Ok as any).last_seen_utxo_height)
+        const block_h = Number((res.Ok as any).current_block_height)
+        return { 
+          success: true, 
+          data: { 
+            last_seen_utxo_height: isNaN(utxo_h) ? null : utxo_h,
+            current_block_height: isNaN(block_h) ? null : block_h
+          } 
+        }
+      }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get BTC network status" }
+    }
+  }
+}
+
 export const bitcoinService = {
   // Derive BTC native address via backend
   deriveBtcAddress: async (owner?: string): Promise<Result<string>> => {
@@ -626,6 +700,37 @@ export const balanceService = {
       return { success: false, error: res.Err }
     } catch (e: any) {
       return { success: false, error: e?.message || "Failed to get balances" }
+    }
+  },
+}
+
+export const feeService = {
+  getCkbtcFee: async (): Promise<Result<bigint>> => {
+    try {
+      const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mxzaz-hqaaa-aaaar-qaada-cai"
+      const { idlFactory: ckbtcLedgerIdlFactory } = await import("../../../src/declarations/ckbtc_ledger")
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+      const ckbtcLedgerActor: any = await createExternalActor(ckbtcLedgerCanisterId, ckbtcLedgerIdlFactory, identity)
+      
+      const res = await ckbtcLedgerActor.icrc1_fee() as bigint
+      return { success: true, data: res }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get ckBTC fee" }
+    }
+  },
+  getCkethFee: async (): Promise<Result<bigint>> => {
+    try {
+      const ckethLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_LEDGER || "apia6-jaaaa-aaaar-qabma-cai"
+      const { idlFactory: ckethLedgerIdlFactory } = await import("../../../src/declarations/cketh_ledger")
+      const client = await ensureAuthClient()
+      const identity = client.getIdentity()
+      const ckethLedgerActor: any = await createExternalActor(ckethLedgerCanisterId, ckethLedgerIdlFactory, identity)
+      
+      const res = await ckethLedgerActor.icrc1_fee() as bigint
+      return { success: true, data: res }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get ckETH fee" }
     }
   },
 }

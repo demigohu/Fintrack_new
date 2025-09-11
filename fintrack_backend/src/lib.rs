@@ -69,7 +69,7 @@ async fn eth_get_minter_address() -> Result<String, String> {
     services::eth::get_minter_address().await
 }
 
-#[ic_cdk::query]
+#[ic_cdk::update]
 async fn eth_get_minter_info() -> Result<String, String> {
     services::eth::get_minter_info().await
 }
@@ -216,6 +216,15 @@ async fn get_crypto_usd_rate(crypto_id: String) -> Result<f64, String> {
 #[ic_cdk::update]
 async fn get_rates_summary() -> Result<services::rates::CryptoRates, String> {
     services::rates::get_rates_summary().await
+}
+
+// -------------------------
+// Network info endpoints (pollable)
+// -------------------------
+
+#[ic_cdk::update]
+async fn btc_get_network_info(address: Option<String>) -> Result<services::btc::BtcNetworkInfo, String> {
+    services::btc::get_network_info(address).await
 }
 
 
