@@ -82,7 +82,6 @@ export const WETH_CONTRACT_ADDRESS = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14
 // Transaction constants
 export const MAX_FEE_PER_GAS = 100000000000;
 export const MAX_PRIORITY_FEE_PER_GAS = 100000000000;
-export const TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER = 2000;
 
 // ABI's (based on Uniswap reference)
 export const ERC20_ABI = [
@@ -288,35 +287,55 @@ export async function createTrade(
   feeAmount: FeeAmount,
   provider: ethers.providers.Provider
 ): Promise<TokenTrade> {
-  const poolInfo = await getPoolInfo(tokenIn, tokenOut, feeAmount, provider);
+  try {
+    // Validate input
+    if (amountIn <= 0 || !isFinite(amountIn)) {
+      throw new Error("Invalid input amount");
+    }
 
-  const pool = new Pool(
-    tokenIn,
-    tokenOut,
-    feeAmount,
-    poolInfo.sqrtPriceX96.toString(),
-    poolInfo.liquidity.toString(),
-    poolInfo.tick
-  );
+    const poolInfo = await getPoolInfo(tokenIn, tokenOut, feeAmount, provider);
 
-  const swapRoute = new Route([pool], tokenIn, tokenOut);
+    // Validate pool info
+    if (!poolInfo || poolInfo.liquidity.isZero()) {
+      throw new Error("Pool has no liquidity");
+    }
 
-  const amountOut = await getOutputQuote(swapRoute, tokenIn, amountIn, provider);
-
-  const uncheckedTrade = Trade.createUncheckedTrade({
-    route: swapRoute,
-    inputAmount: CurrencyAmount.fromRawAmount(
+    const pool = new Pool(
       tokenIn,
-      fromReadableAmount(amountIn, tokenIn.decimals).toString()
-    ),
-    outputAmount: CurrencyAmount.fromRawAmount(
       tokenOut,
-      JSBI.BigInt(amountOut)
-    ),
-    tradeType: TradeType.EXACT_INPUT,
-  });
+      feeAmount,
+      poolInfo.sqrtPriceX96.toString(),
+      poolInfo.liquidity.toString(),
+      poolInfo.tick
+    );
 
-  return uncheckedTrade;
+    const swapRoute = new Route([pool], tokenIn, tokenOut);
+
+    const amountOut = await getOutputQuote(swapRoute, tokenIn, amountIn, provider);
+
+    // Validate output amount
+    if (!amountOut || ethers.BigNumber.from(amountOut).isZero()) {
+      throw new Error("Invalid output amount from quote");
+    }
+
+    const uncheckedTrade = Trade.createUncheckedTrade({
+      route: swapRoute,
+      inputAmount: CurrencyAmount.fromRawAmount(
+        tokenIn,
+        fromReadableAmount(amountIn, tokenIn.decimals).toString()
+      ),
+      outputAmount: CurrencyAmount.fromRawAmount(
+        tokenOut,
+        JSBI.BigInt(amountOut)
+      ),
+      tradeType: TradeType.EXACT_INPUT,
+    });
+
+    return uncheckedTrade;
+  } catch (error) {
+    console.error("createTrade failed:", error);
+    throw new Error(`Failed to create trade: ${error}`);
+  }
 }
 
 /**
@@ -328,24 +347,36 @@ async function getOutputQuote(
   amountIn: number,
   provider: ethers.providers.Provider
 ): Promise<string> {
-  const { calldata } = await SwapQuoter.quoteCallParameters(
-    route,
-    CurrencyAmount.fromRawAmount(
-      tokenIn,
-      fromReadableAmount(amountIn, tokenIn.decimals).toString()
-    ),
-    TradeType.EXACT_INPUT,
-    {
-      useQuoterV2: true,
+  try {
+    const { calldata } = await SwapQuoter.quoteCallParameters(
+      route,
+      CurrencyAmount.fromRawAmount(
+        tokenIn,
+        fromReadableAmount(amountIn, tokenIn.decimals).toString()
+      ),
+      TradeType.EXACT_INPUT,
+      {
+        useQuoterV2: true,
+      }
+    );
+
+    const quoteCallReturnData = await provider.call({
+      to: QUOTER_CONTRACT_ADDRESS,
+      data: calldata,
+    });
+
+    const result = ethers.utils.defaultAbiCoder.decode(['uint256'], quoteCallReturnData)[0];
+    
+    // Validate result
+    if (!result || ethers.BigNumber.from(result).isZero()) {
+      throw new Error("Quote returned zero amount");
     }
-  );
-
-  const quoteCallReturnData = await provider.call({
-    to: QUOTER_CONTRACT_ADDRESS,
-    data: calldata,
-  });
-
-  return ethers.utils.defaultAbiCoder.decode(['uint256'], quoteCallReturnData)[0];
+    
+    return result;
+  } catch (error) {
+    console.error("getOutputQuote failed:", error);
+    throw new Error(`Failed to get output quote: ${error}`);
+  }
 }
 
 /**
@@ -380,13 +411,6 @@ export async function executeTrade(
   recipient: string,
   provider: ethers.providers.Provider
 ): Promise<SwapCalldataResultV3> {
-  // Give approval to the router to spend the token
-  const tokenApproval = await getTokenTransferApproval(trade.inputAmount.currency as Token, provider);
-
-  if (!tokenApproval) {
-    throw new Error('Token approval failed');
-  }
-
   // Build router trade for Universal Router
   const routerTrade = buildTrade([trade]);
 
@@ -428,29 +452,6 @@ export async function executeTrade(
   };
 }
 
-/**
- * Get token transfer approval for Universal Router
- */
-export async function getTokenTransferApproval(
-  token: Token,
-  provider: ethers.providers.Provider
-): Promise<boolean> {
-  try {
-    // Approve token to Permit2 contract (ERC20 approval)
-    const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider);
-
-    const erc20ApprovalTx = await tokenContract.populateTransaction.approve(
-      PERMIT2_ADDRESS, // ERC20 approval to Permit2
-      fromReadableAmount(TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER, token.decimals).toString()
-    );
-
-    // Return the transaction data for the backend to sign and send
-    return true;
-  } catch (e) {
-    console.error('Token approval failed:', e);
-    return false;
-  }
-}
 
 /**
  * Swap options for Universal Router (based on example)
@@ -779,7 +780,7 @@ export async function getQuoteV2(
 }
 
 /**
- * Build swap calldata using Universal Router (default - without Permit2)
+ * Build swap calldata using Universal Router (default - with Permit2)
  * Based on: https://docs.uniswap.org/contracts/universal-router/technical-reference
  */
 export async function buildSwapCalldataV3(
@@ -791,23 +792,29 @@ export async function buildSwapCalldataV3(
   fee: FeeAmount,
   slippage: number,
   deadline: number,
-  provider: ethers.providers.Provider
+  provider: ethers.providers.Provider,
+  isOriginalEthInput: boolean = false,
+  isOriginalEthOutput: boolean = false
 ): Promise<SwapCalldataResultV3> {
-  // Use the simpler NoPermit version as default
-  return await buildSwapCalldataV3_NoPermit(
+  // Use the WithPermit2 version as default for single transaction
+  return await buildSwapCalldataV3_WithPermit2(
     tokenIn,
     tokenOut,
     amountIn,
     amountOutMin,
     recipient,
     fee,
-    deadline
+    slippage,
+    deadline,
+    provider,
+    isOriginalEthInput,
+    isOriginalEthOutput
   );
 }
 
 /**
  * Build swap calldata using Universal Router with Permit2
- * (More complex but allows single transaction)
+ * (Single transaction approach - requires ERC20 approval to Permit2 beforehand)
  */
 export async function buildSwapCalldataV3_WithPermit2(
   tokenIn: Token,
@@ -818,48 +825,66 @@ export async function buildSwapCalldataV3_WithPermit2(
   fee: FeeAmount,
   slippage: number,
   deadline: number,
-  provider: ethers.providers.Provider
+  provider: ethers.providers.Provider,
+  isOriginalEthInput: boolean = false,
+  isOriginalEthOutput: boolean = false
 ): Promise<SwapCalldataResultV3> {
   try {
-    // Check if we need PERMIT2 (non-ETH tokens)
-    const needsPermit2 = tokenIn.address !== ethers.constants.AddressZero;
-    const isEthOutput = tokenOut.address === ethers.constants.AddressZero;
+    // Determine if we need WRAP_ETH command:
+    // - If original input was ETH: need WRAP_ETH (isOriginalEthInput = true)
+    // - If original input was WETH/token: no WRAP_ETH needed (isOriginalEthInput = false)
+    const isEthInput = isOriginalEthInput;
+    
+    // Determine if we need UNWRAP_WETH command:
+    // - If original output was ETH: need UNWRAP_WETH (isOriginalEthOutput = true)
+    // - If original output was WETH/token: no UNWRAP_WETH needed (isOriginalEthOutput = false)
+    const isEthOutput = isOriginalEthOutput;
+    
+    console.log("Token addresses:", {
+      tokenIn: tokenIn.address,
+      tokenOut: tokenOut.address,
+      isOriginalEthInput,
+      isOriginalEthOutput,
+      isEthInput,
+      isEthOutput,
+      zeroAddress: ethers.constants.AddressZero,
+      wethAddress: WETH_CONTRACT_ADDRESS
+    });
     
     // Build commands and inputs arrays
     const commands: string[] = [];
     const inputs: string[] = [];
     
-    // 1. PERMIT2_PERMIT (0x0a) - if token needs approval
-    if (needsPermit2) {
-      commands.push("0x0a");
-      
-      // PERMIT2_PERMIT parameters:
-      // PermitSingle permitSingle, bytes signature
-      const permitSingle = {
-        details: {
-          token: tokenIn.address,
-          amount: amountIn,
-          expiration: deadline,
-          nonce: 0
-        },
-        spender: PERMIT2_ADDRESS,
-        sigDeadline: deadline
-      };
-      
-      // For now, we'll use empty signature - in production you'd implement proper Permit2
-      const signature = "0x"; // TODO: Implement proper Permit2 signature
-      
-      const permitInput = ethers.utils.defaultAbiCoder.encode(
-        [
-          "tuple(tuple(address token, uint160 amount, uint48 expiration, uint48 nonce) details, address spender, uint256 sigDeadline)",
-          "bytes"
-        ],
-        [permitSingle, signature]
+    // 1. WRAP_ETH (0x0b) - if input is ETH (need to wrap to WETH first)
+    if (isEthInput) {
+      console.log("Adding WRAP_ETH command");
+      commands.push("0x0b");
+      const wrapInput = ethers.utils.defaultAbiCoder.encode(
+        ["address", "uint256"],
+        [recipient, amountIn]
       );
-      inputs.push(permitInput);
+      inputs.push(wrapInput);
     }
     
-    // 2. V3_SWAP_EXACT_IN (0x00)
+    // 2. PERMIT2_TRANSFER_FROM (0x02) - transfer token to Universal Router
+    // For ETH input: transfer WETH (after wrapping)
+    // For WETH/Token input: transfer directly
+    const tokenToTransfer = isEthInput ? WETH_CONTRACT_ADDRESS : tokenIn.address;
+    
+    console.log("Adding PERMIT2_TRANSFER_FROM command for token:", tokenToTransfer);
+    commands.push("0x02");
+    const permit2TransferInput = ethers.utils.defaultAbiCoder.encode(
+      ["address", "address", "uint160"],
+      [
+        tokenToTransfer,    // token (WETH for ETH input, or original token)
+        UNIVERSAL_ROUTER_ADDRESS, // recipient (Universal Router)
+        amountIn            // amount (as uint160)
+      ]
+    );
+    inputs.push(permit2TransferInput);
+    
+    // 3. V3_SWAP_EXACT_IN (0x00)
+    console.log("Adding V3_SWAP_EXACT_IN command");
     commands.push("0x00");
     
     // Build V3 path: tokenIn -> tokenOut with fee
@@ -870,33 +895,48 @@ export async function buildSwapCalldataV3_WithPermit2(
     const swapInput = ethers.utils.defaultAbiCoder.encode(
       ["address", "uint256", "uint256", "bytes", "bool"],
       [
-        recipient,     // recipient
+        isEthOutput ? UNIVERSAL_ROUTER_ADDRESS : recipient, // recipient: Universal Router for ETH output, user for token output
         amountIn,      // amountIn
         amountOutMin,  // amountOutMin
         path,          // path
-        true           // payerIsUser
+        false          // payerIsUser = false (Permit2 already transferred to router)
       ]
     );
     inputs.push(swapInput);
     
-    // 3. UNWRAP_WETH (0x0c) - if output is ETH
+    // 4. UNWRAP_WETH (0x0c) - if output is ETH
     if (isEthOutput) {
+      console.log("Adding UNWRAP_WETH command");
       commands.push("0x0c");
-      
-      // UNWRAP_WETH parameters:
-      // address recipient, uint256 amountMin
       const unwrapInput = ethers.utils.defaultAbiCoder.encode(
         ["address", "uint256"],
-        [
-          recipient, // recipient
-          amountOutMin // amountMin
-        ]
+        [recipient, "0"] // amountMinimum = 0 (unwrap all WETH)
       );
       inputs.push(unwrapInput);
     }
     
+    // 5. SWEEP (0x04) - clean up any remaining tokens
+    console.log("Adding SWEEP command");
+    commands.push("0x04");
+    const sweepToken = isEthOutput ? WETH_CONTRACT_ADDRESS : tokenOut.address;
+    const sweepInput = ethers.utils.defaultAbiCoder.encode(
+      ["address", "address", "uint256"],
+      [sweepToken, recipient, "0"] // amountMin = 0
+    );
+    inputs.push(sweepInput);
+    
     // Combine commands into single bytes (each command is 1 byte)
     const commandsBytes = "0x" + commands.map(cmd => cmd.slice(2)).join("");
+    
+    // Debug logging
+    console.log("Universal Router commands:", {
+      isEthInput,
+      isEthOutput,
+      tokenToTransfer,
+      commands: commands.map(cmd => `0x${cmd.slice(2)}`),
+      commandsBytes,
+      inputs: inputs.map(input => input.slice(0, 10) + "...")
+    });
     
     // Create Universal Router ABI
     const universalRouterABI = [
@@ -918,7 +958,6 @@ export async function buildSwapCalldataV3_WithPermit2(
     const data = iface.encodeFunctionData("execute", [commandsBytes, inputs, deadline]);
 
     // Determine value (ETH amount if swapping from ETH)
-    const isEthInput = tokenIn.address === ethers.constants.AddressZero;
     const value = isEthInput ? amountIn : "0";
 
     return {
@@ -943,112 +982,20 @@ function buildV3Path(tokenIn: Token, tokenOut: Token, fee: FeeAmount): string {
   );
 }
 
-/**
- * Build swap calldata using Universal Router without Permit2
- * (Requires manual ERC20 approval beforehand)
- */
-export async function buildSwapCalldataV3_NoPermit(
-  tokenIn: Token,
-  tokenOut: Token,
-  amountIn: string,
-  amountOutMin: string,
-  recipient: string,
-  fee: FeeAmount,
-  deadline: number
-): Promise<SwapCalldataResultV3> {
-  const isEthInput = tokenIn.address === ethers.constants.AddressZero;
-  const isEthOutput = tokenOut.address === ethers.constants.AddressZero;
-
-  // Commands & inputs
-  const commands: string[] = [];
-  const inputs: string[] = [];
-
-  // 1. WRAP_ETH (0x0b) jika input ETH
-  if (isEthInput) {
-    commands.push("0x0b");
-    const wrapInput = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256"],
-      [recipient, amountIn]
-    );
-    inputs.push(wrapInput);
-  }
-
-  // 2. V3_SWAP_EXACT_IN (0x00)
-  commands.push("0x00");
-
-  const path = buildV3Path(tokenIn, tokenOut, fee);
-  const swapInput = ethers.utils.defaultAbiCoder.encode(
-    ["address", "uint256", "uint256", "bytes", "bool"],
-    [
-      recipient,     // recipient
-      amountIn,      // amountIn
-      amountOutMin,  // amountOutMin
-      path,          // path
-      true           // payerIsUser (karena sudah approve)
-    ]
-  );
-  inputs.push(swapInput);
-
-  // 3. UNWRAP_WETH (0x0c) jika output ETH
-  if (isEthOutput) {
-    commands.push("0x0c");
-    const unwrapInput = ethers.utils.defaultAbiCoder.encode(
-      ["address", "uint256"],
-      [recipient, amountOutMin]
-    );
-    inputs.push(unwrapInput);
-  }
-
-  // 4. SWEEP (0x04) untuk membersihkan token yang tersisa di router
-  commands.push("0x04");
-  const sweepToken = isEthOutput ? WETH_CONTRACT_ADDRESS : tokenOut.address;
-  const sweepInput = ethers.utils.defaultAbiCoder.encode(
-    ["address", "address", "uint256"],
-    [sweepToken, recipient, "0"] // amountMin = 0
-  );
-  inputs.push(sweepInput);
-
-  // Encode commands jadi single bytes
-  const commandsBytes = "0x" + commands.map(c => c.slice(2)).join("");
-
-  const universalRouterABI = [
-    {
-      inputs: [
-        { internalType: "bytes", name: "commands", type: "bytes" },
-        { internalType: "bytes[]", name: "inputs", type: "bytes[]" },
-        { internalType: "uint256", name: "deadline", type: "uint256" },
-      ],
-      name: "execute",
-      outputs: [],
-      stateMutability: "payable",
-      type: "function",
-    },
-  ];
-
-  const iface = new ethers.utils.Interface(universalRouterABI);
-  const data = iface.encodeFunctionData("execute", [commandsBytes, inputs, deadline]);
-
-  return {
-    to: UNIVERSAL_ROUTER_ADDRESS,
-    data,
-    value: isEthInput ? amountIn : "0"
-  };
-}
 
 /**
- * Build ERC20 approval calldata for Permit2
- * First step: Approve token to Permit2 contract
+ * Build ERC20 approval calldata
+ * Approve token to Permit2 with max amount
  */
-export function buildApprovalCalldataV3(
+export function buildERC20ApprovalCalldata(
   tokenAddress: string,
-  spenderAddress: string,
-  amount: string
+  spenderAddress: string
 ): { to: string; data: string; value: string } | null {
   if (tokenAddress === "0x0000000000000000000000000000000000000000") {
     return null; // ETH doesn't need approval
   }
 
-  // ERC20.approve(Permit2, amount) - standard ERC20 approval
+  // ERC20.approve(spender, max amount) - standard ERC20 approval with max amount
   const erc20ApproveABI = [
     {
       "inputs": [
@@ -1064,13 +1011,65 @@ export function buildApprovalCalldataV3(
 
   const iface = new ethers.utils.Interface(erc20ApproveABI);
   
+  // Use max uint256 for approval amount
+  const maxAmount = ethers.constants.MaxUint256.toString();
+  
   const data = iface.encodeFunctionData("approve", [
-    PERMIT2_ADDRESS, // Approve to Permit2 contract
-    amount           // amount
+    spenderAddress, // spender (Permit2)
+    maxAmount       // max amount
   ]);
 
   return {
-    to: tokenAddress, // Call token contract, not Permit2
+    to: tokenAddress, // Call token contract
+    data,
+    value: "0"
+  };
+}
+
+/**
+ * Build Permit2 approval calldata
+ * Approve token to Universal Router via Permit2 with max amount
+ */
+export function buildApprovalCalldataV3(
+  tokenAddress: string,
+  spenderAddress: string, // This parameter is now ignored, as spender is hardcoded to UNIVERSAL_ROUTER_ADDRESS
+  amount: string // This parameter is now ignored, as maxAmount is used internally
+): { to: string; data: string; value: string } | null {
+  if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+    return null; // ETH doesn't need approval
+  }
+
+  // Permit2.approve(token, spender, amount, expiration) - Permit2 approval
+  const permit2ApproveABI = [
+    {
+      "inputs": [
+        {"internalType": "address", "name": "token", "type": "address"},
+        {"internalType": "address", "name": "spender", "type": "address"},
+        {"internalType": "uint160", "name": "amount", "type": "uint160"},
+        {"internalType": "uint48", "name": "expiration", "type": "uint48"}
+      ],
+      "name": "approve",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
+
+  const iface = new ethers.utils.Interface(permit2ApproveABI);
+  
+  // Use max uint160 for approval amount (Permit2 uses uint160)
+  const maxAmount = "1461501637330902918203684832716283019655932542975"; // 2^160 - 1
+  const expiration = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60); // 1 year from now
+  
+  const data = iface.encodeFunctionData("approve", [
+    tokenAddress,           // token
+    UNIVERSAL_ROUTER_ADDRESS, // spender (Universal Router)
+    maxAmount,             // amount (max uint160)
+    expiration             // expiration (1 year)
+  ]);
+
+  return {
+    to: PERMIT2_ADDRESS, // Call Permit2 contract
     data,
     value: "0"
   };
@@ -1081,6 +1080,73 @@ export function buildApprovalCalldataV3(
  */
 export function isApprovalNeededV3(tokenAddress: string): boolean {
   return tokenAddress !== "0x0000000000000000000000000000000000000000";
+}
+
+/**
+ * Check Permit2 allowance for a token
+ */
+export async function checkPermit2Allowance(
+  tokenAddress: string,
+  ownerAddress: string,
+  spenderAddress: string,
+  provider: ethers.providers.Provider
+): Promise<{
+  amount: string;
+  expiration: number;
+  nonce: number;
+  isValid: boolean;
+}> {
+  try {
+    // Permit2 allowance ABI
+    const permit2ABI = [
+      {
+        "inputs": [
+          {"internalType": "address", "name": "owner", "type": "address"},
+          {"internalType": "address", "name": "token", "type": "address"},
+          {"internalType": "address", "name": "spender", "type": "address"}
+        ],
+        "name": "allowance",
+        "outputs": [
+          {"internalType": "uint160", "name": "amount", "type": "uint160"},
+          {"internalType": "uint48", "name": "expiration", "type": "uint48"},
+          {"internalType": "uint48", "name": "nonce", "type": "uint48"}
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    const permit2Contract = new ethers.Contract(PERMIT2_ADDRESS, permit2ABI, provider);
+    
+    const [amount, expiration, nonce] = await permit2Contract.allowance(
+      ownerAddress,
+      tokenAddress,
+      spenderAddress
+    );
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    // Safely convert to numbers, handling BigNumber objects
+    const expirationNum = typeof expiration === 'object' && expiration.toNumber ? expiration.toNumber() : parseInt(expiration.toString());
+    const nonceNum = typeof nonce === 'object' && nonce.toNumber ? nonce.toNumber() : parseInt(nonce.toString());
+    
+    const isValid = expirationNum > currentTime && amount.gt(0);
+
+    return {
+      amount: amount.toString(),
+      expiration: expirationNum,
+      nonce: nonceNum,
+      isValid
+    };
+  } catch (error) {
+    console.error("Failed to check Permit2 allowance:", error);
+    return {
+      amount: "0",
+      expiration: 0,
+      nonce: 0,
+      isValid: false
+    };
+  }
 }
 
 /**
@@ -1099,11 +1165,21 @@ function calculatePriceImpact(
     const amountInBN = ethers.BigNumber.from(amountIn);
     const amountOutBN = ethers.BigNumber.from(amountOut);
     
+    // Check for zero amounts to prevent division by zero
+    if (amountInBN.isZero() || amountOutBN.isZero()) {
+      return new Percent(0, 10000); // 0% price impact if amounts are zero
+    }
+    
     // Simple price impact calculation (this is not accurate, just for demo)
+    // Calculate as: ((amountIn * 100) / amountOut) - 100
     const priceImpact = amountInBN.mul(100).div(amountOutBN).sub(100);
     
-    return new Percent(priceImpact.toString(), 10000);
+    // Ensure price impact is not negative (shouldn't happen in normal swaps)
+    const safePriceImpact = priceImpact.lt(0) ? ethers.BigNumber.from(0) : priceImpact;
+    
+    return new Percent(safePriceImpact.toString(), 10000);
   } catch (error) {
+    console.warn("Price impact calculation failed:", error);
     return new Percent(0, 10000); // 0% price impact if calculation fails
   }
 }
@@ -1121,11 +1197,30 @@ export async function getBestQuoteV3(
   let bestQuote: QuoteResultV3 | null = null;
   let lastError: any = null;
 
+  // Validate input amount
+  const amountInBN = ethers.BigNumber.from(amountIn);
+  if (amountInBN.isZero()) {
+    throw new Error("Input amount cannot be zero");
+  }
+
   for (const fee of feeTiers) {
     try {
       // Try to create trade first to check if pool exists
       const amountInNumber = parseFloat(toReadableAmount(amountIn, tokenIn.decimals));
+      
+      // Validate amount
+      if (amountInNumber <= 0 || !isFinite(amountInNumber)) {
+        console.log(`Invalid amount for fee ${fee}:`, amountInNumber);
+        continue;
+      }
+      
       const trade = await createTrade(tokenIn, tokenOut, amountInNumber, fee, provider);
+      
+      // Validate trade output
+      if (!trade || !trade.outputAmount || JSBI.equal(trade.outputAmount.quotient, JSBI.BigInt(0))) {
+        console.log(`Invalid trade output for fee ${fee}`);
+        continue;
+      }
       
       // If trade creation succeeds, create quote result
       const quote: QuoteResultV3 = {

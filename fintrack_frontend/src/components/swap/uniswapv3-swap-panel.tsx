@@ -15,10 +15,13 @@ import {
   calculateAmountOutMin, 
   createDeadline, 
   formatAmount, 
-  buildApprovalCalldataV3, 
+  buildApprovalCalldataV3,
+  buildERC20ApprovalCalldata, 
   isApprovalNeededV3,
   estimateSwapGasV3,
-  PERMIT2_ADDRESS
+  PERMIT2_ADDRESS,
+  UNIVERSAL_ROUTER_ADDRESS,
+  checkPermit2Allowance
 } from "@/utils/uniswapv3"
 import { Token } from "@uniswap/sdk-core"
 import { uniswapService, ethereumService, authService } from "@/services/backend"
@@ -255,49 +258,176 @@ export function UniswapV3SwapPanel() {
         fee: quote.fee
       })
 
-      // Check if approval is needed
+      // Check if approval is needed for Permit2
+      // For ETH: we need to approve WETH to Permit2 (after wrapping)
+      // For tokens: we need to approve the token to Permit2
       const fromTokenObj = fromToken.symbol === 'ETH' ? SEPOLIA_TOKENS_V3.WETH : SEPOLIA_TOKENS_V3[fromToken.symbol as keyof typeof SEPOLIA_TOKENS_V3];
-      if (isApprovalNeededV3((fromTokenObj as Token).address)) {
-        console.log("Approval needed for token:", fromToken.symbol)
+      const tokenToApprove = fromTokenObj; // Always use the actual token that will be transferred
+      
+      if (isApprovalNeededV3((tokenToApprove as Token).address)) {
+        console.log("Checking allowances for token:", {
+          fromTokenSymbol: fromToken.symbol,
+          tokenToApproveSymbol: (tokenToApprove as Token).symbol,
+          tokenToApproveAddress: (tokenToApprove as Token).address
+        })
         
-        const approvalCalldata = buildApprovalCalldataV3(
-          (fromTokenObj as Token).address,
-          PERMIT2_ADDRESS, // Spender is Permit2 (ERC20 approval to Permit2)
-          amountIn
+        // First: Check ERC20 allowance (token → Permit2)
+        const erc20Contract = new ethers.Contract(
+          (tokenToApprove as Token).address,
+          ["function allowance(address owner, address spender) view returns (uint256)"],
+          provider
         )
         
-        if (approvalCalldata) {
-          console.log("Sending approval transaction...", {
-            to: approvalCalldata.to,
-            data: approvalCalldata.data,
-            value: approvalCalldata.value,
-            amountIn,
-            fromToken: fromToken.symbol
-          })
+        const erc20Allowance = await erc20Contract.allowance(userEthAddress, PERMIT2_ADDRESS)
+        console.log("Current ERC20 allowance (token → Permit2):", {
+          amount: erc20Allowance.toString(),
+          isSufficient: erc20Allowance.gte(amountIn)
+        })
+        
+        // Second: Check Permit2 allowance (token → Universal Router)
+        const permit2Allowance = await checkPermit2Allowance(
+          (tokenToApprove as Token).address,
+          userEthAddress,
+          UNIVERSAL_ROUTER_ADDRESS, // Check allowance for Universal Router
+          provider
+        )
+        
+        console.log("Current Permit2 allowance (token → Universal Router):", {
+          amount: permit2Allowance.amount,
+          expiration: permit2Allowance.expiration,
+          isValid: permit2Allowance.isValid,
+          currentTime: Math.floor(Date.now() / 1000)
+        })
+        
+        // Check if we need ERC20 approval (token → Permit2)
+        const needsERC20Approval = erc20Allowance.lt(amountIn)
+        
+        // Check if we need Permit2 approval (token → Universal Router)
+        const needsPermit2Approval = !permit2Allowance.isValid || ethers.BigNumber.from(permit2Allowance.amount).lt(amountIn)
+        
+        console.log("Approval status:", {
+          needsERC20Approval,
+          needsPermit2Approval,
+          willProceed: !needsERC20Approval && !needsPermit2Approval
+        })
+        
+        // If we need any approval
+        if (needsERC20Approval || needsPermit2Approval) {
+          console.log("Approval needed for token:", fromToken.symbol)
           
-          const approvalResult = await uniswapService.sendApprovalTx({
-            to: approvalCalldata.to,
-            data: approvalCalldata.data,
-            value: BigInt(approvalCalldata.value)
-          })
-          
-          if (!approvalResult.success) {
-            throw new Error(`Approval failed: ${approvalResult.error}`)
+          // First: ERC20 approval to Permit2 (if needed)
+          if (needsERC20Approval) {
+            console.log("ERC20 approval needed: token → Permit2")
+            const erc20ApprovalCalldata = buildERC20ApprovalCalldata(
+              (tokenToApprove as Token).address,
+              PERMIT2_ADDRESS
+            )
+            
+            if (erc20ApprovalCalldata) {
+              console.log("Sending ERC20 approval to Permit2 (max amount)...", {
+                to: erc20ApprovalCalldata.to,
+                data: erc20ApprovalCalldata.data,
+                value: erc20ApprovalCalldata.value,
+                fromToken: fromToken.symbol,
+                spender: PERMIT2_ADDRESS,
+                contract: "ERC20"
+              })
+              
+              const erc20ApprovalResult = await uniswapService.sendApprovalTx({
+                to: erc20ApprovalCalldata.to,
+                data: erc20ApprovalCalldata.data,
+                value: BigInt(erc20ApprovalCalldata.value)
+              })
+              
+              if (!erc20ApprovalResult.success) {
+                throw new Error(`ERC20 approval failed: ${erc20ApprovalResult.error}`)
+              }
+              
+              console.log("ERC20 approval to Permit2 successful:", erc20ApprovalResult.data)
+              
+              // Wait for approval to be mined
+              await new Promise(resolve => setTimeout(resolve, 3000))
+              
+              // Get fresh nonce after ERC20 approval
+              console.log("Getting fresh nonce after ERC20 approval...")
+              await uniswapService.getFreshNonce()
+            }
+          } else {
+            console.log("ERC20 allowance is sufficient, skipping ERC20 approval")
           }
           
-          console.log("Approval successful:", approvalResult.data)
+          // Second: Permit2 approval to Universal Router (if needed)
+          if (needsPermit2Approval) {
+            console.log("Permit2 approval needed: token → Universal Router")
+            const approvalCalldata = buildApprovalCalldataV3(
+              (tokenToApprove as Token).address,
+              UNIVERSAL_ROUTER_ADDRESS, // Spender is Universal Router (Permit2 approval)
+              "0" // amount parameter is ignored, max amount is used internally
+            )
+            
+            if (approvalCalldata) {
+              console.log("Sending Permit2 approval transaction (max amount)...", {
+                to: approvalCalldata.to,
+                data: approvalCalldata.data,
+                value: approvalCalldata.value,
+                fromToken: fromToken.symbol,
+                spender: UNIVERSAL_ROUTER_ADDRESS,
+                contract: "Permit2"
+              })
+              
+              const approvalResult = await uniswapService.sendApprovalTx({
+                to: approvalCalldata.to,
+                data: approvalCalldata.data,
+                value: BigInt(approvalCalldata.value)
+              })
+              
+              if (!approvalResult.success) {
+                throw new Error(`Permit2 approval failed: ${approvalResult.error}`)
+              }
+              
+              console.log("Permit2 approval successful:", approvalResult.data)
+              
+              // Wait for approval to be mined
+              await new Promise(resolve => setTimeout(resolve, 3000))
+              
+              // Get fresh nonce after Permit2 approval
+              console.log("Getting fresh nonce after Permit2 approval...")
+              await uniswapService.getFreshNonce()
+            }
+          } else {
+            console.log("Permit2 allowance is sufficient, skipping Permit2 approval")
+          }
           
-          // Wait for approval to be mined
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          
-          // Get fresh nonce for swap transaction
-          console.log("Getting fresh nonce after approval...")
+          // Final: Get fresh nonce for swap transaction (after all approvals)
+          console.log("Getting fresh nonce for swap transaction...")
           await uniswapService.getFreshNonce()
+          
+        } else {
+          console.log("All allowances are valid, proceeding with swap")
         }
       }
 
       // Build swap calldata
+      // For V3, we always use WETH internally, but need to know if original input was ETH
       const toTokenObj = toToken.symbol === 'ETH' ? SEPOLIA_TOKENS_V3.WETH : SEPOLIA_TOKENS_V3[toToken.symbol as keyof typeof SEPOLIA_TOKENS_V3];
+      
+      // If original input is ETH, we need WRAP_ETH command
+      // If original input is WETH/token, we use token directly
+      const isOriginalEthInput = fromToken.symbol === 'ETH';
+      
+      // If original output is ETH, we need UNWRAP_WETH command
+      // If original output is WETH/token, we use token directly
+      const isOriginalEthOutput = toToken.symbol === 'ETH';
+      
+      console.log("Swap parameters:", {
+        fromTokenSymbol: fromToken.symbol,
+        toTokenSymbol: toToken.symbol,
+        isOriginalEthInput,
+        isOriginalEthOutput,
+        fromTokenObj: fromTokenObj.symbol,
+        toTokenObj: toTokenObj.symbol
+      });
+      
       const swapCalldata = await buildSwapCalldataV3(
         fromTokenObj as Token,
         toTokenObj as Token,
@@ -307,7 +437,9 @@ export function UniswapV3SwapPanel() {
         quote.fee,
         slippage[0],
         deadline,
-        provider
+        provider,
+        isOriginalEthInput,
+        isOriginalEthOutput
       )
 
       console.log("V3 Swap calldata:", swapCalldata)
