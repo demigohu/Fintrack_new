@@ -139,6 +139,35 @@ async fn eth_transfer(request: services::ethtransfer::EthTransferRequest) -> Res
     services::ethtransfer::transfer_eth(request).await
 }
 
+// -------------------------
+// Uniswap service endpoints
+// -------------------------
+
+#[ic_cdk::update]
+async fn uniswap_send_tx(request: services::uniswap::TxRequest) -> Result<String, String> {
+    services::uniswap::send_uniswap_tx(request).await
+}
+
+#[ic_cdk::update]
+async fn uniswap_send_tx_with_response(request: services::uniswap::TxRequest) -> Result<services::uniswap::UniswapTxResponse, String> {
+    services::uniswap::send_uniswap_tx_with_response(request).await
+}
+
+#[ic_cdk::update]
+async fn uniswap_get_gas_price() -> Result<u128, String> {
+    services::uniswap::get_current_gas_price().await
+}
+
+#[ic_cdk::update]
+async fn uniswap_send_approval_tx(request: services::uniswap::TxRequest) -> Result<String, String> {
+    services::uniswap::send_approval_tx(request).await
+}
+
+#[ic_cdk::update]
+async fn uniswap_get_fresh_nonce(owner: Option<Principal>) -> Result<u64, String> {
+    services::uniswap::get_fresh_nonce(owner).await
+}
+
 #[ic_cdk::update]
 async fn btc_get_utxos_for_address(address: String) -> Result<Vec<ic_cdk::bitcoin_canister::Utxo>, String> {
     services::btctransfer::get_utxos_for_address(address).await

@@ -10,6 +10,8 @@
   "dependencies": {
     "@dfinity/agent": "^3.2.1",
     "@dfinity/candid": "^3.2.1",
-    "@dfinity/principal": "^3.2.1"
+    "@dfinity/principal": "^3.2.1",
+    "@uniswap/sdk-core": "^7.7.2",
+    "@uniswap/v3-sdk": "^3.25.2"
   }
 }

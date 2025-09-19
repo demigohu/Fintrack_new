@@ -1178,4 +1178,105 @@ export const goalsService = {
   },
 }
 
+// ---------------- Uniswap Service ----------------
+export const uniswapService = {
+  // Send Uniswap transaction (simple response)
+  sendTx: async (request: {
+    to: string;
+    data: string;
+    value?: bigint;
+    owner?: string;
+  }): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        to: request.to,
+        data: request.data,
+        value: request.value ? [Number(request.value)] : [],
+        owner: request.owner ? [Principal.fromText(request.owner)] : [],
+      } as any
+      const res = await a.uniswap_send_tx(req)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to send Uniswap transaction" }
+    }
+  },
+
+  // Send Uniswap transaction (structured response)
+  sendTxWithResponse: async (request: {
+    to: string;
+    data: string;
+    value?: bigint;
+    owner?: string;
+  }): Promise<Result<{
+    success: boolean;
+    transaction_hash?: string;
+    error?: string;
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        to: request.to,
+        data: request.data,
+        value: request.value ? [Number(request.value)] : [],
+        owner: request.owner ? [Principal.fromText(request.owner)] : [],
+      } as any
+      const res = await a.uniswap_send_tx_with_response(req)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to send Uniswap transaction" }
+    }
+  },
+
+  // Get current gas price
+  getGasPrice: async (): Promise<Result<bigint>> => {
+    try {
+      const a = await ensureActor()
+      const res = await a.uniswap_get_gas_price()
+      if ("Ok" in res) return { success: true, data: BigInt(res.Ok) }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get gas price" }
+    }
+  },
+
+  // Send approval transaction
+  sendApprovalTx: async (request: {
+    to: string;
+    data: string;
+    value?: bigint;
+    owner?: string;
+  }): Promise<Result<string>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        to: request.to,
+        data: request.data,
+        value: request.value ? [Number(request.value)] : [],
+        owner: request.owner ? [Principal.fromText(request.owner)] : [],
+      } as any
+      const res = await a.uniswap_send_approval_tx(req)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to send approval transaction" }
+    }
+  },
+
+  // Get fresh nonce after approval
+  getFreshNonce: async (owner?: string): Promise<Result<number>> => {
+    try {
+      const a = await ensureActor()
+      const req: [] | [Principal] = owner ? [Principal.fromText(owner)] : []
+      const res = await a.uniswap_get_fresh_nonce(req)
+      if ("Ok" in res) return { success: true, data: Number(res.Ok) }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get fresh nonce" }
+    }
+  },
+}
+
 

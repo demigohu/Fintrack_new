@@ -68,18 +68,18 @@ async function principalToBytes32(principal: string): Promise<string> {
     console.error('Error converting principal to bytes32:', error);
     // Fallback to hash method if backend fails
     const { ethers } = await import('ethers');
-    const hash = ethers.keccak256(ethers.toUtf8Bytes(principal));
+    const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(principal));
     return hash;
   }
 }
 
 // Fungsi untuk menghubungkan MetaMask
-async function connectMetaMask(): Promise<ethers.BrowserProvider | null> {
+async function connectMetaMask(): Promise<ethers.providers.Web3Provider | null> {
   if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
     try {
       // Request akun dari MetaMask
       await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       return provider;
     } catch (error) {
       console.error('Error connecting to MetaMask:', error);
@@ -133,7 +133,7 @@ export async function depositEthToContract(
     const principalBytes32 = await principalToBytes32(principal);
 
     // Konversi amount dari ETH ke Wei
-    const amountInWei = ethers.parseEther(amountInEth);
+    const amountInWei = ethers.utils.parseEther(amountInEth);
 
     // Kirim transaksi deposit
     const tx = await contract.deposit(principalBytes32, {

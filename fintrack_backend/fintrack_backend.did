@@ -219,6 +219,8 @@ type Result_21 = variant { Ok : UserBalances; Err : text };
 type Result_22 = variant { Ok : GoalInfo; Err : text };
 type Result_23 = variant { Ok : GoalProgress; Err : text };
 type Result_24 = variant { Ok : vec GoalEvent; Err : text };
+type Result_25 = variant { Ok : nat; Err : text };
+type Result_26 = variant { Ok : UniswapTxResponse; Err : text };
 type Result_3 = variant { Ok : nat64; Err : text };
 type Result_4 = variant { Ok : BtcNetworkInfo; Err : text };
 type Result_5 = variant { Ok : vec SimplifiedUtxo; Err : text };
@@ -237,6 +239,17 @@ type Transaction = record {
 };
 type TransactionId = record { chain : text; timestamp : nat64; tx_hash : text };
 type TransformArgs = record { context : blob; response : HttpResponse };
+type TxRequest = record {
+  to : text;
+  value : opt nat;
+  owner : opt principal;
+  data : text;
+};
+type UniswapTxResponse = record {
+  transaction_hash : opt text;
+  error : opt text;
+  success : bool;
+};
 type UserBalances = record {
   last_updated : nat64;
   cketh_balance : nat;
@@ -309,4 +322,9 @@ service : (opt InitArg) -> {
   goals_withdraw : (text, nat) -> (Result_1);
   principal_to_bytes32 : (text) -> (Result) query;
   transform : (TransformArgs) -> (HttpResponse) query;
+  uniswap_get_fresh_nonce : (opt principal) -> (Result_3);
+  uniswap_get_gas_price : () -> (Result_25);
+  uniswap_send_approval_tx : (TxRequest) -> (Result);
+  uniswap_send_tx : (TxRequest) -> (Result);
+  uniswap_send_tx_with_response : (TxRequest) -> (Result_26);
 }
