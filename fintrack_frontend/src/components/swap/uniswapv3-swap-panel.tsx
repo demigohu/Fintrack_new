@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowUpDown, Settings, TrendingUp, AlertCircle, ExternalLink, Info, ChevronDown, Search, X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
+import { SwapProgressDialog, SwapStep } from "./swap-progress-dialog"
 import { 
   getBestQuoteV3, 
   buildSwapCalldataV3, 
@@ -46,6 +47,9 @@ const ERC20_ABI = [
 
 // Sepolia RPC URL
 const SEPOLIA_RPC_URL = "https://sepolia.infura.io/v3/76cf79a022694d02839ffa1827307d27"
+
+// Provider for checking allowances
+const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC_URL)
 
 // Helper function to get asset logo
 const getAssetLogo = (symbol: string) => {
@@ -97,6 +101,8 @@ export function UniswapV3SwapPanel() {
   const [tokenSelectorType, setTokenSelectorType] = useState<'from' | 'to'>('from')
   const [searchQuery, setSearchQuery] = useState("")
   const [availableTokens, setAvailableTokens] = useState<TokenInfo[]>([])
+  const [showProgressDialog, setShowProgressDialog] = useState(false)
+  const [swapSteps, setSwapSteps] = useState<SwapStep[]>([])
 
   // Initialize available tokens
   useEffect(() => {
@@ -179,8 +185,6 @@ export function UniswapV3SwapPanel() {
     getUserEthAddress()
   }, [])
 
-  // Provider for Sepolia
-  const provider = new ethers.providers.JsonRpcProvider(SEPOLIA_RPC_URL)
 
   // Fetch balances for all tokens
   const fetchBalances = async (address: string) => {
@@ -339,10 +343,98 @@ export function UniswapV3SwapPanel() {
     }
   }, [fromAmount, fromToken, toToken])
 
+  const updateStep = (stepId: string, updates: Partial<SwapStep>) => {
+    setSwapSteps(prev => prev.map(step => 
+      step.id === stepId ? { ...step, ...updates } : step
+    ))
+  }
+
+  const initializeSwapSteps = () => {
+    // Check if approvals are already done in background
+    // For ETH: we need to check WETH approvals (ETH gets converted to WETH for V3)
+    // For other tokens: check the token approvals directly
+    const fromTokenObj = fromToken.symbol === 'ETH' ? SEPOLIA_TOKENS_V3.WETH : SEPOLIA_TOKENS_V3[fromToken.symbol as keyof typeof SEPOLIA_TOKENS_V3];
+    const amountIn = fromReadableAmount(parseFloat(fromAmount), fromToken.decimals);
+    
+    // Check ERC20 allowance (WETH for ETH, or the token itself)
+    const erc20Contract = new ethers.Contract(
+      (fromTokenObj as Token).address,
+      ["function allowance(address owner, address spender) view returns (uint256)"],
+      provider
+    )
+    
+    erc20Contract.allowance(userEthAddress, PERMIT2_ADDRESS)
+      .then((erc20Allowance: any) => {
+        const needsERC20Approval = erc20Allowance.lt(amountIn)
+        
+        if (!needsERC20Approval) {
+          const tokenName = fromToken.symbol === 'ETH' ? 'WETH' : fromToken.symbol
+          updateStep('erc20-approval', { 
+            status: 'success',
+            description: `Already approved ${tokenName} for Permit2`
+          })
+        }
+      })
+      .catch((error: any) => {
+        console.log("Error checking ERC20 allowance:", error)
+      })
+
+    // Check Permit2 allowance
+    checkPermit2Allowance(
+      (fromTokenObj as Token).address,
+      userEthAddress,
+      UNIVERSAL_ROUTER_ADDRESS,
+      provider
+    )
+      .then((permit2Allowance: any) => {
+        const needsPermit2Approval = !permit2Allowance.isValid || ethers.BigNumber.from(permit2Allowance.amount).lt(amountIn)
+        
+        if (!needsPermit2Approval) {
+          const tokenName = fromToken.symbol === 'ETH' ? 'WETH' : fromToken.symbol
+          updateStep('permit2-approval', { 
+            status: 'success',
+            description: `Already approved Permit2 for Universal Router`
+          })
+        }
+      })
+      .catch((error: any) => {
+        console.log("Error checking Permit2 allowance:", error)
+      })
+  }
+
   const handleSwap = async () => {
     if (!fromAmount || !toAmount || !quote) return
     
     setIsLoading(true)
+    setShowProgressDialog(true)
+    
+    // Initialize steps immediately with pending status
+    const tokenName = fromToken.symbol === 'ETH' ? 'WETH' : fromToken.symbol
+    const initialSteps: SwapStep[] = [
+      {
+        id: 'erc20-approval',
+        title: 'Approve ERC20 Token',
+        description: `Approving ${tokenName} for Permit2 contract`,
+        status: 'pending'
+      },
+      {
+        id: 'permit2-approval',
+        title: 'Approve Permit2',
+        description: `Setting Permit2 allowance for Universal Router`,
+        status: 'pending'
+      },
+      {
+        id: 'swap-transaction',
+        title: 'Execute Swap',
+        description: `Swapping ${fromAmount} ${fromToken.symbol} for ${toAmount} ${toToken.symbol}`,
+        status: 'pending'
+      }
+    ]
+    setSwapSteps(initialSteps)
+    
+    // Check existing approvals in background
+    initializeSwapSteps()
+    
     try {
       const amountIn = fromReadableAmount(parseFloat(fromAmount), fromToken.decimals)
       const amountOutMin = calculateAmountOutMin(quote.amountOut, slippage[0])
@@ -418,20 +510,15 @@ export function UniswapV3SwapPanel() {
           willProceed: !needsERC20Approval && !needsPermit2Approval
         })
         
-        // If we need any approval
-        if (needsERC20Approval || needsPermit2Approval) {
-          console.log("Approval needed for token:", fromToken.symbol)
-          
-          // Show approval toast
-          toast({
-            title: "Approval Required",
-            description: `Approving ${fromToken.symbol} for trading.`,
-            variant: "info"
-          })
+          // If we need any approval
+          if (needsERC20Approval || needsPermit2Approval) {
+            console.log("Approval needed for token:", fromToken.symbol)
           
           // First: ERC20 approval to Permit2 (if needed)
           if (needsERC20Approval) {
             console.log("ERC20 approval needed: token → Permit2")
+            updateStep('erc20-approval', { status: 'loading' })
+            
             const erc20ApprovalCalldata = buildERC20ApprovalCalldata(
               (tokenToApprove as Token).address,
               PERMIT2_ADDRESS
@@ -454,25 +541,19 @@ export function UniswapV3SwapPanel() {
               })
               
               if (!erc20ApprovalResult.success) {
+                updateStep('erc20-approval', { 
+                  status: 'error', 
+                  error: erc20ApprovalResult.error 
+                })
                 throw new Error(`ERC20 approval failed: ${erc20ApprovalResult.error}`)
               }
               
               console.log("ERC20 approval to Permit2 successful:", erc20ApprovalResult.data)
-              
-              // Show approval success toast
-              toast({
-                title: "Approval Successful",
-                description: `ERC20 approval completed for ${fromToken.symbol}`,
-                variant: "success",
-                action: (
-                  <button
-                    onClick={() => window.open(`https://sepolia.etherscan.io/tx/${erc20ApprovalResult.data}`, '_blank')}
-                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    View TX
-                  </button>
-                )
+              updateStep('erc20-approval', { 
+                status: 'success', 
+                txHash: erc20ApprovalResult.data 
               })
+              
               
               // Wait for approval to be mined
               await new Promise(resolve => setTimeout(resolve, 3000))
@@ -488,6 +569,8 @@ export function UniswapV3SwapPanel() {
           // Second: Permit2 approval to Universal Router (if needed)
           if (needsPermit2Approval) {
             console.log("Permit2 approval needed: token → Universal Router")
+            updateStep('permit2-approval', { status: 'loading' })
+            
             const approvalCalldata = buildApprovalCalldataV3(
               (tokenToApprove as Token).address,
               UNIVERSAL_ROUTER_ADDRESS, // Spender is Universal Router (Permit2 approval)
@@ -511,25 +594,19 @@ export function UniswapV3SwapPanel() {
               })
               
               if (!approvalResult.success) {
+                updateStep('permit2-approval', { 
+                  status: 'error', 
+                  error: approvalResult.error 
+                })
                 throw new Error(`Permit2 approval failed: ${approvalResult.error}`)
               }
               
               console.log("Permit2 approval successful:", approvalResult.data)
-              
-              // Show approval success toast
-              toast({
-                title: "Approval Successful",
-                description: `Permit2 approval completed for ${fromToken.symbol}`,
-                variant: "success",
-                action: (
-                  <button
-                    onClick={() => window.open(`https://sepolia.etherscan.io/tx/${approvalResult.data}`, '_blank')}
-                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    View TX
-                  </button>
-                )
+              updateStep('permit2-approval', { 
+                status: 'success', 
+                txHash: approvalResult.data 
               })
+              
               
               // Wait for approval to be mined
               await new Promise(resolve => setTimeout(resolve, 3000))
@@ -588,12 +665,9 @@ export function UniswapV3SwapPanel() {
 
       console.log("V3 Swap calldata:", swapCalldata)
 
-      // Show transaction submitted toast
-      toast({
-        title: "Transaction Submitted",
-        description: "Swap transaction has been submitted. Please wait for confirmation.",
-        variant: "info"
-      })
+      // Update swap step to loading
+      updateStep('swap-transaction', { status: 'loading' })
+
 
       // Send swap transaction
       const swapResult = await uniswapService.sendTx({
@@ -603,25 +677,19 @@ export function UniswapV3SwapPanel() {
       })
 
       if (!swapResult.success) {
+        updateStep('swap-transaction', { 
+          status: 'error', 
+          error: swapResult.error 
+        })
         throw new Error(`Swap failed: ${swapResult.error}`)
       }
 
       console.log("V3 Swap transaction hash:", swapResult.data)
-      
-      // Show success toast with transaction hash and Etherscan link
-      toast({
-        title: "Swap Successful!",
-        description: `Successfully swapped ${fromAmount} ${fromToken.symbol} for ${toAmount} ${toToken.symbol}`,
-        variant: "success",
-        action: (
-          <button
-            onClick={() => window.open(`https://sepolia.etherscan.io/tx/${swapResult.data}`, '_blank')}
-            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            View on Etherscan
-          </button>
-        )
+      updateStep('swap-transaction', { 
+        status: 'success', 
+        txHash: swapResult.data 
       })
+      
       
       // Refresh balances after successful swap
       await fetchBalances(userEthAddress)
@@ -633,6 +701,11 @@ export function UniswapV3SwapPanel() {
       
     } catch (error: any) {
       console.error("V3 Swap failed:", error)
+      
+      // Update any loading steps to error
+      setSwapSteps(prev => prev.map(step => 
+        step.status === 'loading' ? { ...step, status: 'error', error: error.message } : step
+      ))
       
       let errorMessage = error.message || "An error occurred during the swap"
       
@@ -999,6 +1072,17 @@ export function UniswapV3SwapPanel() {
           </div>
         </div>
       )}
+
+      {/* Swap Progress Dialog */}
+      <SwapProgressDialog
+        isOpen={showProgressDialog}
+        onClose={() => setShowProgressDialog(false)}
+        steps={swapSteps}
+        onRetry={(stepId) => {
+          // Handle retry logic if needed
+          console.log('Retrying step:', stepId)
+        }}
+      />
 
     </div>
   )

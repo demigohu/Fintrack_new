@@ -1344,4 +1344,122 @@ export const uniswapService = {
   },
 }
 
+// KongSwap Service for Multi-hop ckBTC/ckETH Swaps
+export const kongswapService = {
+  // Preview swap amounts (how much you'll receive)
+  previewSwap: async (request: {
+    from_token: string;
+    to_token: string;
+    amount: number; // Changed from string to number for nat type
+    max_slippage?: number;
+    referred_by?: string | null;
+  }): Promise<Result<{
+    from_token: string;
+    to_token: string;
+    from_amount: string;
+    to_amount: string;
+    price: number;
+    mid_price: number;
+    slippage: number;
+    lp_fee: string;
+    gas_fee: string;
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        from_token: request.from_token,
+        to_token: request.to_token,
+        amount: request.amount,
+        pay_tx_id: [], // Empty array for optional field (no TX ID needed for preview)
+        max_slippage: request.max_slippage ? [request.max_slippage] : [],
+        referred_by: request.referred_by ? [request.referred_by] : [],
+      }
+      const res = await (a as any).kongswap_preview_swap(req)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to preview swap" }
+    }
+  },
+
+  // Execute swap with TX ID from ICRC1 transfer
+  swapTokensAsync: async (request: {
+    from_token: string;
+    to_token: string;
+    amount: number; // Changed from string to number for nat type
+    pay_tx_id: {
+      BlockIndex: number;
+      TransactionId?: string | null;
+    };
+    max_slippage?: number;
+    referred_by?: string | null;
+  }): Promise<Result<number>> => {
+    try {
+      const a = await ensureActor()
+      const req = {
+        from_token: request.from_token,
+        to_token: request.to_token,
+        amount: request.amount,
+        pay_tx_id: [{
+          BlockIndex: request.pay_tx_id.BlockIndex,
+          TransactionId: request.pay_tx_id.TransactionId ? [request.pay_tx_id.TransactionId] : [],
+        }],
+        max_slippage: request.max_slippage ? [request.max_slippage] : [],
+        referred_by: request.referred_by ? [request.referred_by] : [],
+      }
+      const res = await (a as any).kongswap_swap_tokens_async(req)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to execute swap" }
+    }
+  },
+
+  // Poll swap status
+  pollSwapStatus: async (request_id: number): Promise<Result<{
+    success: boolean;
+    tx_id?: number;
+    request_id?: number;
+    status?: string;
+    from_amount?: string;
+    to_amount?: string;
+    price?: number;
+    slippage?: number;
+    error?: string;
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).kongswap_poll_swap_status(request_id)
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to poll swap status" }
+    }
+  },
+
+  // Get current price between ckBTC and ckETH
+  getCurrentPrice: async (): Promise<Result<number>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).kongswap_get_current_price()
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get current price" }
+    }
+  },
+
+  // Check if KongSwap service is available
+  isServiceAvailable: async (): Promise<Result<boolean>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).kongswap_is_service_available()
+      if ("Ok" in res) return { success: true, data: res.Ok }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to check service availability" }
+    }
+  },
+}
+
 

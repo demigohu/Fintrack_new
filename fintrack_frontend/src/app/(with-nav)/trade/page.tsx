@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Zap, Shield, TrendingUp } from "lucide-react"
 import { SwapPanel } from "@/components/swap/swap-panel"
+import { KongSwapSwapPanel } from "@/components/swap/kongswap-swap-panel"
 import { UniswapV3SwapPanel } from "@/components/swap/uniswapv3-swap-panel"
 
 export default function TradePage() {
@@ -46,7 +47,7 @@ export default function TradePage() {
             {/* KongSwap Tab */}
             <TabsContent value="kongswap" className="space-y-6">
               <div className="flex justify-center">
-                <SwapPanel />
+                <KongSwapSwapPanel />
               </div>
             </TabsContent>
 

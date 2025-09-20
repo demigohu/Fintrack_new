@@ -19,6 +19,102 @@ fn get_kongswap_canister() -> Principal {
 // KongSwap API Types (based on the candid file)
 // ============================================================================
 
+// Missing structs for RequestRequest and RequestReply enums
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct AddPoolArgs {
+    pub token_0: String,
+    pub token_1: String,
+    pub amount_0: Nat,
+    pub amount_1: Nat,
+    pub tx_id_0: Option<TxId>,
+    pub tx_id_1: Option<TxId>,
+    pub lp_fee_bps: Option<u8>,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct AddPoolReply {
+    pub tx_id: u64,
+    pub pool_id: u32,
+    pub request_id: u64,
+    pub status: String,
+    pub name: String,
+    pub symbol: String,
+    pub chain_0: String,
+    pub symbol_0: String,
+    pub address_0: String,
+    pub amount_0: Nat,
+    pub chain_1: String,
+    pub symbol_1: String,
+    pub address_1: String,
+    pub amount_1: Nat,
+    pub lp_fee_bps: u8,
+    pub lp_token_symbol: String,
+    pub add_lp_token_amount: Nat,
+    pub transfer_ids: Vec<TransferIdReply>,
+    pub claim_ids: Vec<u64>,
+    pub is_removed: bool,
+    pub ts: u64,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct AddLiquidityArgs {
+    pub token_0: String,
+    pub token_1: String,
+    pub amount_0: Nat,
+    pub amount_1: Nat,
+    pub tx_id_0: Option<TxId>,
+    pub tx_id_1: Option<TxId>,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct AddLiquidityReply {
+    pub tx_id: u64,
+    pub request_id: u64,
+    pub status: String,
+    pub symbol: String,
+    pub chain_0: String,
+    pub symbol_0: String,
+    pub address_0: String,
+    pub amount_0: Nat,
+    pub chain_1: String,
+    pub symbol_1: String,
+    pub address_1: String,
+    pub amount_1: Nat,
+    pub add_lp_token_amount: Nat,
+    pub transfer_ids: Vec<TransferIdReply>,
+    pub claim_ids: Vec<u64>,
+    pub ts: u64,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct RemoveLiquidityArgs {
+    pub token_0: String,
+    pub token_1: String,
+    pub remove_lp_token_amount: Nat,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct RemoveLiquidityReply {
+    pub tx_id: u64,
+    pub request_id: u64,
+    pub status: String,
+    pub symbol: String,
+    pub chain_0: String,
+    pub symbol_0: String,
+    pub address_0: String,
+    pub amount_0: Nat,
+    pub lp_fee_0: Nat,
+    pub chain_1: String,
+    pub symbol_1: String,
+    pub address_1: String,
+    pub amount_1: Nat,
+    pub lp_fee_1: Nat,
+    pub remove_lp_token_amount: Nat,
+    pub transfer_ids: Vec<TransferIdReply>,
+    pub claim_ids: Vec<u64>,
+    pub ts: u64,
+}
+
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct SwapArgs {
     pub pay_token: String,
@@ -32,11 +128,11 @@ pub struct SwapArgs {
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct TxId {
+pub enum TxId {
     #[serde(rename = "BlockIndex")]
-    pub block_index: Option<Nat>,
+    BlockIndex(Nat),
     #[serde(rename = "TransactionId")]
-    pub transaction_id: Option<String>,
+    TransactionId(String),
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
@@ -176,35 +272,78 @@ pub struct PoolReply {
 
 // Result types
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct SwapAmountsResult {
+pub enum SwapAmountsResult {
     #[serde(rename = "Ok")]
-    pub ok: Option<SwapAmountsReply>,
+    Ok(SwapAmountsReply),
     #[serde(rename = "Err")]
-    pub err: Option<String>,
+    Err(String),
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct SwapResult {
+pub enum SwapResult {
     #[serde(rename = "Ok")]
-    pub ok: Option<SwapReply>,
+    Ok(SwapReply),
     #[serde(rename = "Err")]
-    pub err: Option<String>,
+    Err(String),
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct TokensResult {
+pub enum TokensResult {
     #[serde(rename = "Ok")]
-    pub ok: Option<Vec<TokenReply>>,
+    Ok(Vec<TokenReply>),
     #[serde(rename = "Err")]
-    pub err: Option<String>,
+    Err(String),
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct PoolsResult {
+pub enum PoolsResult {
     #[serde(rename = "Ok")]
-    pub ok: Option<Vec<PoolReply>>,
+    Ok(Vec<PoolReply>),
     #[serde(rename = "Err")]
-    pub err: Option<String>,
+    Err(String),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct RequestsReply {
+    pub request_id: u64,
+    pub statuses: Vec<String>,
+    pub request: RequestRequest,
+    pub reply: RequestReply,
+    pub ts: u64,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum RequestRequest {
+    #[serde(rename = "AddPool")]
+    AddPool(AddPoolArgs),
+    #[serde(rename = "AddLiquidity")]
+    AddLiquidity(AddLiquidityArgs),
+    #[serde(rename = "RemoveLiquidity")]
+    RemoveLiquidity(RemoveLiquidityArgs),
+    #[serde(rename = "Swap")]
+    Swap(SwapArgs),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum RequestReply {
+    #[serde(rename = "Pending")]
+    Pending,
+    #[serde(rename = "AddPool")]
+    AddPool(AddPoolReply),
+    #[serde(rename = "AddLiquidity")]
+    AddLiquidity(AddLiquidityReply),
+    #[serde(rename = "RemoveLiquidity")]
+    RemoveLiquidity(RemoveLiquidityReply),
+    #[serde(rename = "Swap")]
+    Swap(SwapReply),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum RequestsResult {
+    #[serde(rename = "Ok")]
+    Ok(Vec<RequestsReply>),
+    #[serde(rename = "Err")]
+    Err(String),
 }
 
 // ============================================================================
@@ -216,6 +355,7 @@ pub struct KongSwapRequest {
     pub from_token: String,        // "ckBTC" or "ckETH"
     pub to_token: String,          // "ckBTC" or "ckETH"
     pub amount: Nat,               // Amount to swap (in smallest unit)
+    pub pay_tx_id: Option<TxId>,   // TX ID from user's ICRC transfer
     pub max_slippage: Option<f64>, // Optional slippage tolerance (e.g., 0.01 for 1%)
     pub referred_by: Option<String>, // Optional referral code
 }
@@ -247,100 +387,131 @@ pub struct KongSwapPreview {
 }
 
 // ============================================================================
-// KongSwap Service Functions
+// KongSwap Service Functions - Focused on ckBTC/ckETH Multi-hop Swaps
 // ============================================================================
 
-/// Get available tokens from KongSwap
-pub async fn get_tokens() -> Result<Vec<TokenReply>, String> {
-    let canister = get_kongswap_canister();
-    let cycles = 1_000_000_000_u128; // 1B cycles for query
-
-    let (result,): (TokensResult,) = ic_cdk::call(canister, "tokens", (None::<String>,))
-        .await
-        .map_err(|e| format!("Failed to call tokens: {:?}", e))?;
-
-    match result {
-        TokensResult { ok: Some(tokens), err: None } => Ok(tokens),
-        TokensResult { ok: None, err: Some(error) } => Err(format!("KongSwap error: {}", error)),
-        _ => Err("Unexpected response from KongSwap".to_string()),
-    }
-}
-
-/// Get available pools from KongSwap
-pub async fn get_pools() -> Result<Vec<PoolReply>, String> {
-    let canister = get_kongswap_canister();
-    let cycles = 1_000_000_000_u128; // 1B cycles for query
-
-    let (result,): (PoolsResult,) = ic_cdk::call(canister, "pools", (None::<String>,))
-        .await
-        .map_err(|e| format!("Failed to call pools: {:?}", e))?;
-
-    match result {
-        PoolsResult { ok: Some(pools), err: None } => Ok(pools),
-        PoolsResult { ok: None, err: Some(error) } => Err(format!("KongSwap error: {}", error)),
-        _ => Err("Unexpected response from KongSwap".to_string()),
-    }
-}
-
-/// Get swap amounts preview (how much you'll receive)
+/// Get swap amounts preview (how much you'll receive) - supports multi-hop
 pub async fn get_swap_amounts(
     pay_token: String,
     pay_amount: Nat,
     receive_token: String,
 ) -> Result<SwapAmountsReply, String> {
     let canister = get_kongswap_canister();
-    let cycles = 1_000_000_000_u128; // 1B cycles for query
 
-    let (result,): (SwapAmountsResult,) = ic_cdk::call(
+    let (result,): (SwapAmountsResult,) = call_with_payment128(
         canister,
         "swap_amounts",
         (pay_token, pay_amount, receive_token),
+        10_000_000_000, // 10B cycles for swap_amounts call
     )
     .await
     .map_err(|e| format!("Failed to call swap_amounts: {:?}", e))?;
 
     match result {
-        SwapAmountsResult { ok: Some(amounts), err: None } => Ok(amounts),
-        SwapAmountsResult { ok: None, err: Some(error) } => Err(format!("KongSwap error: {}", error)),
-        _ => Err("Unexpected response from KongSwap".to_string()),
-    }
-}
-
-/// Execute a swap transaction
-pub async fn execute_swap(args: SwapArgs) -> Result<SwapReply, String> {
-    let canister = get_kongswap_canister();
-    let cycles = 10_000_000_000_u128; // 10B cycles for update call
-
-    let (result,): (SwapResult,) = ic_cdk::call(canister, "swap", (args,))
-        .await
-        .map_err(|e| format!("Failed to call swap: {:?}", e))?;
-
-    match result {
-        SwapResult { ok: Some(swap_reply), err: None } => Ok(swap_reply),
-        SwapResult { ok: None, err: Some(error) } => Err(format!("KongSwap error: {}", error)),
-        _ => Err("Unexpected response from KongSwap".to_string()),
+        SwapAmountsResult::Ok(amounts) => Ok(amounts),
+        SwapAmountsResult::Err(error) => Err(format!("KongSwap error: {}", error)),
     }
 }
 
 /// Execute a swap asynchronously (returns request_id for polling)
 pub async fn execute_swap_async(args: SwapArgs) -> Result<u64, String> {
     let canister = get_kongswap_canister();
-    let cycles = 10_000_000_000_u128; // 10B cycles for update call
 
-    let (result,): (Result<u64, String>,) = ic_cdk::call(canister, "swap_async", (args,))
-        .await
-        .map_err(|e| format!("Failed to call swap_async: {:?}", e))?;
+    let (result,): (Result<u64, String>,) = call_with_payment128(
+        canister, 
+        "swap_async", 
+        (args,),
+        50_000_000_000, // 50B cycles for swap_async call (more expensive operation)
+    )
+    .await
+    .map_err(|e| format!("Failed to call swap_async: {:?}", e))?;
 
     result.map_err(|e| format!("KongSwap async error: {}", e))
 }
 
+/// Get request status by request_id
+pub async fn get_request(request_id: u64) -> Result<RequestsReply, String> {
+    let canister = get_kongswap_canister();
+
+    let (result,): (RequestsResult,) = call_with_payment128(
+        canister, 
+        "requests", 
+        (Some(request_id),),
+        5_000_000_000, // 5B cycles for requests call (query-like operation)
+    )
+    .await
+    .map_err(|e| format!("Failed to call requests: {:?}", e))?;
+
+    match result {
+        RequestsResult::Ok(requests) => {
+            if requests.is_empty() {
+                Err("Request not found".to_string())
+            } else {
+                Ok(requests[0].clone())
+            }
+        },
+        RequestsResult::Err(error) => Err(format!("KongSwap error: {}", error)),
+    }
+}
+
+
+/// Poll swap request status
+pub async fn poll_swap_status(request_id: u64) -> Result<KongSwapResponse, String> {
+    let request = get_request(request_id).await?;
+    
+    match request.reply {
+        RequestReply::Pending => {
+            // Still pending
+            Ok(KongSwapResponse {
+                success: false,
+                tx_id: Some(request.request_id),
+                request_id: Some(request.request_id),
+                status: Some("pending".to_string()),
+                from_amount: None,
+                to_amount: None,
+                price: None,
+                slippage: None,
+                error: None,
+            })
+        },
+        RequestReply::Swap(swap_reply) => {
+            // Swap completed
+            Ok(KongSwapResponse {
+                success: true,
+                tx_id: Some(swap_reply.tx_id),
+                request_id: Some(swap_reply.request_id),
+                status: Some(swap_reply.status),
+                from_amount: Some(swap_reply.pay_amount),
+                to_amount: Some(swap_reply.receive_amount),
+                price: Some(swap_reply.price),
+                slippage: Some(swap_reply.slippage),
+                error: None,
+            })
+        },
+        _ => {
+            // Unknown state (AddPool, AddLiquidity, RemoveLiquidity)
+            Ok(KongSwapResponse {
+                success: false,
+                tx_id: Some(request.request_id),
+                request_id: Some(request.request_id),
+                status: Some("unknown".to_string()),
+                from_amount: None,
+                to_amount: None,
+                price: None,
+                slippage: None,
+                error: Some("Unknown request state".to_string()),
+            })
+        }
+    }
+}
+
 // ============================================================================
-// High-level KongSwap Functions
+// High-level KongSwap Functions - Multi-hop ckBTC/ckETH Swaps
 // ============================================================================
 
-/// Preview a swap between ckBTC and ckETH
+/// Preview a multi-hop swap between ckBTC and ckETH (via ckUSDT)
 pub async fn preview_swap(request: KongSwapRequest) -> Result<KongSwapPreview, String> {
-    // Validate tokens
+    // Validate tokens - only ckBTC and ckETH supported
     if !is_valid_token(&request.from_token) || !is_valid_token(&request.to_token) {
         return Err("Invalid token. Only ckBTC and ckETH are supported.".to_string());
     }
@@ -349,7 +520,8 @@ pub async fn preview_swap(request: KongSwapRequest) -> Result<KongSwapPreview, S
         return Err("Cannot swap token to itself".to_string());
     }
 
-    // Get swap amounts from KongSwap
+    // Get swap amounts from KongSwap (handles multi-hop automatically)
+    // ckBTC -> ckUSDT -> ckETH or ckETH -> ckUSDT -> ckBTC
     let amounts = get_swap_amounts(
         request.from_token.clone(),
         request.amount.clone(),
@@ -369,59 +541,9 @@ pub async fn preview_swap(request: KongSwapRequest) -> Result<KongSwapPreview, S
     })
 }
 
-/// Execute a swap between ckBTC and ckETH
-pub async fn swap_tokens(request: KongSwapRequest) -> Result<KongSwapResponse, String> {
-    // Validate tokens
-    if !is_valid_token(&request.from_token) || !is_valid_token(&request.to_token) {
-        return Err("Invalid token. Only ckBTC and ckETH are supported.".to_string());
-    }
-
-    if request.from_token == request.to_token {
-        return Err("Cannot swap token to itself".to_string());
-    }
-
-    // Build swap arguments
-    let swap_args = SwapArgs {
-        pay_token: request.from_token.clone(),
-        pay_amount: request.amount.clone(),
-        pay_tx_id: None, // Will be set by user via ICRC transfer
-        receive_token: request.to_token.clone(),
-        receive_amount: None, // Let KongSwap calculate
-        receive_address: None, // Use caller's address
-        max_slippage: request.max_slippage,
-        referred_by: request.referred_by,
-    };
-
-    // Execute swap
-    match execute_swap(swap_args).await {
-        Ok(swap_reply) => Ok(KongSwapResponse {
-            success: true,
-            tx_id: Some(swap_reply.tx_id),
-            request_id: Some(swap_reply.request_id),
-            status: Some(swap_reply.status),
-            from_amount: Some(swap_reply.pay_amount),
-            to_amount: Some(swap_reply.receive_amount),
-            price: Some(swap_reply.price),
-            slippage: Some(swap_reply.slippage),
-            error: None,
-        }),
-        Err(error) => Ok(KongSwapResponse {
-            success: false,
-            tx_id: None,
-            request_id: None,
-            status: None,
-            from_amount: None,
-            to_amount: None,
-            price: None,
-            slippage: None,
-            error: Some(error),
-        }),
-    }
-}
-
-/// Execute a swap asynchronously (for polling status)
+/// Execute a multi-hop swap asynchronously (returns request_id for polling)
 pub async fn swap_tokens_async(request: KongSwapRequest) -> Result<u64, String> {
-    // Validate tokens
+    // Validate tokens - only ckBTC and ckETH supported
     if !is_valid_token(&request.from_token) || !is_valid_token(&request.to_token) {
         return Err("Invalid token. Only ckBTC and ckETH are supported.".to_string());
     }
@@ -430,59 +552,29 @@ pub async fn swap_tokens_async(request: KongSwapRequest) -> Result<u64, String> 
         return Err("Cannot swap token to itself".to_string());
     }
 
-    // Build swap arguments
+    // Build swap arguments for multi-hop swap
     let swap_args = SwapArgs {
         pay_token: request.from_token.clone(),
         pay_amount: request.amount.clone(),
-        pay_tx_id: None, // Will be set by user via ICRC transfer
+        pay_tx_id: request.pay_tx_id.clone(), // Use TX ID from user's transfer
         receive_token: request.to_token.clone(),
-        receive_amount: None, // Let KongSwap calculate
+        receive_amount: None, // Let KongSwap calculate optimal route
         receive_address: None, // Use caller's address
         max_slippage: request.max_slippage,
         referred_by: request.referred_by,
     };
 
-    // Execute swap asynchronously
+    // Execute multi-hop swap asynchronously
+    // KongSwap will automatically route through ckUSDT
     execute_swap_async(swap_args).await
 }
 
-/// Get available ckBTC/ckETH pools
-pub async fn get_ckbtc_cketh_pools() -> Result<Vec<PoolReply>, String> {
-    let pools = get_pools().await?;
-    
-    // Filter for ckBTC/ckETH pools
-    let ckbtc_cketh_pools: Vec<PoolReply> = pools
-        .into_iter()
-        .filter(|pool| {
-            (pool.symbol_0 == CKBTC_SYMBOL && pool.symbol_1 == CKETH_SYMBOL) ||
-            (pool.symbol_0 == CKETH_SYMBOL && pool.symbol_1 == CKBTC_SYMBOL)
-        })
-        .collect();
-
-    Ok(ckbtc_cketh_pools)
-}
-
-/// Get ckBTC and ckETH token information
-pub async fn get_ckbtc_cketh_tokens() -> Result<Vec<ICTokenReply>, String> {
-    let tokens = get_tokens().await?;
-    
-    // Filter for ckBTC and ckETH tokens
-    let ckbtc_cketh_tokens: Vec<ICTokenReply> = tokens
-        .into_iter()
-        .filter_map(|token| match token {
-            TokenReply { ic } if ic.symbol == CKBTC_SYMBOL || ic.symbol == CKETH_SYMBOL => Some(ic),
-            _ => None,
-        })
-        .collect();
-
-    Ok(ckbtc_cketh_tokens)
-}
 
 // ============================================================================
-// Helper Functions
+// Helper Functions - Multi-hop ckBTC/ckETH Swaps
 // ============================================================================
 
-/// Validate if token is supported (ckBTC or ckETH)
+/// Validate if token is supported (ckBTC or ckETH only)
 fn is_valid_token(token: &str) -> bool {
     token == CKBTC_SYMBOL || token == CKETH_SYMBOL
 }
@@ -520,9 +612,9 @@ pub fn parse_token_amount(amount_str: &str, token: &str) -> Result<Nat, String> 
     Ok(Nat::from(amount_u64))
 }
 
-/// Get current price between ckBTC and ckETH
+/// Get current price between ckBTC and ckETH (via multi-hop)
 pub async fn get_current_price() -> Result<f64, String> {
-    // Use a small amount to get current price
+    // Use a small amount to get current price via multi-hop route
     let small_amount = Nat::from(1000u64); // 0.00001 ckBTC or 0.000000000000001 ckETH
     
     let amounts = get_swap_amounts(
@@ -534,9 +626,14 @@ pub async fn get_current_price() -> Result<f64, String> {
     Ok(amounts.price)
 }
 
-/// Check if KongSwap service is available
+/// Check if KongSwap service is available for multi-hop swaps
 pub async fn is_service_available() -> Result<bool, String> {
-    match get_tokens().await {
+    // Test with a small swap to check if multi-hop routing works
+    match get_swap_amounts(
+        CKBTC_SYMBOL.to_string(),
+        Nat::from(1000u64),
+        CKETH_SYMBOL.to_string(),
+    ).await {
         Ok(_) => Ok(true),
         Err(_) => Ok(false),
     }

@@ -234,7 +234,7 @@ pub async fn get_transaction_count(owner: Option<Principal>, block: Option<Block
 // Estimate gas and fees for Uniswap transactions
 fn estimate_uniswap_fees() -> (u128, u128, u128) {
     const GAS_LIMIT: u128 = 300_000; // Higher gas limit for Uniswap interactions
-    const MAX_FEE_PER_GAS: u128 = 50_000_000_000; // 50 gwei
+    const MAX_FEE_PER_GAS: u128 = 3_000_000_000; // 50 gwei
     const MAX_PRIORITY_FEE_PER_GAS: u128 = 2_000_000_000; // 2 gwei
     (GAS_LIMIT, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS)
 }

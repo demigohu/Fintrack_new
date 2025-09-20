@@ -1,4 +1,62 @@
 type Account = record { owner : principal; subaccount : opt blob };
+type AddLiquidityArgs = record {
+  token_0 : text;
+  token_1 : text;
+  amount_0 : nat;
+  amount_1 : nat;
+  tx_id_0 : opt TxId;
+  tx_id_1 : opt TxId;
+};
+type AddLiquidityReply = record {
+  ts : nat64;
+  request_id : nat64;
+  status : text;
+  tx_id : nat64;
+  add_lp_token_amount : nat;
+  transfer_ids : vec TransferIdReply;
+  amount_0 : nat;
+  amount_1 : nat;
+  claim_ids : vec nat64;
+  address_0 : text;
+  address_1 : text;
+  symbol_0 : text;
+  symbol_1 : text;
+  chain_0 : text;
+  chain_1 : text;
+  symbol : text;
+};
+type AddPoolArgs = record {
+  token_0 : text;
+  token_1 : text;
+  amount_0 : nat;
+  amount_1 : nat;
+  tx_id_0 : opt TxId;
+  tx_id_1 : opt TxId;
+  lp_fee_bps : opt nat8;
+};
+type AddPoolReply = record {
+  ts : nat64;
+  request_id : nat64;
+  status : text;
+  tx_id : nat64;
+  lp_token_symbol : text;
+  add_lp_token_amount : nat;
+  transfer_ids : vec TransferIdReply;
+  name : text;
+  amount_0 : nat;
+  amount_1 : nat;
+  claim_ids : vec nat64;
+  address_0 : text;
+  address_1 : text;
+  symbol_0 : text;
+  symbol_1 : text;
+  pool_id : nat32;
+  chain_0 : text;
+  chain_1 : text;
+  is_removed : bool;
+  symbol : text;
+  lp_fee_bps : nat8;
+};
 type AssetKind = variant { CkBtc; CkEth };
 type AssetKind_1 = variant { CkBtc; CkEth };
 type BitcoinTransaction = record {
@@ -189,17 +247,12 @@ type HttpResponse = record {
   body : blob;
   headers : vec HttpHeader;
 };
-type ICTokenReply = record {
-  fee : nat;
-  decimals : nat8;
-  token_id : nat32;
+type ICTransferReply = record {
+  is_send : bool;
+  block_index : nat;
   chain : text;
-  name : text;
   canister_id : text;
-  icrc1 : bool;
-  icrc2 : bool;
-  icrc3 : bool;
-  is_removed : bool;
+  amount : nat;
   symbol : text;
 };
 type IcpTransaction = record {
@@ -229,6 +282,7 @@ type KongSwapRequest = record {
   from_token : text;
   max_slippage : opt float64;
   referred_by : opt text;
+  pay_tx_id : opt TxId;
   amount : nat;
 };
 type KongSwapResponse = record {
@@ -248,26 +302,52 @@ type MarketChartData = record {
   prices : vec vec float64;
 };
 type Outpoint = record { txid : blob; vout : nat32 };
-type PoolReply = record {
-  lp_token_symbol : text;
-  name : text;
+type PriceData = record { timestamp : nat64; price : float64 };
+type RemoveLiquidityArgs = record {
+  token_0 : text;
+  token_1 : text;
+  remove_lp_token_amount : nat;
+};
+type RemoveLiquidityReply = record {
+  ts : nat64;
+  request_id : nat64;
+  status : text;
+  tx_id : nat64;
+  transfer_ids : vec TransferIdReply;
   lp_fee_0 : nat;
   lp_fee_1 : nat;
-  balance_0 : nat;
-  balance_1 : nat;
+  amount_0 : nat;
+  amount_1 : nat;
+  claim_ids : vec nat64;
   address_0 : text;
   address_1 : text;
   symbol_0 : text;
   symbol_1 : text;
-  pool_id : nat32;
-  price : float64;
   chain_0 : text;
   chain_1 : text;
-  is_removed : bool;
+  remove_lp_token_amount : nat;
   symbol : text;
-  lp_fee_bps : nat8;
 };
-type PriceData = record { timestamp : nat64; price : float64 };
+type RequestReply = variant {
+  AddLiquidity : AddLiquidityReply;
+  Swap : SwapReply;
+  AddPool : AddPoolReply;
+  RemoveLiquidity : RemoveLiquidityReply;
+  Pending;
+};
+type RequestRequest = variant {
+  AddLiquidity : AddLiquidityArgs;
+  Swap : SwapArgs;
+  AddPool : AddPoolArgs;
+  RemoveLiquidity : RemoveLiquidityArgs;
+};
+type RequestsReply = record {
+  ts : nat64;
+  request_id : nat64;
+  request : RequestRequest;
+  statuses : vec text;
+  reply : RequestReply;
+};
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : nat; Err : text };
 type Result_10 = variant { Ok : BudgetInfo; Err : text };
@@ -288,12 +368,12 @@ type Result_23 = variant { Ok : UserBalances; Err : text };
 type Result_24 = variant { Ok : GoalInfo; Err : text };
 type Result_25 = variant { Ok : GoalProgress; Err : text };
 type Result_26 = variant { Ok : vec GoalEvent; Err : text };
-type Result_27 = variant { Ok : vec PoolReply; Err : text };
-type Result_28 = variant { Ok : vec ICTokenReply; Err : text };
+type Result_27 = variant { Ok : RequestsReply; Err : text };
+type Result_28 = variant { Ok : SwapAmountsReply; Err : text };
 type Result_29 = variant { Ok : bool; Err : text };
 type Result_3 = variant { Ok : nat64; Err : text };
-type Result_30 = variant { Ok : KongSwapPreview; Err : text };
-type Result_31 = variant { Ok : KongSwapResponse; Err : text };
+type Result_30 = variant { Ok : KongSwapResponse; Err : text };
+type Result_31 = variant { Ok : KongSwapPreview; Err : text };
 type Result_32 = variant { Ok : nat; Err : text };
 type Result_33 = variant { Ok : UniswapTxResponse; Err : text };
 type Result_4 = variant { Ok : BtcNetworkInfo; Err : text };
@@ -303,6 +383,79 @@ type Result_7 = variant { Ok : BtcFeePreview; Err : text };
 type Result_8 = variant { Ok; Err : text };
 type Result_9 = variant { Ok : BtcTransferResponse; Err : text };
 type SimplifiedUtxo = record { confirmations : nat32; hash : text };
+type SwapAmountsReply = record {
+  txs : vec SwapAmountsTxReply;
+  receive_chain : text;
+  mid_price : float64;
+  pay_amount : nat;
+  receive_amount : nat;
+  pay_symbol : text;
+  receive_symbol : text;
+  receive_address : text;
+  pay_address : text;
+  price : float64;
+  pay_chain : text;
+  slippage : float64;
+};
+type SwapAmountsTxReply = record {
+  receive_chain : text;
+  pay_amount : nat;
+  receive_amount : nat;
+  pay_symbol : text;
+  receive_symbol : text;
+  receive_address : text;
+  pool_symbol : text;
+  pay_address : text;
+  price : float64;
+  pay_chain : text;
+  lp_fee : nat;
+  gas_fee : nat;
+};
+type SwapArgs = record {
+  receive_token : text;
+  max_slippage : opt float64;
+  pay_amount : nat;
+  referred_by : opt text;
+  receive_amount : opt nat;
+  receive_address : opt text;
+  pay_token : text;
+  pay_tx_id : opt TxId;
+};
+type SwapReply = record {
+  ts : nat64;
+  txs : vec SwapTxReply;
+  request_id : nat64;
+  status : text;
+  tx_id : nat64;
+  transfer_ids : vec TransferIdReply;
+  receive_chain : text;
+  mid_price : float64;
+  pay_amount : nat;
+  receive_amount : nat;
+  claim_ids : vec nat64;
+  pay_symbol : text;
+  receive_symbol : text;
+  receive_address : text;
+  pay_address : text;
+  price : float64;
+  pay_chain : text;
+  slippage : float64;
+};
+type SwapTxReply = record {
+  ts : nat64;
+  receive_chain : text;
+  pay_amount : nat;
+  receive_amount : nat;
+  pay_symbol : text;
+  receive_symbol : text;
+  receive_address : text;
+  pool_symbol : text;
+  pay_address : text;
+  price : float64;
+  pay_chain : text;
+  lp_fee : nat;
+  gas_fee : nat;
+};
 type Transaction = record {
   id : TransactionId;
   status : text;
@@ -312,7 +465,10 @@ type Transaction = record {
   eth_tx : opt EthereumTransaction;
 };
 type TransactionId = record { chain : text; timestamp : nat64; tx_hash : text };
+type TransferIdReply = record { transfer_id : nat64; transfer : TransferReply };
+type TransferReply = record { IC : ICTransferReply };
 type TransformArgs = record { context : blob; response : HttpResponse };
+type TxId = variant { TransactionId : text; BlockIndex : nat };
 type TxRequest = record {
   to : text;
   value : opt nat;
@@ -401,12 +557,12 @@ service : (opt InitArg) -> {
   goals_withdraw : (text, nat) -> (Result_1);
   kongswap_format_token_amount : (nat, text) -> (text) query;
   kongswap_get_current_price : () -> (Result_18) query;
-  kongswap_get_pools : () -> (Result_27) query;
-  kongswap_get_tokens : () -> (Result_28) query;
+  kongswap_get_request : (nat64) -> (Result_27) query;
+  kongswap_get_swap_amounts : (text, nat, text) -> (Result_28) query;
   kongswap_is_service_available : () -> (Result_29) query;
   kongswap_parse_token_amount : (text, text) -> (Result_1) query;
-  kongswap_preview_swap : (KongSwapRequest) -> (Result_30);
-  kongswap_swap_tokens : (KongSwapRequest) -> (Result_31);
+  kongswap_poll_swap_status : (nat64) -> (Result_30) query;
+  kongswap_preview_swap : (KongSwapRequest) -> (Result_31);
   kongswap_swap_tokens_async : (KongSwapRequest) -> (Result_3);
   principal_to_bytes32 : (text) -> (Result) query;
   transform : (TransformArgs) -> (HttpResponse) query;

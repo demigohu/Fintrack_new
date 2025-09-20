@@ -437,23 +437,8 @@ async fn kongswap_preview_swap(request: kongswap::KongSwapRequest) -> Result<kon
 }
 
 #[ic_cdk::update]
-async fn kongswap_swap_tokens(request: kongswap::KongSwapRequest) -> Result<kongswap::KongSwapResponse, String> {
-    kongswap::swap_tokens(request).await
-}
-
-#[ic_cdk::update]
 async fn kongswap_swap_tokens_async(request: kongswap::KongSwapRequest) -> Result<u64, String> {
     kongswap::swap_tokens_async(request).await
-}
-
-#[ic_cdk::query]
-async fn kongswap_get_tokens() -> Result<Vec<kongswap::ICTokenReply>, String> {
-    kongswap::get_ckbtc_cketh_tokens().await
-}
-
-#[ic_cdk::query]
-async fn kongswap_get_pools() -> Result<Vec<kongswap::PoolReply>, String> {
-    kongswap::get_ckbtc_cketh_pools().await
 }
 
 #[ic_cdk::query]
@@ -474,6 +459,22 @@ fn kongswap_format_token_amount(amount: Nat, token: String) -> String {
 #[ic_cdk::query]
 fn kongswap_parse_token_amount(amount_str: String, token: String) -> Result<Nat, String> {
     kongswap::parse_token_amount(&amount_str, &token)
+}
+
+// KongSwap multi-hop swap endpoints
+#[ic_cdk::query]
+async fn kongswap_get_request(request_id: u64) -> Result<kongswap::RequestsReply, String> {
+    kongswap::get_request(request_id).await
+}
+
+#[ic_cdk::query]
+async fn kongswap_poll_swap_status(request_id: u64) -> Result<kongswap::KongSwapResponse, String> {
+    kongswap::poll_swap_status(request_id).await
+}
+
+#[ic_cdk::query]
+async fn kongswap_get_swap_amounts(pay_token: String, pay_amount: Nat, receive_token: String) -> Result<kongswap::SwapAmountsReply, String> {
+    kongswap::get_swap_amounts(pay_token, pay_amount, receive_token).await
 }
 
 
