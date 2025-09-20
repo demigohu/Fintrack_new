@@ -4,7 +4,6 @@ import { PortfolioOverview } from "@/components/portfolio/portfolio-overview"
 import { AssetAllocation } from "@/components/portfolio/asset-allocation"
 import { PortfolioChart } from "@/components/portfolio/portfolio-chart"
 import { AssetsList } from "@/components/portfolio/assets-list"
-import { TransactionHistory } from "@/components/portfolio/transaction-history"
 
 export default function PortfolioPage() {
   return (
@@ -27,10 +26,9 @@ export default function PortfolioPage() {
             <AssetsList />
           </div>
 
-          {/* Right Column - Allocation & Transactions */}
+          {/* Right Column - Allocation */}
           <div className="space-y-6">
             <AssetAllocation />
-            <TransactionHistory />
           </div>
         </div>
       </div>

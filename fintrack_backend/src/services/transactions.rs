@@ -79,6 +79,8 @@ pub struct UserBalances {
     pub cketh_balance: Nat,
     pub btc_native_balance: Nat,
     pub eth_native_balance: Nat,
+    pub usdc_balance: Nat,
+    pub weth_balance: Nat,
     pub last_updated: u64,
 }
 
@@ -251,6 +253,10 @@ const ETHERSCAN_SEPOLIA_URL: &str = "https://api-sepolia.etherscan.io/api";
 const ETHERSCAN_API_KEY: &str = "69RXZDXVXTN3QDQ2BTXCT57BECUXQ9CJHQ";
 // Jika ingin pakai BlockCypher mainnet (contoh), isi token di sini. Untuk regtest -> tidak digunakan.
 const BLOCKCYPHER_TOKEN: &str = "dce63e3270ec49cfbc91eff20cbece20";
+
+// ERC20 Token addresses on Sepolia testnet
+const USDC_CONTRACT_ADDRESS: &str = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
+const WETH_CONTRACT_ADDRESS: &str = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14";
 
 async fn http_post_json(url: &str, body: String, max_response_bytes: u64) -> Result<String, String> {
     let headers = vec![
@@ -632,6 +638,58 @@ fn hex_to_u64(h: &str) -> Option<u64> {
     u64::from_str_radix(s, 16).ok()
 }
 
+// Get ERC20 token balance using Etherscan API
+async fn get_erc20_balance(
+    user_address: &str,
+    contract_address: &str,
+    token_name: &str
+) -> Result<Nat, String> {
+    let url = format!(
+        "{}?module=account&action=tokenbalance&contractaddress={}&address={}&tag=latest&apikey={}",
+        ETHERSCAN_SEPOLIA_URL, contract_address, user_address, ETHERSCAN_API_KEY
+    );
+
+    let max_bytes = 10_000;
+    let response = http_get_json(&url, max_bytes).await?;
+    
+    ic_cdk::println!("Debug: Etherscan API response for {}: {}", token_name, response);
+
+    // Parse Etherscan response
+    let v: serde_json::Value = serde_json::from_str(&response)
+        .map_err(|e| format!("Failed to parse Etherscan JSON: {}", e))?;
+
+    // Check if API call was successful
+    let status = v.get("status").and_then(|s| s.as_str()).unwrap_or("");
+    if status != "1" {
+        let message = v.get("message").and_then(|m| m.as_str()).unwrap_or("Unknown error");
+        ic_cdk::println!("Debug: Etherscan API error for {}: status={}, message={}", token_name, status, message);
+        return Err(format!("Etherscan API error for {}: {}", token_name, message));
+    }
+
+    let balance_hex = v.get("result")
+        .and_then(|r| r.as_str())
+        .ok_or(format!("No result in {} response", token_name))?;
+
+    // Convert hex to u64
+    let balance_u64 = if balance_hex.starts_with("0x") {
+        hex_to_u64(balance_hex).unwrap_or(0)
+    } else {
+        balance_hex.parse::<u64>().unwrap_or(0)
+    };
+
+    Ok(Nat::from(balance_u64))
+}
+
+// Get USDC balance
+async fn get_usdc_balance(user_address: &str) -> Result<Nat, String> {
+    get_erc20_balance(user_address, USDC_CONTRACT_ADDRESS, "USDC").await
+}
+
+// Get WETH balance
+async fn get_weth_balance(user_address: &str) -> Result<Nat, String> {
+    get_erc20_balance(user_address, WETH_CONTRACT_ADDRESS, "WETH").await
+}
+
 fn parse_iso8601_to_unix(s: &str) -> Option<u64> {
     // Parse ISO8601 timestamp dari Alchemy API
     // Format: "2024-01-15T10:30:45.123Z"
@@ -828,9 +886,10 @@ fn format_nat_as_token(amount: &Nat, token: &str) -> String {
 pub async fn get_user_balances(user: Principal) -> Result<UserBalances, String> {
     // Try to get from cache first
     if let Some(balances) = USER_BALANCES.with(|map| map.borrow().get(&user).cloned()) {
-        // Check if data is fresh (less than 5 minutes old)
+        // Check if data is fresh (less than 2 minutes old)
         let current_time = ic_cdk::api::time();
-        if current_time - balances.last_updated < 300_000_000_000 { // 5 minutes in nanoseconds
+        if current_time - balances.last_updated < 120_000_000_000 { // 2 minutes in nanoseconds
+            ic_cdk::println!("Debug: Using cached balances for user: {}", user);
             return Ok(balances);
         }
     }
@@ -841,12 +900,21 @@ pub async fn get_user_balances(user: Principal) -> Result<UserBalances, String> 
 
     // Fetch native balances
     // ETH native via backend ethtransfer using user's derived ETH address
-    let eth_native_balance = match crate::services::address::get_eth_address(Some(user)).await {
-        Ok(addr) => match crate::services::ethtransfer::get_native_eth_balance(Some(addr)).await {
+    let eth_address = match crate::services::address::get_eth_address(Some(user)).await {
+        Ok(addr) => addr,
+        Err(_e) => {
+            ic_cdk::println!("Warning: Failed to get ETH address for user: {}", user);
+            "".to_string()
+        }
+    };
+    
+    let eth_native_balance = if !eth_address.is_empty() {
+        match crate::services::ethtransfer::get_native_eth_balance(Some(eth_address.clone())).await {
             Ok(n) => n,
             Err(_e) => Nat::from(0u32),
-        },
-        Err(_e) => Nat::from(0u32),
+        }
+    } else {
+        Nat::from(0u32)
     };
 
     // BTC native via bitcoin canister balance
@@ -860,12 +928,87 @@ pub async fn get_user_balances(user: Principal) -> Result<UserBalances, String> 
         },
         Err(_e) => Nat::from(0u32),
     };
+
+    // Get ERC20 balances (USDC and WETH) with rate limiting and retry
+    let usdc_balance = if !eth_address.is_empty() {
+        // Retry USDC balance up to 3 times
+        let mut retry_count = 0;
+        let max_retries = 3;
+        
+        loop {
+            match get_usdc_balance(&eth_address).await {
+                Ok(balance) => {
+                    ic_cdk::println!("Debug: USDC balance for {}: {}", eth_address, balance);
+                    break balance;
+                },
+                Err(e) => {
+                    retry_count += 1;
+                    ic_cdk::println!("Warning: Failed to get USDC balance (attempt {}/{}): {}", retry_count, max_retries, e);
+                    
+                    if retry_count >= max_retries {
+                        ic_cdk::println!("Error: Max retries reached for USDC balance, using 0");
+                        break Nat::from(0u64);
+                    }
+                    
+                    // Wait before retry
+                    for _ in 0..200 {
+                        ic_cdk::api::time();
+                    }
+                }
+            }
+        }
+    } else {
+        ic_cdk::println!("Debug: ETH address is empty, skipping USDC balance check");
+        Nat::from(0u64)
+    };
+
+    // Rate limiting: Wait 5 seconds before fetching WETH balance
+    ic_cdk::println!("Debug: Waiting 5 seconds before fetching WETH balance...");
+    
+    // More substantial delay to avoid rate limiting
+    for _ in 0..500 {
+        ic_cdk::api::time();
+    }
+
+    let weth_balance = if !eth_address.is_empty() {
+        // Retry WETH balance up to 3 times
+        let mut retry_count = 0;
+        let max_retries = 3;
+        
+        loop {
+            match get_weth_balance(&eth_address).await {
+                Ok(balance) => {
+                    ic_cdk::println!("Debug: WETH balance for {}: {}", eth_address, balance);
+                    break balance;
+                },
+                Err(e) => {
+                    retry_count += 1;
+                    ic_cdk::println!("Warning: Failed to get WETH balance (attempt {}/{}): {}", retry_count, max_retries, e);
+                    
+                    if retry_count >= max_retries {
+                        ic_cdk::println!("Error: Max retries reached for WETH balance, using 0");
+                        break Nat::from(0u64);
+                    }
+                    
+                    // Wait before retry
+                    for _ in 0..200 {
+                        ic_cdk::api::time();
+                    }
+                }
+            }
+        }
+    } else {
+        ic_cdk::println!("Debug: ETH address is empty, skipping WETH balance check");
+        Nat::from(0u64)
+    };
     
     let balances = UserBalances {
         ckbtc_balance,
         cketh_balance,
         btc_native_balance,
         eth_native_balance,
+        usdc_balance,
+        weth_balance,
         last_updated: ic_cdk::api::time(),
     };
     
@@ -874,7 +1017,9 @@ pub async fn get_user_balances(user: Principal) -> Result<UserBalances, String> 
         map.borrow_mut().insert(user, balances.clone());
     });
     
+    ic_cdk::println!("Debug: User balances: {:?}", balances);
     Ok(balances)
+
 }
 
 // ICP Transaction functions

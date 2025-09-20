@@ -409,7 +409,7 @@ export default function BudgetsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">Budgets</h1>
-            <p className="text-gray-300 mt-1">Hard-lock + linear vesting using ckAssets</p>
+            <p className="text-gray-300 mt-1">Linear vesting using ckAssets</p>
           </div>
         </div>
 
@@ -546,7 +546,7 @@ export default function BudgetsPage() {
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-3">No Budgets Yet</h3>
                     <p className="text-slate-300 text-center mb-6 max-w-md">
-                      Create your first budget to start managing your financial goals with hard-lock and linear vesting.
+                      Create your first budget to start managing your financial goals with linear vesting.
                     </p>
                   </div>
                 ) : (

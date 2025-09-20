@@ -751,6 +751,71 @@ export const currencyService = {
   },
 }
 
+// CoinGecko Market Chart Service
+export const marketChartService = {
+  // Get market chart data (prices, market caps, volumes)
+  getMarketChart: async (coinId: string, vsCurrency: string = "usd", days: number = 7): Promise<Result<{
+    prices: Array<[number, number]>
+    market_caps: Array<[number, number]>
+    total_volumes: Array<[number, number]>
+  }>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).get_market_chart(coinId, vsCurrency, days)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get market chart" }
+    }
+  },
+
+  // Get 24h price change percentage
+  get24hChange: async (coinId: string): Promise<Result<number>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).get_24h_change(coinId)
+      if ("Ok" in res) return { success: true, data: res.Ok as number }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get 24h change" }
+    }
+  },
+
+  // Get historical prices
+  getHistoricalPrices: async (coinId: string, vsCurrency: string = "usd", days: number = 7): Promise<Result<Array<{
+    timestamp: number
+    price: number
+  }>>> => {
+    try {
+      const a = await ensureActor()
+      const res = await (a as any).get_historical_prices(coinId, vsCurrency, days)
+      if ("Ok" in res) return { success: true, data: res.Ok as any }
+      return { success: false, error: res.Err }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get historical prices" }
+    }
+  },
+
+  // Get price data for specific coins
+  getPriceData: async (coinIds: string[], vsCurrency: string = "usd"): Promise<Result<Record<string, number>>> => {
+    try {
+      const results: Record<string, number> = {}
+      
+      // Get 24h change for each coin
+      for (const coinId of coinIds) {
+        const changeResult = await marketChartService.get24hChange(coinId)
+        if (changeResult.success) {
+          results[coinId] = changeResult.data
+        }
+      }
+      
+      return { success: true, data: results }
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to get price data" }
+    }
+  }
+}
+
 // ---------------- Budgets (single period lock + linear vesting) ----------------
 export type AssetKind = "CkBtc" | "CkEth"
 

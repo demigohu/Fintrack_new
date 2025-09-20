@@ -6,6 +6,7 @@ use crate::services::evm_rpc_canister::BlockTag;
 use crate::services::ethtransfer::InitArg;
 use services::budget as budget;
 use services::goals as goals;
+use services::kongswap as kongswap;
 
 // -------------------------
 // BTC service endpoints
@@ -247,6 +248,21 @@ async fn get_rates_summary() -> Result<services::rates::CryptoRates, String> {
     services::rates::get_rates_summary().await
 }
 
+#[ic_cdk::update]
+async fn get_market_chart(coin_id: String, vs_currency: String, days: u32) -> Result<services::rates::MarketChartData, String> {
+    services::rates::get_market_chart(&coin_id, &vs_currency, days).await
+}
+
+#[ic_cdk::update]
+async fn get_24h_change(coin_id: String) -> Result<f64, String> {
+    services::rates::get_24h_change(&coin_id).await
+}
+
+#[ic_cdk::update]
+async fn get_historical_prices(coin_id: String, vs_currency: String, days: u32) -> Result<Vec<services::rates::PriceData>, String> {
+    services::rates::get_historical_prices(&coin_id, &vs_currency, days).await
+}
+
 // -------------------------
 // Network info endpoints (pollable)
 // -------------------------
@@ -410,6 +426,55 @@ async fn goals_withdraw(id: String, amount: Nat) -> Result<Nat, String> { goals:
 
 #[ic_cdk::query]
 fn goals_list_events(id: String, limit: Option<u32>, offset: Option<u32>) -> Result<Vec<goals::GoalEvent>, String> { goals::goals_list_events(id, limit, offset) }
+
+// -------------------------
+// KongSwap service endpoints
+// -------------------------
+
+#[ic_cdk::update]
+async fn kongswap_preview_swap(request: kongswap::KongSwapRequest) -> Result<kongswap::KongSwapPreview, String> {
+    kongswap::preview_swap(request).await
+}
+
+#[ic_cdk::update]
+async fn kongswap_swap_tokens(request: kongswap::KongSwapRequest) -> Result<kongswap::KongSwapResponse, String> {
+    kongswap::swap_tokens(request).await
+}
+
+#[ic_cdk::update]
+async fn kongswap_swap_tokens_async(request: kongswap::KongSwapRequest) -> Result<u64, String> {
+    kongswap::swap_tokens_async(request).await
+}
+
+#[ic_cdk::query]
+async fn kongswap_get_tokens() -> Result<Vec<kongswap::ICTokenReply>, String> {
+    kongswap::get_ckbtc_cketh_tokens().await
+}
+
+#[ic_cdk::query]
+async fn kongswap_get_pools() -> Result<Vec<kongswap::PoolReply>, String> {
+    kongswap::get_ckbtc_cketh_pools().await
+}
+
+#[ic_cdk::query]
+async fn kongswap_get_current_price() -> Result<f64, String> {
+    kongswap::get_current_price().await
+}
+
+#[ic_cdk::query]
+async fn kongswap_is_service_available() -> Result<bool, String> {
+    kongswap::is_service_available().await
+}
+
+#[ic_cdk::query]
+fn kongswap_format_token_amount(amount: Nat, token: String) -> String {
+    kongswap::format_token_amount(amount, &token)
+}
+
+#[ic_cdk::query]
+fn kongswap_parse_token_amount(amount_str: String, token: String) -> Result<Nat, String> {
+    kongswap::parse_token_amount(&amount_str, &token)
+}
 
 
 ic_cdk::export_candid!();

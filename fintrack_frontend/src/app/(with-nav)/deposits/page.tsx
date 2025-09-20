@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
+import QRCode from 'qrcode'
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,8 +19,6 @@ const cryptoAssets = [
     network: "Bitcoin",
     ckAddress: "",
     nativeAddress: "",
-    minDeposit: "0.0001",
-    confirmations: 3,
   },
   {
     symbol: "ETH",
@@ -26,24 +26,25 @@ const cryptoAssets = [
     network: "Ethereum (ERC-20)",
     ckAddress: "",
     nativeAddress: "",
-    minDeposit: "0.01",
-    confirmations: 12,
-  },
-  {
-    symbol: "SOL",
-    name: "Solana",
-    network: "Solana",
-    address: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
-    minDeposit: "0.1",
-    confirmations: 1,
   },
 ]
+
+// Helper function to get asset logo
+const getAssetLogo = (symbol: string) => {
+  const logoMap: Record<string, string> = {
+    'BTC': '/bitcoin.svg',
+    'ETH': '/ethereum.svg',
+  }
+  return logoMap[symbol] || '/bitcoin.svg' // fallback
+}
 
 export default function DepositPage() {
   const [selectedAsset, setSelectedAsset] = useState(cryptoAssets[0])
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string>("")
+  const [qrLoading, setQrLoading] = useState(false)
 
   // Hook to get user principal
   const { user } = useAuth()
@@ -87,10 +88,47 @@ export default function DepositPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Generate QR code when selected asset changes
+  useEffect(() => {
+    const nativeAddress = (selectedAsset as any).nativeAddress
+    if (nativeAddress) {
+      generateQRCode(nativeAddress)
+    } else {
+      setQrDataUrl("")
+    }
+  }, [selectedAsset])
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Generate QR code for native address
+  const generateQRCode = async (address: string) => {
+    if (!address || address === "Address unavailable" || address === "Loading...") {
+      setQrDataUrl("")
+      return
+    }
+
+    setQrLoading(true)
+    try {
+      console.log("[Deposit] Generating QR for address:", address)
+      const qrDataUrl = await QRCode.toDataURL(address, {
+        width: 192, // 48 * 4 for better quality
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      })
+      setQrDataUrl(qrDataUrl)
+    } catch (e) {
+      console.error("[Deposit] QR generation failed:", e)
+      setQrDataUrl("")
+    } finally {
+      setQrLoading(false)
+    }
   }
 
   return (
@@ -98,7 +136,7 @@ export default function DepositPage() {
       <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-heading font-bold text-white mb-2">Deposit Crypto</h1>
-          <p className="text-slate-400">Add funds to your CyberTrade account</p>
+          <p className="text-slate-400">Add funds to your FinTrack account</p>
         </div>
 
         <div className="space-y-8 mb-8">
@@ -112,7 +150,7 @@ export default function DepositPage() {
                 if (asset) setSelectedAsset(asset)
               }}
             >
-              <TabsList className="grid w-full grid-cols-3 bg-slate-800/50">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-800/50">
                 {cryptoAssets.map((asset) => (
                   <TabsTrigger
                     key={asset.symbol}
@@ -128,25 +166,18 @@ export default function DepositPage() {
                 <TabsContent key={asset.symbol} value={asset.symbol} className="mt-4">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3 p-4 bg-slate-800/50 rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 flex items-center justify-center text-white font-bold">
-                        {asset.symbol.charAt(0)}
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                        <Image
+                          src={getAssetLogo(asset.symbol)}
+                          alt={asset.symbol}
+                          width={26}
+                          height={26}
+                          className="object-contain"
+                        />
                       </div>
                       <div>
                         <div className="text-white font-semibold">{asset.name}</div>
                         <div className="text-slate-400 text-sm">{asset.network}</div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="p-3 bg-slate-800/30 rounded-lg">
-                        <div className="text-slate-400">Min Deposit</div>
-                        <div className="text-white font-semibold">
-                          {asset.minDeposit} {asset.symbol}
-                        </div>
-                      </div>
-                      <div className="p-3 bg-slate-800/30 rounded-lg">
-                        <div className="text-slate-400">Confirmations</div>
-                        <div className="text-white font-semibold">{asset.confirmations}</div>
                       </div>
                     </div>
                   </div>
@@ -162,15 +193,53 @@ export default function DepositPage() {
             {/* QR Code */}
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-white rounded-lg">
-                <div className="w-48 h-48 bg-gradient-to-br from-slate-200 to-slate-300 rounded flex items-center justify-center">
-                  <QrCode className="h-32 w-32 text-slate-600" />
+                <div className="w-48 h-48 rounded flex items-center justify-center">
+                  {qrLoading ? (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 rounded flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 border-slate-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : qrDataUrl ? (
+                    <Image 
+                      src={qrDataUrl} 
+                      alt={`${selectedAsset.symbol} Deposit QR`} 
+                      width={192} 
+                      height={192} 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 rounded flex items-center justify-center">
+                      <QrCode className="h-32 w-32 text-slate-600" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Address */}
             <div className="space-y-5">
-              {/* ckAsset deposit (user principal) */}
+              {/* Native deposit - Primary (QR code shows this) */}
+              <div className="space-y-2">
+                <Label className="text-slate-300 font-semibold">Native {selectedAsset.symbol} Deposit Address</Label>
+                <div className="text-xs text-slate-400">Network: {selectedAsset.symbol === "BTC" ? "Bitcoin (native)" : "Ethereum (native)"}</div>
+                <div className="text-xs text-blue-400 mb-2">📱 QR Code above shows this address</div>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={(selectedAsset as any).nativeAddress || (loading ? "Loading..." : error ? "Unavailable" : "")}
+                    readOnly
+                    placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
+                    className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
+                  />
+                  <Button
+                    onClick={() => (selectedAsset as any).nativeAddress && copyToClipboard((selectedAsset as any).nativeAddress)}
+                    className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
+                    disabled={!(selectedAsset as any).nativeAddress}
+                  >
+                    {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* ckAsset deposit (user principal) - Secondary */}
               <div className="space-y-2">
                 <Label className="text-slate-300">ck{selectedAsset.symbol} Deposit Address (Your Principal)</Label>
                 <div className="text-xs text-slate-400">Network: {selectedAsset.symbol === "BTC" ? "Internet Computer / ckBTC" : "Internet Computer / ckETH"}</div>
@@ -185,27 +254,6 @@ export default function DepositPage() {
                     onClick={() => user && copyToClipboard(user)}
                     className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
                     disabled={!user}
-                  >
-                    {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Native deposit */}
-              <div className="space-y-2">
-                <Label className="text-slate-300">Native {selectedAsset.symbol} Deposit Address</Label>
-                <div className="text-xs text-slate-400">Network: {selectedAsset.symbol === "BTC" ? "Bitcoin (native)" : "Ethereum (native)"}</div>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={(selectedAsset as any).nativeAddress || (loading ? "Loading..." : error ? "Unavailable" : "")}
-                    readOnly
-                    placeholder={loading ? "Loading..." : error ? "Unavailable" : ""}
-                    className="bg-slate-800/50 border-slate-600 text-white font-mono text-sm"
-                  />
-                  <Button
-                    onClick={() => (selectedAsset as any).nativeAddress && copyToClipboard((selectedAsset as any).nativeAddress)}
-                    className={`px-3 ${copied ? "bg-green-600 hover:bg-green-700" : "bg-purple-600 hover:bg-purple-700"} glow-purple`}
-                    disabled={!(selectedAsset as any).nativeAddress}
                   >
                     {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -268,9 +316,9 @@ export default function DepositPage() {
                 3
               </div>
               <div>
-                <div className="font-semibold text-white">Wait for confirmations</div>
+                <div className="font-semibold text-white">Wait for confirmation</div>
                 <div className="text-slate-400">
-                  Your deposit will appear after {selectedAsset.confirmations} network confirmations
+                  Your deposit will appear after network confirmation
                 </div>
               </div>
             </div>

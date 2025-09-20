@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { TrendingUp, PieChart, ArrowDownToLine, Home, GalleryVerticalEnd, History, Send, CalendarCheck, Target, Zap } from "lucide-react"
 import {
   Sidebar,
@@ -81,8 +82,14 @@ export function BasicSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
               >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <GalleryVerticalEnd className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  <Image
+                    src="/fintrack.svg"
+                    alt="FinTrack Logo"
+                    width={20}
+                    height={20}
+                    className="object-contain brightness-0 dark:invert"
+                  />
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate text-xl font-heading font-bold text-glow bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">FinTrack</span>

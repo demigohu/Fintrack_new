@@ -11,4 +11,5 @@ pub mod evm_rpc_canister;
 pub mod budget;
 pub mod timers;
 pub mod goals;
+pub mod kongswap;
 

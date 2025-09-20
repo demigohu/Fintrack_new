@@ -39,9 +39,13 @@ export function AssetAllocation() {
       const ckethWei = Number(sum.cketh_balance ?? 0)
       const btcNativeSats = Number(sum.btc_native_balance ?? 0)
       const ethNativeWei = Number(sum.eth_native_balance ?? 0)
+      const usdcAmount = Number(sum.usdc_balance ?? 0) / 1e6 // USDC has 6 decimals
+      const wethAmount = Number(sum.weth_balance ?? 0) / 1e18 // WETH has 18 decimals
 
-      const btcBalance = (ckbtcSats + btcNativeSats) / 1e8
-      const ethBalance = (ckethWei + ethNativeWei) / 1e18
+      const ckbtcAmount = ckbtcSats / 1e8
+      const btcAmount = btcNativeSats / 1e8
+      const ckethAmount = ckethWei / 1e18
+      const ethAmount = ethNativeWei / 1e18
       
       // Live USD rates from backend
       const ratesRes = await currencyService.getCurrencyRates()
@@ -52,9 +56,11 @@ export function AssetAllocation() {
       const btcPrice = ratesRes.data.btc_to_usd
       const ethPrice = ratesRes.data.eth_to_usd
       
-      const btcValue = btcBalance * btcPrice
-      const ethValue = ethBalance * ethPrice
-      const currentTotalValue = btcValue + ethValue
+      const btcValue = (ckbtcAmount + btcAmount) * btcPrice
+      const ethValue = (ckethAmount + ethAmount) * ethPrice
+      const usdcValue = usdcAmount * 1 // USDC is pegged to $1
+      const wethValue = wethAmount * ethPrice // WETH price = ETH price
+      const currentTotalValue = btcValue + ethValue + usdcValue + wethValue
       
       setTotalValue(currentTotalValue)
       
@@ -62,6 +68,8 @@ export function AssetAllocation() {
         const newAllocations: AssetAllocation[] = [
           { symbol: "BTC", name: "Bitcoin", percentage: (btcValue / currentTotalValue) * 100, value: btcValue, color: "#f97316" },
           { symbol: "ETH", name: "Ethereum", percentage: (ethValue / currentTotalValue) * 100, value: ethValue, color: "#3b82f6" },
+          { symbol: "USDC", name: "USD Coin", percentage: (usdcValue / currentTotalValue) * 100, value: usdcValue, color: "#22c55e" },
+          { symbol: "WETH", name: "Wrapped Ethereum", percentage: (wethValue / currentTotalValue) * 100, value: wethValue, color: "#8b5cf6" },
         ]
         
         // Only show assets with balance > 0
@@ -105,7 +113,7 @@ export function AssetAllocation() {
     return (
       <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
         <div className="text-slate-400 text-center py-8">
-          Memuat allocation...
+          Loading allocation...
         </div>
       </Card>
     )
@@ -198,7 +206,7 @@ export function AssetAllocation() {
               dominantBaseline="middle"
               className="text-lg font-bold fill-white"
             >
-              ${Math.round(totalValue / 1000)}k
+              ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </text>
             <text x="50%" y="55%" textAnchor="middle" dominantBaseline="middle" className="text-xs fill-slate-400">
               Total
@@ -229,7 +237,7 @@ export function AssetAllocation() {
             </div>
             <div className="text-right">
               <div className="text-white font-semibold text-sm">{asset.percentage.toFixed(1)}%</div>
-              <div className="text-slate-400 text-xs">${asset.value.toLocaleString()}</div>
+              <div className="text-slate-400 text-xs">${asset.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
           </div>
         ))}
@@ -246,7 +254,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         <div className="text-white font-semibold">{data.name}</div>
         <div className="text-purple-400 text-sm">{data.symbol}</div>
         <div className="text-cyan-400 font-bold">{data.percentage.toFixed(1)}%</div>
-        <div className="text-slate-300 text-sm">${data.value.toLocaleString()}</div>
+        <div className="text-slate-300 text-sm">${data.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
       </div>
     )
   }

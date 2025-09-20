@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowUpDown, Settings, TrendingUp, AlertCircle, ExternalLink, Info } from "lucide-react"
+import { ArrowUpDown, Settings, TrendingUp, AlertCircle, ExternalLink, Info, ChevronDown, Search, X } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import Image from "next/image"
 import { 
   getBestQuoteV3, 
   buildSwapCalldataV3, 
@@ -45,11 +47,22 @@ const ERC20_ABI = [
 // Sepolia RPC URL
 const SEPOLIA_RPC_URL = "https://sepolia.infura.io/v3/76cf79a022694d02839ffa1827307d27"
 
+// Helper function to get asset logo
+const getAssetLogo = (symbol: string) => {
+  const logoMap: Record<string, string> = {
+    'ETH': '/ethereum.svg',
+    'USDC': '/usdc.svg',
+    'WETH': '/weth.svg',
+  }
+  return logoMap[symbol] || '/ethereum.svg' // fallback
+}
+
 export function UniswapV3SwapPanel() {
+  const { toast } = useToast()
   const [fromToken, setFromToken] = useState<TokenInfo>({
     symbol: "ETH",
     name: "Ethereum",
-    icon: "Ξ",
+    icon: "ethereum",
     balance: "0.00",
     decimals: 18,
     address: "0x0000000000000000000000000000000000000000"
@@ -57,14 +70,15 @@ export function UniswapV3SwapPanel() {
   const [toToken, setToToken] = useState<TokenInfo>({
     symbol: "USDC",
     name: "USD Coin",
-    icon: "$",
+    icon: "usdc",
     balance: "0.00",
     decimals: 6,
     address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
   })
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
-  const [slippage, setSlippage] = useState([0.5])
+  const [slippage, setSlippage] = useState([1.0]) // Default 1% slippage
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isQuoting, setIsQuoting] = useState(false)
   const [quote, setQuote] = useState<{
@@ -79,7 +93,64 @@ export function UniswapV3SwapPanel() {
   const [userEthAddress, setUserEthAddress] = useState<string>("")
   const [isConnected, setIsConnected] = useState(false)
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
-  const [selectedFee, setSelectedFee] = useState<number>(FEE_AMOUNTS.MEDIUM) // Default to 0.3%
+  const [showTokenSelector, setShowTokenSelector] = useState(false)
+  const [tokenSelectorType, setTokenSelectorType] = useState<'from' | 'to'>('from')
+  const [searchQuery, setSearchQuery] = useState("")
+  const [availableTokens, setAvailableTokens] = useState<TokenInfo[]>([])
+
+  // Initialize available tokens
+  useEffect(() => {
+    const tokens: TokenInfo[] = [
+      {
+        symbol: "ETH",
+        name: "Ethereum",
+        icon: "ethereum",
+        balance: "0.00",
+        decimals: 18,
+        address: "0x0000000000000000000000000000000000000000"
+      },
+      {
+        symbol: "USDC",
+        name: "USD Coin",
+        icon: "usdc",
+        balance: "0.00",
+        decimals: 6,
+        address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+      },
+      {
+        symbol: "WETH",
+        name: "Wrapped Ethereum",
+        icon: "weth",
+        balance: "0.00",
+        decimals: 18,
+        address: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+      }
+    ]
+    setAvailableTokens(tokens)
+  }, [])
+
+  // Filter tokens based on search query
+  const filteredTokens = availableTokens.filter(token =>
+    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  // Handle token selection
+  const handleTokenSelect = (token: TokenInfo) => {
+    if (tokenSelectorType === 'from') {
+      setFromToken(token)
+    } else {
+      setToToken(token)
+    }
+    setShowTokenSelector(false)
+    setSearchQuery("")
+  }
+
+  // Open token selector
+  const openTokenSelector = (type: 'from' | 'to') => {
+    setTokenSelectorType(type)
+    setShowTokenSelector(true)
+  }
 
   // Get user's ETH address from principal
   useEffect(() => {
@@ -139,7 +210,19 @@ export function UniswapV3SwapPanel() {
       const wethBalance = await wethContract.balanceOf(address)
       const wethFormatted = ethers.utils.formatEther(wethBalance)
 
-      // Update balances based on current token selection
+      // Update available tokens with real balances
+      setAvailableTokens(prev => prev.map(token => {
+        if (token.symbol === "ETH") {
+          return { ...token, balance: ethFormatted }
+        } else if (token.symbol === "USDC") {
+          return { ...token, balance: usdcFormatted }
+        } else if (token.symbol === "WETH") {
+          return { ...token, balance: wethFormatted }
+        }
+        return token
+      }))
+
+      // Update current selected tokens
       setFromToken(prev => ({
         ...prev,
         balance: prev.symbol === "ETH" ? ethFormatted : 
@@ -156,6 +239,11 @@ export function UniswapV3SwapPanel() {
       
     } catch (error) {
       console.error("Error fetching balances:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch token balances",
+        variant: "destructive"
+      })
     } finally {
       setIsLoadingBalance(false)
     }
@@ -215,9 +303,19 @@ export function UniswapV3SwapPanel() {
       if (error.message && error.message.includes("No available pools found")) {
         setPoolAvailable(false)
         setPoolCheckError(error.message)
+        toast({
+          title: "No Pool Available",
+          description: "No liquidity pool found for this token pair. Try different tokens.",
+          variant: "destructive"
+        })
       } else {
         setPoolAvailable(null)
         setPoolCheckError(error.message || "Quote failed")
+        toast({
+          title: "Quote Failed",
+          description: error.message || "Failed to get quote. Please try again.",
+          variant: "destructive"
+        })
       }
       
       setQuote(null)
@@ -239,7 +337,7 @@ export function UniswapV3SwapPanel() {
       }, 500)
       return () => clearTimeout(timeoutId)
     }
-  }, [fromAmount, fromToken, toToken, selectedFee])
+  }, [fromAmount, fromToken, toToken])
 
   const handleSwap = async () => {
     if (!fromAmount || !toAmount || !quote) return
@@ -255,7 +353,16 @@ export function UniswapV3SwapPanel() {
         toToken: toToken.symbol,
         amountIn,
         amountOutMin,
+        expectedAmountOut: quote.amountOut,
+        slippage: slippage[0],
         fee: quote.fee
+      })
+      
+      console.log("Slippage calculation:", {
+        expectedAmountOut: quote.amountOut,
+        slippagePercent: slippage[0],
+        amountOutMin: amountOutMin,
+        slippageAmount: (parseFloat(quote.amountOut) * slippage[0] / 100).toString()
       })
 
       // Check if approval is needed for Permit2
@@ -315,6 +422,13 @@ export function UniswapV3SwapPanel() {
         if (needsERC20Approval || needsPermit2Approval) {
           console.log("Approval needed for token:", fromToken.symbol)
           
+          // Show approval toast
+          toast({
+            title: "Approval Required",
+            description: `Approving ${fromToken.symbol} for trading.`,
+            variant: "info"
+          })
+          
           // First: ERC20 approval to Permit2 (if needed)
           if (needsERC20Approval) {
             console.log("ERC20 approval needed: token → Permit2")
@@ -344,6 +458,21 @@ export function UniswapV3SwapPanel() {
               }
               
               console.log("ERC20 approval to Permit2 successful:", erc20ApprovalResult.data)
+              
+              // Show approval success toast
+              toast({
+                title: "Approval Successful",
+                description: `ERC20 approval completed for ${fromToken.symbol}`,
+                variant: "success",
+                action: (
+                  <button
+                    onClick={() => window.open(`https://sepolia.etherscan.io/tx/${erc20ApprovalResult.data}`, '_blank')}
+                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    View TX
+                  </button>
+                )
+              })
               
               // Wait for approval to be mined
               await new Promise(resolve => setTimeout(resolve, 3000))
@@ -386,6 +515,21 @@ export function UniswapV3SwapPanel() {
               }
               
               console.log("Permit2 approval successful:", approvalResult.data)
+              
+              // Show approval success toast
+              toast({
+                title: "Approval Successful",
+                description: `Permit2 approval completed for ${fromToken.symbol}`,
+                variant: "success",
+                action: (
+                  <button
+                    onClick={() => window.open(`https://sepolia.etherscan.io/tx/${approvalResult.data}`, '_blank')}
+                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    View TX
+                  </button>
+                )
+              })
               
               // Wait for approval to be mined
               await new Promise(resolve => setTimeout(resolve, 3000))
@@ -434,7 +578,7 @@ export function UniswapV3SwapPanel() {
         amountIn,
         amountOutMin,
         userEthAddress,
-        quote.fee,
+        FEE_AMOUNTS.MEDIUM, // Use default fee tier
         slippage[0],
         deadline,
         provider,
@@ -443,6 +587,13 @@ export function UniswapV3SwapPanel() {
       )
 
       console.log("V3 Swap calldata:", swapCalldata)
+
+      // Show transaction submitted toast
+      toast({
+        title: "Transaction Submitted",
+        description: "Swap transaction has been submitted. Please wait for confirmation.",
+        variant: "info"
+      })
 
       // Send swap transaction
       const swapResult = await uniswapService.sendTx({
@@ -457,6 +608,21 @@ export function UniswapV3SwapPanel() {
 
       console.log("V3 Swap transaction hash:", swapResult.data)
       
+      // Show success toast with transaction hash and Etherscan link
+      toast({
+        title: "Swap Successful!",
+        description: `Successfully swapped ${fromAmount} ${fromToken.symbol} for ${toAmount} ${toToken.symbol}`,
+        variant: "success",
+        action: (
+          <button
+            onClick={() => window.open(`https://sepolia.etherscan.io/tx/${swapResult.data}`, '_blank')}
+            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            View on Etherscan
+          </button>
+        )
+      })
+      
       // Refresh balances after successful swap
       await fetchBalances(userEthAddress)
       
@@ -467,7 +633,23 @@ export function UniswapV3SwapPanel() {
       
     } catch (error: any) {
       console.error("V3 Swap failed:", error)
-      alert(`Swap failed: ${error.message}`)
+      
+      let errorMessage = error.message || "An error occurred during the swap"
+      
+      // Handle specific error cases
+      if (error.message && error.message.includes("V3TooLittleReceived")) {
+        errorMessage = "Swap failed due to slippage. The price moved unfavorably. Try increasing slippage tolerance or reducing the amount."
+      } else if (error.message && error.message.includes("insufficient")) {
+        errorMessage = "Insufficient balance or allowance. Please check your token balance and approvals."
+      } else if (error.message && error.message.includes("deadline")) {
+        errorMessage = "Transaction expired. Please try again."
+      }
+      
+      toast({
+        title: "Swap Failed",
+        description: errorMessage,
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }
@@ -486,121 +668,181 @@ export function UniswapV3SwapPanel() {
     setFromAmount(fromToken.balance)
   }
 
+  const handlePercentageClick = (percentage: number) => {
+    const balance = parseFloat(fromToken.balance)
+    const amount = (balance * percentage / 100).toString()
+    setFromAmount(amount)
+  }
+
+
   return (
-    <Card className="w-full max-w-md mx-auto bg-slate-900 border-slate-700">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-white text-xl font-semibold flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-400" />
-          Uniswap V3 Swap
-        </CardTitle>
-        <div className="text-sm text-slate-400">
-          {isConnected ? (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>Connected: {userEthAddress.slice(0, 6)}...{userEthAddress.slice(-4)}</span>
+    <div className="w-full max-w-md mx-auto">
+      {/* Main Swap Interface */}
+      <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6 space-y-4">
+        {/* Sell Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            {/* <span className="text-slate-300 text-sm font-medium">Sell</span> */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => handlePercentageClick(50)}
+                className="px-2 py-1 text-xs bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700"
+              >
+                50%
+              </button>
+              <button
+                onClick={() => handlePercentageClick(75)}
+                className="px-2 py-1 text-xs bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700"
+              >
+                75%
+              </button>
+              <button
+                onClick={handleMaxClick}
+                className="px-2 py-1 text-xs bg-white text-slate-900 rounded-md hover:bg-slate-100"
+              >
+                Max
+              </button>
             </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-              <span>Not connected</span>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* From Token */}
-        <div className="space-y-2">
-          <Label className="text-slate-300 text-sm">From</Label>
-          <div className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-slate-700">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-lg">{fromToken.icon}</span>
-              <span className="text-white font-medium">{fromToken.symbol}</span>
-            </div>
-            <div className="text-right">
+          </div>
+          
+          <div className="flex items-center gap-3 p-4 bg-slate-800 rounded-xl border border-slate-700">
+            <div className="flex-1">
               <Input
                 type="number"
-                placeholder="0.0"
+                placeholder="0"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(e.target.value)}
-                className="bg-transparent border-none text-white text-right placeholder-slate-500 focus:ring-0 p-0 h-auto"
+                className="bg-transparent border-none text-white text-2xl placeholder-slate-500 focus:ring-0 p-0 h-auto"
               />
-              <div className="text-xs text-slate-400">
-                Balance: {isLoadingBalance ? "Loading..." : `${parseFloat(fromToken.balance).toFixed(4)} ${fromToken.symbol}`}
-                {parseFloat(fromToken.balance) > 0 && (
-                  <button
-                    onClick={handleMaxClick}
-                    className="ml-1 text-blue-400 hover:text-blue-300"
-                  >
-                    MAX
-                  </button>
-                )}
-              </div>
             </div>
+            <button
+              onClick={() => openTokenSelector('from')}
+              className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center">
+                <Image
+                  src={getAssetLogo(fromToken.symbol)}
+                  alt={fromToken.symbol}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-white font-medium">{fromToken.symbol}</span>
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
+          
+          <div className="text-xs text-slate-400">
+            Balance: {isLoadingBalance ? "Loading..." : `${parseFloat(fromToken.balance).toFixed(4)} ${fromToken.symbol}`}
           </div>
         </div>
 
-        {/* Swap Button */}
+        {/* Swap Direction Button */}
         <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={handleSwapTokens}
-            className="p-2 hover:bg-slate-700 rounded-full"
+            className="p-3 bg-slate-800 hover:bg-slate-700 rounded-full border border-slate-700 transition-colors"
           >
-            <ArrowUpDown className="w-4 h-4 text-slate-400" />
-          </Button>
+            <ArrowUpDown className="w-5 h-5 text-slate-400" />
+          </button>
         </div>
 
-        {/* To Token */}
-        <div className="space-y-2">
-          <Label className="text-slate-300 text-sm">To</Label>
-          <div className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-slate-700">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-lg">{toToken.icon}</span>
-              <span className="text-white font-medium">{toToken.symbol}</span>
-            </div>
-            <div className="text-right">
-              <div className="text-white text-right">
+        {/* Buy Section */}
+        <div className="space-y-3">
+          {/* <span className="text-slate-300 text-sm font-medium">Buy</span> */}
+          
+          <div className="flex items-center gap-3 p-4 bg-slate-800 rounded-xl border border-slate-700">
+            <div className="flex-1">
+              <div className="text-white text-2xl">
                 {isQuoting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-sm">Getting quote...</span>
                   </div>
                 ) : (
-                  toAmount || "0.0"
+                  toAmount || "0"
                 )}
               </div>
-              <div className="text-xs text-slate-400">
-                Balance: {isLoadingBalance ? "Loading..." : `${parseFloat(toToken.balance).toFixed(4)} ${toToken.symbol}`}
-              </div>
             </div>
+            <button
+              onClick={() => openTokenSelector('to')}
+              className="flex items-center gap-2 px-3 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg transition-colors"
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center">
+                <Image
+                  src={getAssetLogo(toToken.symbol)}
+                  alt={toToken.symbol}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-white font-medium">{toToken.symbol}</span>
+              <ChevronDown className="w-4 h-4 text-white" />
+            </button>
+          </div>
+          
+          <div className="text-xs text-slate-400">
+            Balance: {isLoadingBalance ? "Loading..." : `${parseFloat(toToken.balance).toFixed(4)} ${toToken.symbol}`}
           </div>
         </div>
 
-        {/* Fee Tier Selection */}
+        {/* Slippage Settings */}
         <div className="space-y-2">
-          <Label className="text-slate-300 text-sm">Fee Tier</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { fee: FEE_AMOUNTS.LOW, label: "0.05%", desc: "Best for stable pairs" },
-              { fee: FEE_AMOUNTS.MEDIUM, label: "0.3%", desc: "Most common" },
-              { fee: FEE_AMOUNTS.HIGH, label: "1%", desc: "Exotic pairs" }
-            ].map(({ fee, label, desc }) => (
-              <button
-                key={fee}
-                onClick={() => setSelectedFee(fee)}
-                className={`p-2 rounded-lg border text-sm ${
-                  selectedFee === fee
-                    ? "bg-blue-600 border-blue-500 text-white"
-                    : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
-                }`}
-                title={desc}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <span className="text-slate-300 text-sm font-medium">Slippage Tolerance</span>
+            <button
+              onClick={() => setShowSlippageSettings(!showSlippageSettings)}
+              className="flex items-center gap-1 text-slate-400 hover:text-slate-300 text-sm"
+            >
+              <Settings className="w-4 h-4" />
+              {slippage[0]}%
+            </button>
           </div>
+          
+          {showSlippageSettings && (
+            <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+              <div className="space-y-3">
+                <div className="text-sm text-slate-300">
+                  Your transaction will revert if the price changes unfavorably by more than this percentage.
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[0.1, 0.5, 1.0, 2.0, 5.0].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => setSlippage([value])}
+                      className={`p-2 rounded-lg border text-sm ${
+                        slippage[0] === value
+                          ? "bg-blue-600 border-blue-500 text-white"
+                          : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {value}%
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Custom"
+                    value={slippage[0]}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value)
+                      if (!isNaN(value) && value >= 0 && value <= 50) {
+                        setSlippage([value])
+                      }
+                    }}
+                    className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                    step="0.1"
+                    min="0"
+                    max="50"
+                  />
+                  <span className="text-slate-400 text-sm">%</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quote Info */}
@@ -647,7 +889,11 @@ export function UniswapV3SwapPanel() {
         <Button
           onClick={handleSwap}
           disabled={!fromAmount || !toAmount || !quote || isLoading || !isConnected || poolAvailable === false}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium disabled:bg-slate-600 disabled:cursor-not-allowed"
+          className={`w-full py-4 text-lg font-medium disabled:cursor-not-allowed rounded-xl ${
+            quote && !isLoading && isConnected && fromAmount && toAmount
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-slate-800 hover:bg-slate-700 text-white disabled:bg-slate-600"
+          }`}
         >
           {isLoading ? (
             <div className="flex items-center gap-2">
@@ -661,24 +907,99 @@ export function UniswapV3SwapPanel() {
           )}
         </Button>
 
-        {/* Info */}
-        <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-blue-200">
-            <p className="font-medium">Uniswap V3</p>
-            <p>Using V3 SDK with multiple fee tiers and concentrated liquidity.</p>
-          </div>
+        {/* Connection Status */}
+        <div className="text-sm text-slate-400 text-center">
+          {isConnected ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>Connected: {userEthAddress.slice(0, 6)}...{userEthAddress.slice(-4)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+              <span>Not connected</span>
+            </div>
+          )}
         </div>
 
-        {/* Warning */}
-        <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-yellow-200">
-            <p className="font-medium">Testnet Warning</p>
-            <p>You are trading on Ethereum Sepolia testnet. These are test tokens with no real value.</p>
+      </div>
+
+      {/* Token Selector Modal */}
+      {showTokenSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-md max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-white text-lg font-semibold">Select a token</h3>
+              <button
+                onClick={() => setShowTokenSelector(false)}
+                className="p-1 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="p-4 border-b border-slate-700">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Search tokens"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-slate-800 border-slate-700 text-white placeholder-slate-500"
+                />
+              </div>
+            </div>
+
+            {/* Token List */}
+            <div className="max-h-96 overflow-y-auto">
+              <div className="p-4">
+                <div className="flex items-center gap-2 text-slate-400 text-sm mb-3">
+                  <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
+                    <span className="text-xs">🪙</span>
+                  </div>
+                  <span>Your tokens</span>
+                </div>
+                
+                <div className="space-y-2">
+                  {filteredTokens.map((token) => (
+                    <button
+                      key={token.symbol}
+                      onClick={() => handleTokenSelect(token)}
+                      className="w-full flex items-center justify-between p-3 hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                          <Image
+                            src={getAssetLogo(token.symbol)}
+                            alt={token.symbol}
+                            width={28}
+                            height={28}
+                            className="object-contain"
+                          />
+                        </div>
+                        <div className="text-left">
+                          <div className="text-white font-medium">{token.name}</div>
+                          <div className="text-slate-400 text-sm">
+                            {token.symbol} {token.address !== "0x0000000000000000000000000000000000000000" && 
+                              `${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-white text-sm">
+                        {parseFloat(token.balance).toFixed(4)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+    </div>
   )
 }

@@ -13,6 +13,17 @@ import { balanceService, bitcoinService, ethereumService, authService, transacti
 import { toDecimalStringNat, toDecimalStringBigInt, parseDecimalToBaseUnits, formatUsd } from "@/lib/utils"
 import { getHelperContractAddress, depositEthToContract } from "@/services/ethDeposit"
 
+// Helper function to get asset logo
+const getAssetLogo = (symbol: string) => {
+  const logoMap: Record<string, string> = {
+    'BTC': '/bitcoin.svg',
+    'ETH': '/ethereum.svg',
+    'ckBTC': '/ckbtc.svg',
+    'ckETH': '/cketh.svg',
+  }
+  return logoMap[symbol] || '/bitcoin.svg' // fallback
+}
+
 export default function BridgePage() {
   const { toast } = useToast()
 
@@ -488,20 +499,14 @@ export default function BridgePage() {
                       className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-800/70 transition-colors"
                       onClick={() => openTokenModal("from")}
                     >
-                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                        {fromAsset === "BTC" ? (
-                          <span className="text-white text-sm font-bold">₿</span>
-                        ) : fromAsset === "ETH" ? (
-                          <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223 12.056 7.026 19.31 12.223 12.056 0z"/>
-                          </svg>
-                        ) : fromAsset === "ckBTC" ? (
-                          <span className="text-white text-xs font-bold">₿IC</span>
-                        ) : (
-                          <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                          </svg>
-                        )}
+                      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                        <Image
+                          src={getAssetLogo(fromAsset)}
+                          alt={fromAsset}
+                          width={20}
+                          height={20}
+                          className="object-contain"
+                        />
                       </div>
                       <span className="text-white font-medium">{fromAsset}</span>
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -525,20 +530,14 @@ export default function BridgePage() {
                     className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-800/70 transition-colors"
                     onClick={() => openTokenModal("to")}
                   >
-                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                      {toAsset === "BTC" ? (
-                        <span className="text-white text-sm font-bold">₿</span>
-                      ) : toAsset === "ETH" ? (
-                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223 12.056 7.026 19.31 12.223 12.056 0z"/>
-                        </svg>
-                      ) : toAsset === "ckBTC" ? (
-                        <span className="text-white text-xs font-bold">₿IC</span>
-                      ) : (
-                        <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                      )}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                      <Image
+                        src={getAssetLogo(toAsset)}
+                        alt={toAsset}
+                        width={20}
+                        height={20}
+                        className="object-contain"
+                      />
                     </div>
                     <span className="text-white font-medium">{toAsset}</span>
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,20 +583,14 @@ export default function BridgePage() {
                   />
                 </div>
                 <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-lg">
-                  <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
-                    {fromAsset === "BTC" ? (
-                      <span className="text-white text-xs font-bold">₿</span>
-                    ) : fromAsset === "ETH" ? (
-                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223 12.056 7.026 19.31 12.223 12.056 0z"/>
-                      </svg>
-                    ) : fromAsset === "ckBTC" ? (
-                      <span className="text-white text-xs font-bold">₿IC</span>
-                    ) : (
-                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    )}
+                  <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center">
+                    <Image
+                      src={getAssetLogo(fromAsset)}
+                      alt={fromAsset}
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
                   </div>
                   <span className="text-white font-medium">{fromAsset}</span>
                 </div>
@@ -765,7 +758,7 @@ export default function BridgePage() {
             <div className="text-sm text-slate-300 space-y-1">
               {assetType === "ETH" ? (
                 <>
-                  <div>Ethereum finalized block height: {minterStatus?.eth_finalized ?? "--"}</div>
+                  {/* <div>Ethereum finalized block height: {minterStatus?.eth_finalized ?? "--"}</div> */}
                   <div>Last synced block height (Ethereum): {minterStatus?.last_scraped ?? "--"}</div>
                 </>
               ) : (
@@ -931,20 +924,14 @@ export default function BridgePage() {
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800/50 cursor-pointer transition-colors"
                   >
                     {/* Token Icon */}
-                    <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                      {token.symbol === "BTC" ? (
-                        <span className="text-white text-sm font-bold">₿</span>
-                      ) : token.symbol === "ETH" ? (
-                        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.372 4.35h.003zM12.056 0L4.69 12.223 12.056 7.026 19.31 12.223 12.056 0z"/>
-                        </svg>
-                      ) : token.symbol === "ckBTC" ? (
-                        <span className="text-white text-xs font-bold">₿IC</span>
-                      ) : (
-                        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                      )}
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                      <Image
+                        src={getAssetLogo(token.symbol)}
+                        alt={token.symbol}
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                      />
                     </div>
                     
                     {/* Token Info */}
