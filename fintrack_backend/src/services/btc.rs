@@ -1,5 +1,5 @@
 use candid::{CandidType, Nat, Principal};
-use ic_cdk::api::call::call;
+use ic_cdk::api::call::call_with_payment128;
 use ic_cdk::{
     bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, bitcoin_get_block_headers, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest, GetBlockHeadersRequest, GetBlockHeadersResponse},
 };
@@ -14,13 +14,13 @@ pub struct SimplifiedUtxo {
 // Helper: read ckBTC minter and ledger principals from dfx.json (baked-in for now)
 // In production, consider storing in stable state or ENV via build-time feature.
 fn ckbtc_minter_principal() -> Principal {
-    // From dfx.json -> ckbtc_minter.specified_id
-    Principal::from_text("ml52i-qqaaa-aaaar-qaaba-cai").expect("invalid ckbtc_minter principal")
+    // Mainnet ckBTC Minter
+    Principal::from_text("mqygn-kiaaa-aaaar-qaadq-cai").expect("invalid ckbtc_minter principal")
 }
 
 fn ckbtc_ledger_principal() -> Principal {
-    // From dfx.json -> ckbtc_ledger.specified_id
-    Principal::from_text("mc6ru-gyaaa-aaaar-qaaaq-cai").expect("invalid ckbtc_ledger principal")
+    // Mainnet ckBTC Ledger
+    Principal::from_text("mxzaz-hqaaa-aaaar-qaada-cai").expect("invalid ckbtc_ledger principal")
 }
 
 // NOTE: For now, these are stubs to be wired to ckBTC minter/ledger.
@@ -33,7 +33,7 @@ pub async fn get_deposit_address(owner: Option<Principal>, subaccount: Option<Ve
         subaccount: Option<Vec<u8>>,
     }
     let arg = (AddressArg { owner, subaccount },);
-    let (address,): (String,) = call(minter, "get_btc_address", arg)
+    let (address,): (String,) = call_with_payment128(minter, "get_btc_address", arg, 1_000_000)
         .await
         .map_err(|e| format!("get_btc_address failed: {:?}", e))?;
     Ok(address)
@@ -109,7 +109,7 @@ pub async fn refresh_balance(owner: Option<Principal>, subaccount: Option<Vec<u8
 
     let arg = (UpdateArg { owner, subaccount },);
     // We don't need detailed structure, just success/failure mapping via candid.
-    let (res,): (UpdateResult,) = call(minter, "update_balance", arg)
+    let (res,): (UpdateResult,) = call_with_payment128(minter, "update_balance", arg, 5_000_000)
         .await
         .map_err(|e| format!("update_balance failed: {:?}", e))?;
     match res {
@@ -128,7 +128,7 @@ pub async fn get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
     let caller = ic_cdk::caller();
     let resolved_owner = owner.unwrap_or(caller);
     let arg = (AccountArg { owner: resolved_owner, subaccount },);
-    let (balance,): (Nat,) = call(ledger, "icrc1_balance_of", arg)
+    let (balance,): (Nat,) = call_with_payment128(ledger, "icrc1_balance_of", arg, 1_000_000)
         .await
         .map_err(|e| format!("icrc1_balance_of failed: {:?}", e))?;
     Ok(balance)
@@ -138,8 +138,8 @@ pub async fn get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
 
 /// Get UTXOs for a Bitcoin address using the Bitcoin canister
 pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
-    // For local development, use Regtest network
-    let network = ic_cdk::bitcoin_canister::Network::Regtest;
+    // Mainnet Bitcoin network
+    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
     
     let request = GetUtxosRequest {
         address: address.clone(),
@@ -166,8 +166,8 @@ pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
 
 /// Get current Bitcoin fee percentiles in millisatoshi/byte
 pub async fn get_current_fee_percentiles() -> Result<Vec<u64>, String> {
-    // For local development, use Regtest network
-    let network = ic_cdk::bitcoin_canister::Network::Regtest;
+    // Mainnet Bitcoin network
+    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
     
     let request = GetCurrentFeePercentilesRequest {
         network,
@@ -194,7 +194,7 @@ pub struct BtcNetworkInfo {
 
 /// Returns network info including current block height and highest seen UTXO height
 pub async fn get_network_info(address: Option<String>) -> Result<BtcNetworkInfo, String> {
-    let network = ic_cdk::bitcoin_canister::Network::Regtest;
+    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
 
     let mut utxo_height: u32 = 0;
     let mut current_block_height: u32 = 0;

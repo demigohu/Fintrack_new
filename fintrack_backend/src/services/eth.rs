@@ -1,18 +1,17 @@
 use candid::{CandidType, Nat, Principal};
 use serde::Deserialize;
 use num_traits::ToPrimitive;
-use ic_cdk::api::call::call;
-use ic_cdk::api::call::call_with_payment;
+use ic_cdk::api::call::call_with_payment128;
 
 // Helper: read ckETH minter and ledger principals from dfx.json (baked-in for now)
 fn cketh_minter_principal() -> Principal {
-    // From dfx.json -> cketh_minter.specified_id
-    Principal::from_text("jzenf-aiaaa-aaaar-qaa7q-cai").expect("invalid cketh_minter principal")
+    // Mainnet ckETH Minter
+    Principal::from_text("sv3dd-oaaaa-aaaar-qacoa-cai").expect("invalid cketh_minter principal")
 }
 
 fn cketh_ledger_principal() -> Principal {
-    // From dfx.json -> cketh_ledger.specified_id
-    Principal::from_text("apia6-jaaaa-aaaar-qabma-cai").expect("invalid cketh_ledger principal")
+    // Mainnet ckETH Ledger
+    Principal::from_text("ss2fx-dyaaa-aaaar-qacoq-cai").expect("invalid cketh_ledger principal")
 }
 
 // NOTE: For now, these are stubs to be wired to ckETH minter/ledger.
@@ -20,7 +19,7 @@ fn cketh_ledger_principal() -> Principal {
 pub async fn get_deposit_address(_subaccount: Option<Vec<u8>>) -> Result<String, String> {
     let minter = cketh_minter_principal();
     // smart_contract_address returns the helper contract address for ETH deposits
-    let (contract_address,): (String,) = call(minter, "smart_contract_address", ())
+    let (contract_address,): (String,) = call_with_payment128(minter, "smart_contract_address", (), 1_000_000)
         .await
         .map_err(|e| format!("smart_contract_address failed: {:?}", e))?;
     
@@ -47,7 +46,7 @@ pub async fn get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
     let caller = ic_cdk::caller();
     let resolved_owner = owner.unwrap_or(caller);
     let arg = (AccountArg { owner: resolved_owner, subaccount },);
-    let (balance,): (Nat,) = call(ledger, "icrc1_balance_of", arg)
+    let (balance,): (Nat,) = call_with_payment128(ledger, "icrc1_balance_of", arg, 1_000_000)
         .await
         .map_err(|e| format!("icrc1_balance_of failed: {:?}", e))?;
     Ok(balance)
@@ -59,7 +58,7 @@ pub async fn get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
 
 pub async fn get_minter_address() -> Result<String, String> {
     let minter = cketh_minter_principal();
-    let (address,): (String,) = call(minter, "minter_address", ())
+    let (address,): (String,) = call_with_payment128(minter, "minter_address", (), 1_000_000)
         .await
         .map_err(|e| format!("minter_address failed: {:?}", e))?;
     Ok(address)
@@ -72,7 +71,7 @@ pub async fn get_minter_info() -> Result<String, String> {
         last_observed_block_number: Option<Nat>,
         last_eth_scraped_block_number: Option<Nat>,
     }
-    let (info,): (MinterInfoPartial,) = ic_cdk::call(minter, "get_minter_info", ())
+    let (info,): (MinterInfoPartial,) = call_with_payment128(minter, "get_minter_info", (), 2_000_000)
         .await
         .map_err(|e| format!("get_minter_info failed: {:?}", e))?;
 
@@ -89,7 +88,7 @@ pub async fn get_minter_info() -> Result<String, String> {
 pub async fn estimate_withdrawal_fee() -> Result<String, String> {
     let minter = cketh_minter_principal();
     // eip_1559_transaction_price takes Option<Eip1559TransactionPriceArg> where None means ETH withdrawal
-    let (fee_info,): (String,) = call(minter, "eip_1559_transaction_price", (None::<Option<()>>,))
+    let (fee_info,): (String,) = call_with_payment128(minter, "eip_1559_transaction_price", (None::<Option<()>>,), 2_000_000)
         .await
         .map_err(|e| format!("eip_1559_transaction_price failed: {:?}", e))?;
     Ok(fee_info)
@@ -98,7 +97,7 @@ pub async fn estimate_withdrawal_fee() -> Result<String, String> {
 /// Get historical fee data to estimate gas prices for Ethereum transactions
 pub async fn fee_history() -> Result<String, String> {
     // Get EVM RPC canister ID from dfx.json
-    let evm_rpc_principal = Principal::from_text("xhcuo-6yaaa-aaaar-qacqq-cai")
+    let evm_rpc_principal = Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai")
         .expect("invalid evm_rpc principal");
     
     // Define the fee_history request structure
@@ -116,11 +115,11 @@ pub async fn fee_history() -> Result<String, String> {
     };
     
     // Call EVM RPC canister's eth_feeHistory method
-    let (fee_history_result,): (String,) = call_with_payment(
+    let (fee_history_result,): (String,) = call_with_payment128(
         evm_rpc_principal,
         "eth_feeHistory",
         (request,),
-        0, // No payment needed for query
+        2_000_000, // Add cycles for fee history query
     )
     .await
     .map_err(|e| format!("eth_feeHistory failed: {:?}", e))?;

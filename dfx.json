@@ -4,9 +4,9 @@
       "candid": "fintrack_backend/fintrack_backend.did",
       "package": "fintrack_backend",
       "type": "rust",
+      "optimize": "cycles",
       "http": {
-        "enabled": true,
-        "domains": ["127.0.0.1:18443"]
+        "enabled": true
       }
     },
     "fintrack_frontend": {
@@ -31,82 +31,104 @@
       "type": "custom",
       "candid": "target/ic/ckbtc_minter.did",
       "wasm": "target/ic/ckbtc_minter.wasm.gz",
-      "specified_id": "ml52i-qqaaa-aaaar-qaaba-cai",
-      "init_arg_file": "target/ic/ckbtc-minter-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "mqygn-kiaaa-aaaar-qaadq-cai"
+        }
+      }
     },
     "ckbtc_ledger": {
       "type": "custom",
       "candid": "target/ic/ckbtc_ledger.did",
       "wasm": "target/ic/ckbtc_ledger.wasm.gz",
-      "specified_id": "mc6ru-gyaaa-aaaar-qaaaq-cai",
-      "init_arg_file": "target/ic/ckbtc-ledger-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
+        }
+      }
     },
     "btc_checker": {
       "type": "custom",
       "candid": "target/ic/btc_checker.did",
       "wasm": "target/ic/btc_checker.wasm.gz",
-      "specified_id": "o6ude-eyaaa-aaaar-qal6a-cai",
-      "init_arg_file": "target/ic/btc-checker-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "oltsj-fqaaa-aaaar-qal5q-cai"
+        }
+      }
     },
     "ckbtc_index": {
       "type": "custom",
       "candid": "target/ic/ckbtc_index.did",
       "wasm": "target/ic/ckbtc_index.wasm.gz",
-      "specified_id": "mm444-5iaaa-aaaar-qaabq-cai",
-      "init_arg_file": "target/ic/ckbtc-index-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "n5wcd-faaaa-aaaar-qaaea-cai"
+        }
+      }
     },
     "cketh_minter": {
       "type": "custom",
       "candid": "target/ic/cketh_minter.did",
       "wasm": "target/ic/cketh_minter.wasm.gz",
-      "specified_id": "jzenf-aiaaa-aaaar-qaa7q-cai",
-      "init_arg_file": "target/ic/cketh-minter-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "sv3dd-oaaaa-aaaar-qacoa-cai"
+        }
+      }
     },
     "cketh_ledger": {
       "type": "custom",
       "candid": "target/ic/cketh_ledger.did",
       "wasm": "target/ic/cketh_ledger.wasm.gz",
-      "specified_id": "apia6-jaaaa-aaaar-qabma-cai",
-      "init_arg_file": "target/ic/cketh-ledger-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "ss2fx-dyaaa-aaaar-qacoq-cai"
+        }
+      }
     },
     "cketh_index": {
       "type": "custom",
       "candid": "target/ic/cketh_index.did",
       "wasm": "target/ic/cketh_index.wasm.gz",
-      "specified_id": "sh5u2-cqaaa-aaaar-qacna-cai",
-      "init_arg_file": "target/ic/cketh-index-init-args.did"
+      "remote": {
+        "id": {
+          "ic": "s3zol-vqaaa-aaaar-qacpa-cai"
+        }
+      }
     },
     "evm_rpc": {
       "type": "custom",
       "candid": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.did",
       "wasm": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.wasm.gz",
-      "specified_id": "xhcuo-6yaaa-aaaar-qacqq-cai",
       "remote": {
         "id": {
           "ic": "7hfb6-caaaa-aaaar-qadga-cai"
-        }
-      },
-      "init_arg": "(record {})"
+        },
+        "init_arg": "(record {})"
+      }
+    },
+    "bitcoin": {
+    "type": "custom",
+    "candid": "https://github.com/dfinity/ic/releases/latest/download/bitcoin.did",
+    "wasm": "https://github.com/dfinity/ic/releases/latest/download/bitcoin.wasm.gz",
+    "remote": {
+      "id": {
+        "ic": "ghsi2-tqaaa-aaaan-aaaca-cai" 
+      }
     }
+  }
+
   },
   "defaults": {
-    "bitcoin": {
-      "enabled": true,
-      "log_level": "info",
-      "nodes": [
-        "127.0.0.1:18444"
-      ],
-      "canister_init_arg":"(record { stability_threshold = 0 : nat; network = variant { regtest }; blocks_source = principal \"aaaaa-aa\"; fees = record { get_utxos_base = 0 : nat; get_utxos_cycles_per_ten_instructions = 0 : nat; get_utxos_maximum = 0 : nat; get_balance = 0 : nat; get_balance_maximum = 0 : nat; get_current_fee_percentiles = 0 : nat; get_current_fee_percentiles_maximum = 0 : nat;  send_transaction_base = 0 : nat; send_transaction_per_byte = 0 : nat; }; syncing = variant { enabled }; api_access = variant { enabled }; disable_api_if_not_fully_synced = variant { enabled }})"
-    },
     "build": {
       "args": "",
       "packtool": ""
     }
   },
   "networks": {
-    "local": {
-      "bind": "127.0.0.1:4943"
-    }
+    "local": { "bind": "127.0.0.1:4943" },
+    "ic": { "providers": ["https://ic0.app"] }
   },
   "output_env_file": ".env",
   "version": 1

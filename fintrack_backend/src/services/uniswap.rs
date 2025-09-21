@@ -1,5 +1,5 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
-use ic_cdk::api::call::call_with_payment128;
+use ic_cdk::api::call::{call, call_with_payment128};
 use ic_cdk::api::management_canister::ecdsa::{
     ecdsa_public_key, EcdsaPublicKeyArgument, EcdsaPublicKeyResponse, EcdsaKeyId, EcdsaCurve, SignWithEcdsaArgument
 };
@@ -8,8 +8,9 @@ use ic_ethereum_types::Address;
 use alloy_consensus::{SignableTransaction, TxEip1559, TxEnvelope};
 use alloy_primitives::{hex, Signature, TxKind, U256, Bytes};
 use super::evm_rpc_canister::{
-    BlockTag, EthSepoliaService, GetTransactionCountArgs,
-    GetTransactionCountResult, MultiGetTransactionCountResult, RpcServices, RpcConfig, RpcService
+    BlockTag, EthMainnetService, EthSepoliaService, GetTransactionCountArgs,
+    GetTransactionCountResult, MultiGetTransactionCountResult, RpcServices, RpcConfig, RpcService,
+    JsonRpcSource
 };
 
 use num_traits::Zero;
@@ -19,9 +20,35 @@ use std::str::FromStr;
 const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
 const SEPOLIA_CHAIN_ID: u64 = 11155111;
 
-// EVM RPC Canister ID: xhcuo-6yaaa-aaaar-qacqq-cai
+// EVM RPC Canister ID: 7hfb6-caaaa-aaaar-qadga-cai (mainnet - same for Sepolia)
 fn get_evm_rpc_canister_id() -> Principal {
-    Principal::from_text("xhcuo-6yaaa-aaaar-qacqq-cai").unwrap()
+    Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai").unwrap()
+}
+
+// Dynamic cost estimation for EVM RPC calls with buffer
+async fn get_evm_rpc_cost_with_buffer(
+    source: JsonRpcSource,
+    json_request: String,
+    max_response_bytes: u64,
+) -> Result<u128, String> {
+    let evm_rpc = get_evm_rpc_canister_id();
+    
+    // Get cost estimate using call without cycles (same as ethtransfer.rs)
+    let (cost_result,): (Result<u128, super::evm_rpc_canister::RpcError>,) = ic_cdk::api::call::call(
+        evm_rpc,
+        "requestCost",
+        (source, json_request.clone(), max_response_bytes),
+    )
+    .await
+    .map_err(|e| format!("Failed to get cost estimate: {:?}", e))?;
+    
+    let base_cost = cost_result.map_err(|e| format!("Cost estimation failed: {:?}", e))?;
+    
+    // Add 50% buffer for retries and response size increases
+    let buffered_cost = base_cost + (base_cost / 2);
+    
+    ic_cdk::println!("EVM RPC cost estimate: {} cycles (with 50% buffer)", buffered_cost);
+    Ok(buffered_cost)
 }
 
 // Input struct for frontend
@@ -188,7 +215,7 @@ fn principal_derivation_path(owner: &Principal) -> Vec<Vec<u8>> {
 }
 
 // Get transaction count (nonce) - reused from ethtransfer.rs
-pub async fn get_transaction_count(owner: Option<Principal>, block: Option<BlockTag>) -> u64 {
+pub async fn get_transaction_count(owner: Option<Principal>, block: Option<BlockTag>) -> Result<u64, String> {
     let owner = owner.unwrap_or_else(ic_cdk::caller);
     let wallet = EthereumWallet::new(owner).await;
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
@@ -198,12 +225,28 @@ pub async fn get_transaction_count(owner: Option<Principal>, block: Option<Block
         block: block.unwrap_or(BlockTag::Finalized),
     };
 
-    let cycles = 5_000_000_000_u128;
+    // Use dynamic cost estimation for transaction count
+    let json_request = format!(
+        r#"{{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["{}","{}"],"id":1}}"#,
+        wallet.ethereum_address(),
+        match block.unwrap_or(BlockTag::Finalized) {
+            BlockTag::Finalized => "finalized",
+            BlockTag::Latest => "latest",
+            BlockTag::Pending => "pending",
+            BlockTag::Number(n) => return Err(format!("Unsupported block number: {}", n)),
+        }
+    );
+    let estimated_cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        json_request,
+        500 // Small response for nonce
+    ).await?;
+
     let (result,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "eth_getTransactionCount",
         (rpc_services, None::<Option<RpcConfig>>, args),
-        cycles,
+        estimated_cycles,
     )
     .await
     .unwrap_or_else(|e| {
@@ -216,14 +259,14 @@ pub async fn get_transaction_count(owner: Option<Principal>, block: Option<Block
     match result {
         MultiGetTransactionCountResult::Consistent(consistent_result) => {
             match consistent_result {
-                GetTransactionCountResult::Ok(count) => nat_to_u64(count),
+                GetTransactionCountResult::Ok(count) => Ok(nat_to_u64(count)),
                 GetTransactionCountResult::Err(_error) => {
-                    ic_cdk::trap("failed to get transaction count")
+                    Err("failed to get transaction count".to_string())
                 }
             }
         }
         MultiGetTransactionCountResult::Inconsistent(inconsistent_results) => {
-            ic_cdk::trap(&format!(
+            Err(format!(
                 "inconsistent results when retrieving transaction count. Received results: {}",
                 inconsistent_results.len()
             ))
@@ -276,7 +319,8 @@ pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
     let owner = req.owner.unwrap_or_else(ic_cdk::caller);
 
     // Get nonce for the owner
-    let nonce = get_transaction_count(Some(owner), Some(BlockTag::Pending)).await;
+    let nonce = get_transaction_count(Some(owner), Some(BlockTag::Pending)).await
+        .map_err(|e| format!("Failed to get nonce: {}", e))?;
 
     // Estimate gas and fees
     let (gas_limit, max_fee_per_gas, max_priority_fee_per_gas) = estimate_uniswap_fees();
@@ -326,14 +370,23 @@ pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
         raw_transaction_hex, raw_transaction_hash
     );
 
-    // Send transaction via EVM RPC
+    // Send transaction via EVM RPC with dynamic cost estimation
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
-    let cycles = 5_000_000_000_u128;
+    let json_request = format!(
+        r#"{{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["{}"],"id":1}}"#,
+        raw_transaction_hex
+    );
+    let estimated_cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        json_request,
+        10_000 // 10KB max response
+    ).await?;
+
     let (result,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "eth_sendRawTransaction",
         (rpc_services, None::<Option<RpcConfig>>, raw_transaction_hex.clone()),
-        cycles,
+        estimated_cycles,
     )
     .await
     .map_err(|e| format!("Failed to send transaction: {:?}", e))?;
@@ -413,7 +466,8 @@ pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
     let owner = req.owner.unwrap_or_else(ic_cdk::caller);
 
     // Get nonce for the owner
-    let nonce = get_transaction_count(Some(owner), Some(BlockTag::Pending)).await;
+    let nonce = get_transaction_count(Some(owner), Some(BlockTag::Pending)).await
+        .map_err(|e| format!("Failed to get nonce: {}", e))?;
 
     // Estimate gas and fees (approval typically needs less gas)
     let (gas_limit, max_fee_per_gas, max_priority_fee_per_gas) = estimate_approval_fees();
@@ -463,14 +517,23 @@ pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
         raw_transaction_hex, raw_transaction_hash
     );
 
-    // Send transaction via EVM RPC
+    // Send approval transaction via EVM RPC with dynamic cost estimation
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
-    let cycles = 5_000_000_000_u128;
+    let json_request = format!(
+        r#"{{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["{}"],"id":1}}"#,
+        raw_transaction_hex
+    );
+    let estimated_cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        json_request,
+        10_000 // 10KB max response
+    ).await?;
+
     let (result,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "eth_sendRawTransaction",
         (rpc_services, None::<Option<RpcConfig>>, raw_transaction_hex.clone()),
-        cycles,
+        estimated_cycles,
     )
     .await
     .map_err(|e| format!("Failed to send approval transaction: {:?}", e))?;
@@ -521,22 +584,26 @@ fn estimate_approval_fees() -> (u128, u128, u128) {
 // Function to get fresh nonce after approval
 pub async fn get_fresh_nonce(owner: Option<Principal>) -> Result<u64, String> {
     let owner = owner.unwrap_or_else(ic_cdk::caller);
-    let nonce = get_transaction_count(Some(owner), Some(BlockTag::Pending)).await;
-    Ok(nonce)
+    get_transaction_count(Some(owner), Some(BlockTag::Pending)).await
 }
 
 // Helper function to get current gas price for fee estimation
 pub async fn get_current_gas_price() -> Result<u128, String> {
     let gas_price_json = r#"{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":1}"#;
     let max_response_size_bytes = 500_u64;
-    let cycles = 5_000_000_000u128;
-    let rpc_service = RpcService::EthSepolia(EthSepoliaService::PublicNode);
+    
+    // Use dynamic cost estimation for gas price query
+    let estimated_cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        gas_price_json.to_string(),
+        max_response_size_bytes
+    ).await?;
 
     let (gas_price_response,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "request",
         (RpcService::EthSepolia(EthSepoliaService::PublicNode), gas_price_json.to_string(), max_response_size_bytes),
-        cycles,
+        estimated_cycles,
     )
     .await
     .map_err(|e| format!("Failed to get gas price: {:?}", e))?;

@@ -18,8 +18,8 @@ use bitcoin::{
 use std::str::FromStr;
 
 const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
-const BTC_NETWORK: BtcNetwork = BtcNetwork::Regtest; // Bitcoin network
-const IC_BTC_NETWORK: ic_cdk::bitcoin_canister::Network = ic_cdk::bitcoin_canister::Network::Regtest; // IC Bitcoin canister network
+const BTC_NETWORK: BtcNetwork = BtcNetwork::Bitcoin; // Bitcoin mainnet
+const IC_BTC_NETWORK: ic_cdk::bitcoin_canister::Network = ic_cdk::bitcoin_canister::Network::Mainnet; // IC Bitcoin canister mainnet
 
 // Request struct untuk transfer BTC
 #[derive(candid::CandidType, candid::Deserialize)]

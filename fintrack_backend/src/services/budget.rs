@@ -168,7 +168,7 @@ async fn icrc1_transfer(token: Principal, arg: TransferArg) -> Result<Nat, Strin
 }
 
 async fn icrc1_fee(token: Principal) -> Result<Nat, String> {
-    let (fee,): (Nat,) = ic_cdk::call(token, "icrc1_fee", ()).await
+    let (fee,): (Nat,) = ic_cdk::api::call::call_with_payment128(token, "icrc1_fee", (), 1_000_000).await
         .map_err(|e| format!("call failed: {:?}", e))?;
     Ok(fee)
 }

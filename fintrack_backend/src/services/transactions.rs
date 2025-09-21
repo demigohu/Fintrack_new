@@ -1,5 +1,5 @@
 use candid::{CandidType, Nat, Principal};
-use ic_cdk::api::call::call;
+use ic_cdk::api::call::call_with_payment128;
 use std::collections::HashMap;
 use std::cell::RefCell;
 use serde_bytes::ByteBuf;
@@ -233,30 +233,30 @@ fn load_native_txs(user: Principal) -> Option<Vec<Transaction>> {
 
 // Canister principals
 fn ckbtc_ledger_principal() -> Principal {
-    Principal::from_text("mc6ru-gyaaa-aaaar-qaaaq-cai").expect("invalid ckbtc_ledger principal")
+    Principal::from_text("mxzaz-hqaaa-aaaar-qaada-cai").expect("invalid ckbtc_ledger principal")
 }
 
 fn cketh_ledger_principal() -> Principal {
-    Principal::from_text("apia6-jaaaa-aaaar-qabma-cai").expect("invalid cketh_ledger principal")
+    Principal::from_text("ss2fx-dyaaa-aaaar-qacoq-cai").expect("invalid cketh_ledger principal")
 }
 
 fn ckbtc_index_principal() -> Principal {
-    Principal::from_text("mm444-5iaaa-aaaar-qaabq-cai").expect("invalid ckbtc_index principal")
+    Principal::from_text("n5wcd-faaaa-aaaar-qaaea-cai").expect("invalid ckbtc_index principal")
 }
 
 fn cketh_index_principal() -> Principal {
-    Principal::from_text("sh5u2-cqaaa-aaaar-qacna-cai").expect("invalid cketh_index principal")
+    Principal::from_text("s3zol-vqaaa-aaaar-qacpa-cai").expect("invalid cketh_index principal")
 }
 
-// Konfigurasi HTTP Outcall
-const ETHERSCAN_SEPOLIA_URL: &str = "https://api-sepolia.etherscan.io/api";
+// Konfigurasi HTTP Outcall - Mainnet
+const ETHERSCAN_MAINNET_URL: &str = "https://api.etherscan.io/api";
 const ETHERSCAN_API_KEY: &str = "69RXZDXVXTN3QDQ2BTXCT57BECUXQ9CJHQ";
-// Jika ingin pakai BlockCypher mainnet (contoh), isi token di sini. Untuk regtest -> tidak digunakan.
+const BLOCKCYPHER_MAINNET_URL: &str = "https://api.blockcypher.com/v1/btc/main";
 const BLOCKCYPHER_TOKEN: &str = "dce63e3270ec49cfbc91eff20cbece20";
 
-// ERC20 Token addresses on Sepolia testnet
-const USDC_CONTRACT_ADDRESS: &str = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
-const WETH_CONTRACT_ADDRESS: &str = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14";
+// ERC20 Token addresses on Ethereum mainnet
+const USDC_CONTRACT_ADDRESS: &str = "0xA0b86a33E6441b8c4C8C0E4A8e4A8e4A8e4A8e4A8"; // Mainnet USDC - Update with correct address
+const WETH_CONTRACT_ADDRESS: &str = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"; // Mainnet WETH
 
 async fn http_post_json(url: &str, body: String, max_response_bytes: u64) -> Result<String, String> {
     let headers = vec![
@@ -400,7 +400,7 @@ async fn get_ckbtc_transactions(user: Principal, max_results: u32) -> Result<Vec
         max_results: Nat::from(max_results as u64),
     },);
     
-    let (result,): (GetAccountTransactionsResult,) = call(index, "get_account_transactions", arg)
+    let (result,): (GetAccountTransactionsResult,) = call_with_payment128(index, "get_account_transactions", arg, 5_000_000)
         .await
         .map_err(|e| format!("ckBTC index query failed: {:?}", e))?;
     
@@ -436,7 +436,7 @@ async fn get_cketh_transactions(user: Principal, max_results: u32) -> Result<Vec
         max_results: Nat::from(max_results as u64),
     },);
     
-    let (result,): (GetAccountTransactionsResult,) = call(index, "get_account_transactions", arg)
+    let (result,): (GetAccountTransactionsResult,) = call_with_payment128(index, "get_account_transactions", arg, 5_000_000)
         .await
         .map_err(|e| format!("ckETH index query failed: {:?}", e))?;
     
@@ -501,7 +501,7 @@ async fn fetch_eth_transfers_for_address(address: &str, max_results: u32) -> Res
     // Build Etherscan API URL
     let url = format!(
         "{}?module=account&action=txlist&address={}&startblock=0&endblock=99999999&sort=desc&apikey={}",
-        ETHERSCAN_SEPOLIA_URL, address, ETHERSCAN_API_KEY
+        ETHERSCAN_MAINNET_URL, address, ETHERSCAN_API_KEY
     );
 
     // Make HTTP GET request to Etherscan
@@ -646,7 +646,7 @@ async fn get_erc20_balance(
 ) -> Result<Nat, String> {
     let url = format!(
         "{}?module=account&action=tokenbalance&contractaddress={}&address={}&tag=latest&apikey={}",
-        ETHERSCAN_SEPOLIA_URL, contract_address, user_address, ETHERSCAN_API_KEY
+        ETHERSCAN_MAINNET_URL, contract_address, user_address, ETHERSCAN_API_KEY
     );
 
     let max_bytes = 10_000;
@@ -1031,7 +1031,7 @@ async fn get_ckbtc_balance(user: Principal, subaccount: Option<Vec<u8>>) -> Resu
         subaccount: Option<Vec<u8>>,
     }
     let arg = (AccountArg { owner: user, subaccount },);
-    let (balance,): (Nat,) = call(ledger, "icrc1_balance_of", arg)
+    let (balance,): (Nat,) = call_with_payment128(ledger, "icrc1_balance_of", arg, 1_000_000)
         .await
         .map_err(|e| format!("ckBTC balance query failed: {:?}", e))?;
     Ok(balance)
@@ -1045,7 +1045,7 @@ async fn get_cketh_balance(user: Principal, subaccount: Option<Vec<u8>>) -> Resu
         subaccount: Option<Vec<u8>>,
     }
     let arg = (AccountArg { owner: user, subaccount },);
-    let (balance,): (Nat,) = call(ledger, "icrc1_balance_of", arg)
+    let (balance,): (Nat,) = call_with_payment128(ledger, "icrc1_balance_of", arg, 1_000_000)
         .await
         .map_err(|e| format!("ckETH balance query failed: {:?}", e))?;
     Ok(balance)

@@ -9,8 +9,9 @@ use ic_ethereum_types::Address;
 use alloy_consensus::{SignableTransaction, TxEip1559, TxEnvelope};
 use alloy_primitives::{hex, Signature, TxKind, U256};
 use super::evm_rpc_canister::{
-    BlockTag, EthSepoliaService, GetTransactionCountArgs,
-    GetTransactionCountResult, MultiGetTransactionCountResult, RpcServices, RpcConfig, RpcService
+    BlockTag, EthMainnetService, EthSepoliaService, GetTransactionCountArgs,
+    GetTransactionCountResult, MultiGetTransactionCountResult, RpcServices, RpcConfig, RpcService,
+    RpcError, JsonRpcSource
 };
 
 use num_traits::Zero;
@@ -18,16 +19,41 @@ use std::str::FromStr;
 
 // Constants
 const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
-// EVM RPC Canister ID: xhcuo-6yaaa-aaaar-qacqq-cai
+// EVM RPC Canister ID: 7hfb6-caaaa-aaaar-qadga-cai (mainnet)
 fn get_evm_rpc_canister_id() -> Principal {
-    Principal::from_text("xhcuo-6yaaa-aaaar-qacqq-cai").unwrap()
+    Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai").unwrap()
+}
+
+// Helper function to estimate EVM RPC cost and add buffer
+async fn get_evm_rpc_cost_with_buffer(
+    source: JsonRpcSource,
+    json_request: String,
+    max_response_bytes: u64
+) -> Result<u128, String> {
+    let evm_rpc = get_evm_rpc_canister_id();
+    
+    // Get cost estimate
+    let (cost_result,): (Result<u128, RpcError>,) = ic_cdk::api::call::call(
+        evm_rpc,
+        "requestCost",
+        (source, json_request.clone(), max_response_bytes),
+    )
+    .await
+    .map_err(|e| format!("Failed to get cost estimate: {:?}", e))?;
+    
+    let base_cost = cost_result.map_err(|e| format!("Cost estimation failed: {:?}", e))?;
+    
+    // Add 50% buffer for retries and response size increases
+    let buffered_cost = base_cost + (base_cost / 2);
+    
+    ic_cdk::println!("EVM RPC cost estimate: {} cycles (with 50% buffer)", buffered_cost);
+    Ok(buffered_cost)
 }
 
 // Types
 #[derive(CandidType, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EthereumNetwork {
     Mainnet,
-    Sepolia,
     Local, // For local development
 }
 
@@ -230,6 +256,8 @@ fn principal_derivation_path(owner: &Principal) -> Vec<Vec<u8>> {
 
 // Main transfer function
 pub async fn transfer_eth(request: EthTransferRequest) -> Result<EthTransferResponse, String> {
+    let start_instructions = ic_cdk::api::instruction_counter();
+    
     // Validate amount
     if request.amount.0.is_zero() {
         return Err("Amount cannot be zero".to_string());
@@ -250,7 +278,7 @@ pub async fn transfer_eth(request: EthTransferRequest) -> Result<EthTransferResp
 
     // Build EIP-1559 transaction
     let transaction = TxEip1559 {
-        chain_id: EthereumNetwork::Sepolia.chain_id(), // Use dynamic chain ID
+        chain_id: EthereumNetwork::Sepolia.chain_id(), // Use Sepolia chain ID
         nonce,
         gas_limit,
         max_fee_per_gas,
@@ -285,14 +313,25 @@ pub async fn transfer_eth(request: EthTransferRequest) -> Result<EthTransferResp
         raw_transaction_hex, raw_transaction_hash
     );
 
-    // Send transaction via EVM RPC
+    // Send transaction via EVM RPC with optimized cost estimation
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
-    let cycles = 5_000_000_000_u128;
+    
+    // Estimate cost for transaction sending (typically needs more cycles)
+    let json_request = format!(
+        r#"{{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["{}"],"id":1}}"#,
+        raw_transaction_hex
+    );
+    let estimated_cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        json_request,
+        10_000 // 10KB max response
+    ).await?;
+    
     let (result,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "eth_sendRawTransaction",
         (rpc_services, None::<Option<RpcConfig>>, raw_transaction_hex.clone()),
-        cycles,
+        estimated_cycles,
     )
     .await
     .map_err(|e| format!("Failed to send transaction: {:?}", e))?;
@@ -303,6 +342,8 @@ pub async fn transfer_eth(request: EthTransferRequest) -> Result<EthTransferResp
                 super::evm_rpc_canister::SendRawTransactionResult::Ok(hash) => {
                     match hash {
                         super::evm_rpc_canister::SendRawTransactionStatus::Ok(Some(tx_hash)) => {
+                            let end_instructions = ic_cdk::api::instruction_counter();
+                            ic_cdk::println!("ETH transfer completed successfully. Instructions consumed: {}", end_instructions - start_instructions);
                             Ok(EthTransferResponse {
                                 success: true,
                                 transaction_hash: Some(tx_hash),
@@ -367,13 +408,19 @@ pub async fn preview_eth_fee(
     // Get current gas price
     let gas_price_json = r#"{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":1}"#;
     let max_response_size_bytes = 500_u64;
-    let cycles = 5_000_000_000u128;
     let rpc_service = RpcService::EthSepolia(EthSepoliaService::PublicNode);
+
+    // Estimate cost for gas price request
+    let cycles = get_evm_rpc_cost_with_buffer(
+        JsonRpcSource::EthSepolia,
+        gas_price_json.to_string(),
+        max_response_size_bytes
+    ).await?;
 
     let (gas_price_response,) = call_with_payment128(
         get_evm_rpc_canister_id(),
         "request",
-        (RpcService::EthSepolia(EthSepoliaService::PublicNode), gas_price_json.to_string(), max_response_size_bytes),
+        (rpc_service, gas_price_json.to_string(), max_response_size_bytes),
         cycles,
     )
     .await

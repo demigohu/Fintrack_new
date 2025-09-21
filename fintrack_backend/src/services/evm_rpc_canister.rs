@@ -370,48 +370,48 @@ pub type RequestCostResult = std::result::Result<candid::Nat, RpcError>;
 pub struct Service(pub Principal);
 impl Service {
   pub async fn eth_call(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &CallArgs) -> Result<(MultiCallResult,)> {
-    ic_cdk::call(self.0, "eth_call", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_call", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_fee_history(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &FeeHistoryArgs) -> Result<(MultiFeeHistoryResult,)> {
-    ic_cdk::call(self.0, "eth_feeHistory", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_feeHistory", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_get_block_by_number(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &BlockTag) -> Result<(MultiGetBlockByNumberResult,)> {
-    ic_cdk::call(self.0, "eth_getBlockByNumber", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_getBlockByNumber", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_get_logs(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &GetLogsArgs) -> Result<(MultiGetLogsResult,)> {
-    ic_cdk::call(self.0, "eth_getLogs", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_getLogs", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_get_transaction_count(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &GetTransactionCountArgs) -> Result<(MultiGetTransactionCountResult,)> {
-    ic_cdk::call(self.0, "eth_getTransactionCount", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_getTransactionCount", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_get_transaction_receipt(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &String) -> Result<(MultiGetTransactionReceiptResult,)> {
-    ic_cdk::call(self.0, "eth_getTransactionReceipt", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_getTransactionReceipt", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn eth_send_raw_transaction(&self, arg0: &RpcServices, arg1: &Option<RpcConfig>, arg2: &String) -> Result<(MultiSendRawTransactionResult,)> {
-    ic_cdk::call(self.0, "eth_sendRawTransaction", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "eth_sendRawTransaction", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   /// DEBUG endpoint to retrieve metrics accumulated by the EVM RPC canister.
   /// NOTE: this method exists for debugging purposes, backward compatibility is not guaranteed.
   pub async fn get_metrics(&self) -> Result<(Metrics,)> {
-    ic_cdk::call(self.0, "getMetrics", ()).await
+    ic_cdk::api::call::call_with_payment128(self.0, "getMetrics", (), 1_000_000).await
   }
   pub async fn get_nodes_in_subnet(&self) -> Result<(u32,)> {
-    ic_cdk::call(self.0, "getNodesInSubnet", ()).await
+    ic_cdk::api::call::call_with_payment128(self.0, "getNodesInSubnet", (), 1_000_000).await
   }
   pub async fn get_providers(&self) -> Result<(Vec<Provider>,)> {
-    ic_cdk::call(self.0, "getProviders", ()).await
+    ic_cdk::api::call::call_with_payment128(self.0, "getProviders", (), 1_000_000).await
   }
   pub async fn get_service_provider_map(&self) -> Result<(Vec<(RpcService,ProviderId,)>,)> {
-    ic_cdk::call(self.0, "getServiceProviderMap", ()).await
+    ic_cdk::api::call::call_with_payment128(self.0, "getServiceProviderMap", (), 1_000_000).await
   }
   pub async fn request(&self, arg0: &RpcService, arg1: &String, arg2: &u64) -> Result<(RequestResult,)> {
-    ic_cdk::call(self.0, "request", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "request", (arg0,arg1,arg2,), 10_000_000_000).await
   }
   pub async fn request_cost(&self, arg0: &RpcService, arg1: &String, arg2: &u64) -> Result<(RequestCostResult,)> {
-    ic_cdk::call(self.0, "requestCost", (arg0,arg1,arg2,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "requestCost", (arg0,arg1,arg2,), 1_000_000).await
   }
   pub async fn update_api_keys(&self, arg0: &Vec<(ProviderId,Option<String>,)>) -> Result<()> {
-    ic_cdk::call(self.0, "updateApiKeys", (arg0,)).await
+    ic_cdk::api::call::call_with_payment128(self.0, "updateApiKeys", (arg0,), 1_000_000).await
   }
 }
 
