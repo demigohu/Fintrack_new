@@ -11,9 +11,9 @@ type Result<T> = { success: true; data: T } | { success: false; error: string }
 let authClient: AuthClient | null = null
 let actor: ActorSubclass<_SERVICE> | null = null
 
-const network = process.env.NEXT_PUBLIC_DFX_NETWORK || "local"
+const network = process.env.NEXT_PUBLIC_DFX_NETWORK || "ic"
 const identityProvider = network === "ic"
-  ? "https://identity.ic0.app"
+  ? "https://id.ai"
   : `http://${process.env.NEXT_PUBLIC_CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
 
 async function ensureAuthClient(): Promise<AuthClient> {
@@ -41,13 +41,64 @@ export const authService = {
   },
   login: async () => {
     const client = await ensureAuthClient()
-    await client.login({ identityProvider })
-    actor = await getBackendActor(client.getIdentity())
+    
+    // Use popup for Internet Identity login
+    await client.login({ 
+      identityProvider,
+      windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=600,left=100,top=100"
+    })
+    
+    // Wait for authentication to complete with timeout
+    await new Promise<void>((resolve, reject) => {
+      let attempts = 0
+      const maxAttempts = 60 // 30 seconds timeout (60 * 500ms)
+      
+      const checkAuth = async () => {
+        try {
+          attempts++
+          
+          if (attempts > maxAttempts) {
+            reject(new Error('Login timeout - please try again'))
+            return
+          }
+          
+          const isAuth = await client.isAuthenticated()
+          if (isAuth) {
+            // Auto-refresh after login
+            actor = await getBackendActor(client.getIdentity())
+            
+            // Trigger a custom event to notify other components
+            window.dispatchEvent(new CustomEvent('authStateChanged', { 
+              detail: { isAuthenticated: true } 
+            }))
+            resolve()
+          } else {
+            // Check again in 500ms
+            setTimeout(checkAuth, 500)
+          }
+        } catch (error) {
+          console.error('Auth check error:', error)
+          if (attempts > maxAttempts) {
+            reject(error)
+          } else {
+            setTimeout(checkAuth, 500)
+          }
+        }
+      }
+      
+      // Start checking immediately
+      checkAuth()
+    })
   },
   logout: async () => {
     const client = await ensureAuthClient()
     await client.logout()
     actor = await getBackendActor(undefined)
+    
+    // Trigger a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('authStateChanged', { 
+      detail: { isAuthenticated: false } 
+    }))
   },
   isAuthenticated: async (): Promise<boolean> => {
     const client = await ensureAuthClient()
@@ -263,7 +314,7 @@ export const bitcoinService = {
     }
   },
 
-  // Native BTC transfer (Regtest)
+  // Native BTC transfer (Testnet4)
   transferNativeBtc: async (
     destinationAddress: string,
     amountInSats: bigint,
@@ -707,7 +758,7 @@ export const balanceService = {
 export const feeService = {
   getCkbtcFee: async (): Promise<Result<bigint>> => {
     try {
-      const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mxzaz-hqaaa-aaaar-qaada-cai"
+      const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mc6ru-gyaaa-aaaar-qaaaq-cai"
       const { idlFactory: ckbtcLedgerIdlFactory } = await import("../../../src/declarations/ckbtc_ledger")
       const client = await ensureAuthClient()
       const identity = client.getIdentity()
@@ -938,7 +989,7 @@ export const budgetService = {
       const ckbtcLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKBTC_LEDGER || "mc6ru-gyaaa-aaaar-qaaaq-cai"
 
       const { HttpAgent, Actor } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943" })
+      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "https://ic0.app" })
       if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
         try { await agent.fetchRootKey() } catch {}
       }
@@ -989,7 +1040,7 @@ export const budgetService = {
       const ckethLedgerCanisterId = process.env.NEXT_PUBLIC_CANISTER_ID_CKETH_LEDGER || "apia6-jaaaa-aaaar-qabma-cai"
 
       const { HttpAgent, Actor } = await import("@dfinity/agent")
-      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943" })
+      const agent = new HttpAgent({ identity, host: process.env.NEXT_PUBLIC_IC_HOST || "https://ic0.app" })
       if (process.env.NEXT_PUBLIC_DFX_NETWORK !== "ic") {
         try { await agent.fetchRootKey() } catch {}
       }

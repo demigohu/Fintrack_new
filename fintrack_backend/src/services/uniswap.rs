@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::api::call::{call, call_with_payment128};
+use num_traits::ToPrimitive;
 use ic_cdk::api::management_canister::ecdsa::{
     ecdsa_public_key, EcdsaPublicKeyArgument, EcdsaPublicKeyResponse, EcdsaKeyId, EcdsaCurve, SignWithEcdsaArgument
 };
@@ -17,12 +18,12 @@ use num_traits::Zero;
 use std::str::FromStr;
 
 // Constants
-const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
+const DEFAULT_ECDSA_KEY_NAME: &str = "key_1"; // Use "test_key_1" or "key_1" on IC
 const SEPOLIA_CHAIN_ID: u64 = 11155111;
 
-// EVM RPC Canister ID: 7hfb6-caaaa-aaaar-qadga-cai (mainnet - same for Sepolia)
+// EVM RPC Canister ID: giifx-2iaaa-aaaab-qb5ua-cai (mainnet - same for Sepolia)
 fn get_evm_rpc_canister_id() -> Principal {
-    Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai").unwrap()
+    Principal::from_text("giifx-2iaaa-aaaab-qb5ua-cai").unwrap()
 }
 
 // Dynamic cost estimation for EVM RPC calls with buffer
@@ -33,21 +34,27 @@ async fn get_evm_rpc_cost_with_buffer(
 ) -> Result<u128, String> {
     let evm_rpc = get_evm_rpc_canister_id();
     
-    // Get cost estimate using call without cycles (same as ethtransfer.rs)
-    let (cost_result,): (Result<u128, super::evm_rpc_canister::RpcError>,) = ic_cdk::api::call::call(
+    // Convert JsonRpcSource to RpcService
+    let rpc_service = match source {
+        JsonRpcSource::EthSepolia => RpcService::EthSepolia(EthSepoliaService::PublicNode),
+        JsonRpcSource::EthMainnet => RpcService::EthMainnet(EthMainnetService::PublicNode),
+    };
+    
+    // Get cost estimate using call without cycles
+    let (cost_result,): (Result<candid::Nat, super::evm_rpc_canister::RpcError>,) = ic_cdk::api::call::call(
         evm_rpc,
         "requestCost",
-        (source, json_request.clone(), max_response_bytes),
+        (rpc_service, json_request.clone(), max_response_bytes),
     )
     .await
     .map_err(|e| format!("Failed to get cost estimate: {:?}", e))?;
     
     let base_cost = cost_result.map_err(|e| format!("Cost estimation failed: {:?}", e))?;
+    let base_cost_u128 = base_cost.0.to_u128().unwrap_or(0);
     
     // Add 50% buffer for retries and response size increases
-    let buffered_cost = base_cost + (base_cost / 2);
+    let buffered_cost = base_cost_u128 + (base_cost_u128 / 2);
     
-    ic_cdk::println!("EVM RPC cost estimate: {} cycles (with 50% buffer)", buffered_cost);
     Ok(buffered_cost)
 }
 
@@ -182,10 +189,6 @@ impl EthereumWallet {
     fn compute_recovery_id(&self, message_hash: &[u8], signature: &[u8]) -> RecoveryId {
         use alloy_primitives::hex;
         
-        ic_cdk::println!("Verifying signature:");
-        ic_cdk::println!("  Message hash: 0x{}", hex::encode(message_hash));
-        ic_cdk::println!("  Signature: 0x{}", hex::encode(signature));
-        ic_cdk::println!("  Public key: 0x{}", hex::encode(self.as_ref().serialize_sec1(true)));
         
         let verification_result = self.as_ref()
             .try_recovery_from_digest(message_hash, signature)
@@ -220,19 +223,22 @@ pub async fn get_transaction_count(owner: Option<Principal>, block: Option<Block
     let wallet = EthereumWallet::new(owner).await;
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
     
+    let block_tag = block.unwrap_or(BlockTag::Pending);
     let args = GetTransactionCountArgs {
         address: wallet.ethereum_address().to_string(),
-        block: block.unwrap_or(BlockTag::Finalized),
+        block: block_tag,
     };
 
     // Use dynamic cost estimation for transaction count
     let json_request = format!(
         r#"{{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["{}","{}"],"id":1}}"#,
         wallet.ethereum_address(),
-        match block.unwrap_or(BlockTag::Finalized) {
+        match args.block {
             BlockTag::Finalized => "finalized",
             BlockTag::Latest => "latest",
             BlockTag::Pending => "pending",
+            BlockTag::Earliest => "earliest",
+            BlockTag::Safe => "safe",
             BlockTag::Number(n) => return Err(format!("Unsupported block number: {}", n)),
         }
     );
@@ -297,10 +303,6 @@ fn u128_to_u256(value: u128) -> U256 {
 
 // Main function to send Uniswap transaction
 pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
-    ic_cdk::println!("Starting Uniswap transaction:");
-    ic_cdk::println!("  To: {}", req.to);
-    ic_cdk::println!("  Data: {}", req.data);
-    ic_cdk::println!("  Value: {:?}", req.value);
 
     // Validate input
     let to_address = Address::from_str(&req.to)
@@ -338,20 +340,11 @@ pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
         input: Bytes::from(calldata),
     };
 
-    ic_cdk::println!("Transaction built:");
-    ic_cdk::println!("  Chain ID: {}", SEPOLIA_CHAIN_ID);
-    ic_cdk::println!("  Nonce: {}", nonce);
-    ic_cdk::println!("  Gas Limit: {}", gas_limit);
-    ic_cdk::println!("  Max Fee Per Gas: {}", max_fee_per_gas);
-    ic_cdk::println!("  Max Priority Fee Per Gas: {}", max_priority_fee_per_gas);
-    ic_cdk::println!("  Value: {}", req.value.unwrap_or(0));
 
     // Sign transaction
     let wallet = EthereumWallet::new(owner).await;
     let tx_hash = transaction.signature_hash().0;
     
-    ic_cdk::println!("Transaction hash to sign: 0x{}", hex::encode(tx_hash));
-    ic_cdk::println!("Wallet ethereum address: {}", wallet.ethereum_address());
     
     let (raw_signature, recovery_id) = wallet.sign_with_ecdsa(tx_hash).await;
     let signature = Signature::from_bytes_and_parity(&raw_signature, recovery_id.is_y_odd())
@@ -365,10 +358,6 @@ pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
     TxEnvelope::from(signed_tx).encode_2718(&mut tx_bytes);
     let raw_transaction_hex = format!("0x{}", hex::encode(&tx_bytes));
 
-    ic_cdk::println!(
-        "Sending raw transaction hex {} with transaction hash {}",
-        raw_transaction_hex, raw_transaction_hash
-    );
 
     // Send transaction via EVM RPC with dynamic cost estimation
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
@@ -397,11 +386,9 @@ pub async fn send_uniswap_tx(req: TxRequest) -> Result<String, String> {
                 super::evm_rpc_canister::SendRawTransactionResult::Ok(hash) => {
                     match hash {
                         super::evm_rpc_canister::SendRawTransactionStatus::Ok(Some(tx_hash)) => {
-                            ic_cdk::println!("Transaction sent successfully: {}", tx_hash);
                             Ok(tx_hash)
                         }
                         super::evm_rpc_canister::SendRawTransactionStatus::Ok(None) => {
-                            ic_cdk::println!("Transaction sent successfully (no hash returned)");
                             Ok("Transaction sent successfully".to_string())
                         }
                         super::evm_rpc_canister::SendRawTransactionStatus::NonceTooLow => {
@@ -444,10 +431,6 @@ pub async fn send_uniswap_tx_with_response(req: TxRequest) -> Result<UniswapTxRe
 
 // Function to send approval transaction (same as send_uniswap_tx but for approval)
 pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
-    ic_cdk::println!("Starting approval transaction:");
-    ic_cdk::println!("  To: {}", req.to);
-    ic_cdk::println!("  Data: {}", req.data);
-    ic_cdk::println!("  Value: {:?}", req.value);
 
     // Validate input
     let to_address = Address::from_str(&req.to)
@@ -485,20 +468,11 @@ pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
         input: Bytes::from(calldata),
     };
 
-    ic_cdk::println!("Approval transaction built:");
-    ic_cdk::println!("  Chain ID: {}", SEPOLIA_CHAIN_ID);
-    ic_cdk::println!("  Nonce: {}", nonce);
-    ic_cdk::println!("  Gas Limit: {}", gas_limit);
-    ic_cdk::println!("  Max Fee Per Gas: {}", max_fee_per_gas);
-    ic_cdk::println!("  Max Priority Fee Per Gas: {}", max_priority_fee_per_gas);
-    ic_cdk::println!("  Value: {}", req.value.unwrap_or(0));
 
     // Sign transaction
     let wallet = EthereumWallet::new(owner).await;
     let tx_hash = transaction.signature_hash().0;
     
-    ic_cdk::println!("Approval transaction hash to sign: 0x{}", hex::encode(tx_hash));
-    ic_cdk::println!("Wallet ethereum address: {}", wallet.ethereum_address());
     
     let (raw_signature, recovery_id) = wallet.sign_with_ecdsa(tx_hash).await;
     let signature = Signature::from_bytes_and_parity(&raw_signature, recovery_id.is_y_odd())
@@ -512,10 +486,6 @@ pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
     TxEnvelope::from(signed_tx).encode_2718(&mut tx_bytes);
     let raw_transaction_hex = format!("0x{}", hex::encode(&tx_bytes));
 
-    ic_cdk::println!(
-        "Sending approval raw transaction hex {} with transaction hash {}",
-        raw_transaction_hex, raw_transaction_hash
-    );
 
     // Send approval transaction via EVM RPC with dynamic cost estimation
     let rpc_services = RpcServices::EthSepolia(Some(vec![EthSepoliaService::PublicNode]));
@@ -544,11 +514,9 @@ pub async fn send_approval_tx(req: TxRequest) -> Result<String, String> {
                 super::evm_rpc_canister::SendRawTransactionResult::Ok(hash) => {
                     match hash {
                         super::evm_rpc_canister::SendRawTransactionStatus::Ok(Some(tx_hash)) => {
-                            ic_cdk::println!("Approval transaction sent successfully: {}", tx_hash);
                             Ok(tx_hash)
                         }
                         super::evm_rpc_canister::SendRawTransactionStatus::Ok(None) => {
-                            ic_cdk::println!("Approval transaction sent successfully (no hash returned)");
                             Ok("Approval transaction sent successfully".to_string())
                         }
                         super::evm_rpc_canister::SendRawTransactionStatus::NonceTooLow => {

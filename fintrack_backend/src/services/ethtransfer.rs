@@ -1,6 +1,7 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::init;
 use ic_cdk::api::call::call_with_payment128;
+use num_traits::ToPrimitive;
 use ic_cdk::api::management_canister::ecdsa::{
     ecdsa_public_key, EcdsaPublicKeyArgument, EcdsaPublicKeyResponse, EcdsaKeyId, EcdsaCurve, SignWithEcdsaArgument
 };
@@ -18,10 +19,10 @@ use num_traits::Zero;
 use std::str::FromStr;
 
 // Constants
-const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
-// EVM RPC Canister ID: 7hfb6-caaaa-aaaar-qadga-cai (mainnet)
+const DEFAULT_ECDSA_KEY_NAME: &str = "key_1"; // Use "test_key_1" or "key_1" on IC
+// EVM RPC Canister ID: giifx-2iaaa-aaaab-qb5ua-cai (mainnet)
 fn get_evm_rpc_canister_id() -> Principal {
-    Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai").unwrap()
+    Principal::from_text("giifx-2iaaa-aaaab-qb5ua-cai").unwrap()
 }
 
 // Helper function to estimate EVM RPC cost and add buffer
@@ -32,19 +33,26 @@ async fn get_evm_rpc_cost_with_buffer(
 ) -> Result<u128, String> {
     let evm_rpc = get_evm_rpc_canister_id();
     
+    // Convert JsonRpcSource to RpcService
+    let rpc_service = match source {
+        JsonRpcSource::EthSepolia => RpcService::EthSepolia(EthSepoliaService::PublicNode),
+        JsonRpcSource::EthMainnet => RpcService::EthMainnet(EthMainnetService::PublicNode),
+    };
+    
     // Get cost estimate
-    let (cost_result,): (Result<u128, RpcError>,) = ic_cdk::api::call::call(
+    let (cost_result,): (Result<candid::Nat, RpcError>,) = ic_cdk::api::call::call(
         evm_rpc,
         "requestCost",
-        (source, json_request.clone(), max_response_bytes),
+        (rpc_service, json_request.clone(), max_response_bytes),
     )
     .await
     .map_err(|e| format!("Failed to get cost estimate: {:?}", e))?;
     
     let base_cost = cost_result.map_err(|e| format!("Cost estimation failed: {:?}", e))?;
+    let base_cost_u128 = base_cost.0.to_u128().unwrap_or(0);
     
     // Add 50% buffer for retries and response size increases
-    let buffered_cost = base_cost + (base_cost / 2);
+    let buffered_cost = base_cost_u128 + (base_cost_u128 / 2);
     
     ic_cdk::println!("EVM RPC cost estimate: {} cycles (with 50% buffer)", buffered_cost);
     Ok(buffered_cost)
@@ -54,6 +62,7 @@ async fn get_evm_rpc_cost_with_buffer(
 #[derive(CandidType, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EthereumNetwork {
     Mainnet,
+    Sepolia,
     Local, // For local development
 }
 

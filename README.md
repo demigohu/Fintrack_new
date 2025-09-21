@@ -1,42 +1,47 @@
-# 🔄 FInTrack Protocol - Cross-Chain Bridge & DeFi Platform
+# 🔄 FinTrack Protocol - Cross-Chain DeFi Super App
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DFX Version](https://img.shields.io/badge/DFX-1.0-blue.svg)](https://internetcomputer.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.6-black.svg)](https://nextjs.org/)
 [![Rust](https://img.shields.io/badge/Rust-2021-orange.svg)](https://rust-lang.org/)
+[![Internet Computer](https://img.shields.io/badge/Internet%20Computer-Mainnet-green.svg)](https://ic0.app/)
 
-**FInTrack Protocol** is a comprehensive cross-chain financial ecosystem built on top of Internet Computer (IC), serving as your gateway to the multi-chain financial universe. While we provide seamless cross-chain bridge functionality through ckAssets (ckBTC, ckETH), our vision extends far beyond - we're building a **super app for cross-chain finance** that integrates external DeFi protocols, personal finance management, and portfolio optimization all in one unified platform.
+> **🏆 Hackathon Submission**: A comprehensive cross-chain DeFi platform that leverages Internet Computer's unique capabilities to create a unified financial ecosystem bridging Bitcoin, Ethereum, and ICP.
 
-## 🌟 Key Features
+## 🌟 Project Overview
+
+**FinTrack Protocol** is a revolutionary cross-chain DeFi super app built on Internet Computer that addresses the fragmentation problem in decentralized finance. While most DeFi platforms are limited to single chains, FinTrack creates a unified ecosystem where users can seamlessly manage Bitcoin, Ethereum, and ICP assets while accessing advanced portfolio management, budgeting tools, and cross-chain DeFi protocols.
+
+### 🎯 Unique Value Proposition
+
+- **Cross-Chain Unification**: First DeFi platform to truly unify Bitcoin, Ethereum, and ICP ecosystems
+- **Native Asset Support**: Direct integration with native BTC/ETH networks via HTTP outcalls
+- **Personal Finance Integration**: Combines DeFi with traditional personal finance management
+- **ICP-Native Architecture**: Leverages Internet Computer's unique features for superior UX
+
+## 🚀 Key Features
 
 ### 🔗 Cross-Chain Bridge Operations
-- **ckBTC Integration**: Full Bitcoin support through Internet Computer
-- **ckETH Integration**: Full Ethereum support with smart contract integration
-- **Chain Fusion**: Advanced cross-chain transfer technology for Bitcoin network
-- **Native Asset Transfers**: Direct BTC/ETH transfers on native blockchains
-- **Fee Preview**: Real-time fee estimation for all transfers
+- **ckBTC Integration**: Full Bitcoin support through Internet Computer's native Bitcoin integration
+- **ckETH Integration**: Complete Ethereum support with smart contract integration
+- **Native Asset Transfers**: Direct BTC/ETH transfers on native blockchains via HTTP outcalls
+- **Real-time Transaction Tracking**: Monitor transactions across all chains 
+- **Fee Optimization**: Dynamic fee calculation using Bitcoin network data
 
-### 💼 Asset Management & Portfolio
-- **Real-time Balance Tracking**: Monitor balances across all chains (BTC, ETH, ckBTC, ckETH, ICP)
-- **Transaction History**: Complete deposit, withdrawal, and transfer logs with native asset support
-- **Portfolio Dashboard**: Visual representation of cross-chain asset distribution
-- **Performance Analytics**: Track portfolio performance across different blockchains
-- **Native Asset Balances**: Real-time BTC and ETH balances on native blockchains
-- **Multi-Chain Transaction View**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
+### 💼 Advanced Portfolio Management
+- **Multi-Chain Balance Tracking**: Real-time balances across BTC, ETH, ckBTC, ckETH, and ICP
+- **Portfolio Analytics**: Visual representation of cross-chain asset distribution with performance metrics
+- **Transaction History**: Comprehensive logs with native asset support and cross-chain transaction correlation
+- **Performance Tracking**: Monitor portfolio performance across different blockchains
 
-### 🎯 DeFi Ecosystem Integration
-- **ckAsset Swapping**: Swap between different ckAssets (ckBTC ↔ ckETH)
-- **External DeFi Access**: Direct integration with Uniswap, Curve, and other DeFi protocols
-- **Cross-Chain Yield Farming**: Access yield opportunities across multiple blockchains
-- **Lending & Borrowing**: Cross-chain lending services integration
-- **NFT Management**: Trade and manage NFTs from various blockchains
+### 🎯 Personal Finance Integration
+- **Budgeting Tools**: Set monthly budgets, With Vesting Linear
+- **Financial Goals**: Define investment targets, savings goals, and financial milestones with progress tracking
 
-### 📊 Personal Finance Management
-- **Budgeting Tools**: Set monthly budgets, track expenses by category
-- **Financial Goals**: Define investment targets, savings goals, and financial milestones
-- **Smart Notifications**: Alerts for budget limits, goal progress, and trading opportunities
-- **Expense Analytics**: Detailed spending analysis and insights
-- **Goal Tracking**: Monitor progress towards financial objectives
+
+### 🔄 DeFi Ecosystem Integration
+- **Uniswap Integration**: Direct access to Ethereum's largest DEX via ECDSA signing
+- **Cross-Chain Swapping**: Swap between ckAssets (ckBTC ↔ ckETH) with optimized routing with KongSwap
 
 
 ### 🔐 Security & Authentication
@@ -44,224 +49,356 @@
 - **ECDSA Signing**: Secure transaction signing via Internet Computer management canister
 - **Multi-Chain Address Derivation**: Deterministic address generation from Principal
 
-## 🎥 Demo Video
 
-Watch FInTrack Protocol in action! See how easy it is to bridge assets between Bitcoin, Ethereum, and Internet Computer.
+## 🏗️ Architecture
 
-[![FInTrack Protocol Demo](https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=OlCddZ8Ey-k)
-
-**What you'll see in the demo:**
-- 🔗 Cross-chain bridge operations (BTC ↔ ckBTC, ETH ↔ ckETH)
-- 💼 Portfolio dashboard with real-time balances across all chains
-- 📱 User-friendly interface for deposits and withdrawals
-- 🚀 Native asset transfers on Bitcoin and Ethereum networks
-- 📊 Transaction history across multiple blockchains
-- 🎯 DeFi protocol integration (Uniswap, Curve, etc.)
-- 📈 Personal finance management with budgeting and goals
-- 🔄 Cross-chain asset swapping and yield farming
-
-## 🏗️ System Architecture
-
-### Backend (Rust + Internet Computer)
+### Backend (Internet Computer Canisters)
 ```
-fintrack_backend/
-├── src/
-│   ├── lib.rs                 # Main entry point & API endpoints
-│   └── services/
-│       ├── btc.rs            # Bitcoin bridge service (ckBTC integration)
-│       ├── eth.rs            # Ethereum bridge service (ckETH integration)
-│       ├── btctransfer.rs    # Native BTC transfer service (Chain Fusion)
-│       ├── ethtransfer.rs    # Native ETH transfer service (EVM RPC)
-│       ├── transactions.rs   # Transaction management & history with HTTP outcalls
-│       ├── rates.rs          # Crypto rates & price feeds
-│       ├── address.rs        # Address derivation (ECDSA) for BTC/ETH
-│       ├── utils.rs          # Utility functions
-│       └── evm_rpc_canister.rs # EVM RPC integration for ETH operations
+┌─────────────────────────────────────────────────────────────┐
+│                    FinTrack Backend                         │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │   BTC       │ │    ETH      │ │ Transactions│           │
+│  │   Service   │ │   Service   │ │   Service   │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │  Uniswap    │ │   Budget    │ │    Goals    │           │
+│  │   Service   │ │   Service   │ │   Service   │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │    Rates    │ │   Address   │ │   Utils     │           │
+│  │   Service   │ │   Service   │ │   Service   │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Frontend (Next.js + TypeScript)
+### Frontend (Next.js + React)
 ```
-fintrack_frontend/
-├── src/
-│   ├── app/                  # Next.js 15 App Router
-│   │   ├── (with-nav)/      # Protected routes with navigation
-│   │   │   ├── portfolio/   # Cross-chain portfolio dashboard
-│   │   │   ├── deposits/    # Deposit management (BTC/ETH → ckAssets)
-│   │   │   ├── withdraw/    # Withdrawal interface (ckAssets → BTC/ETH)
-│   │   │   ├── transfer/    # Native BTC/ETH transfer interface
-│   │   │   ├── transactions/ # Multi-chain transaction history
-│   │   │   └── swap/        # ckAsset swapping (coming soon)
-│   │   └── (without-nav)/   # Public routes (login, landing)
-│   ├── components/           # Reusable UI components
-│   ├── services/             # API integration services
-│   ├── hooks/                # Custom React hooks
-│   └── contexts/             # React contexts & state management
+┌─────────────────────────────────────────────────────────────┐
+│                    FinTrack Frontend                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │   Bridge    │ │  Portfolio  │ │    Trade    │           │
+│  │    Page     │ │    Page     │ │    Page     │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │  Budgets    │ │    Goals    │ │Transactions │           │
+│  │    Page     │ │    Page     │ │    Page     │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+│                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │  Transfer   │ │  Deposits   │ │  Services   │           │
+│  │    Page     │ │    Page     │ │   Layer     │           │
+│  └─────────────┘ └─────────────┘ └─────────────┘           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Blockchain Integration
-- **Bitcoin Network**: Native BTC blockchain for deposits, withdrawals, and direct transfers via Chain Fusion
-- **Ethereum Network**: Native ETH blockchain for deposits, withdrawals, and direct transfers via EVM RPC
-- **Internet Computer (ICP)**: ckAssets (ckBTC, ckETH) and platform services
-- **HTTP Outcalls**: Integration with Etherscan (ETH) and BlockCypher (BTC) for transaction history
+## 🔧 ICP Features Used
 
-## 🚀 Getting Started
+### Core ICP Capabilities
+- **HTTP Outcalls**: Real-time data fetching from external APIs (Moralis, Mempool.space)
+- **Bitcoin API**: Native Bitcoin integration for UTXO management and transaction signing
+- **ECDSA Signing**: Secure transaction signing for Ethereum and Bitcoin transactions
+- **Stable Memory**: Persistent storage for transaction history and user data
+- **Inter-Canister Calls**: Communication with ckBTC, ckETH, and other IC canisters
+- **Internet Identity 2.0**: Update Internet Identity to 2.0
+
+### Advanced Features
+- **Principal-based Address Derivation**: Deterministic address generation across chains
+- **Real-time Data Sync**: Live updates from external blockchain networks
+- **Fee Optimization**: Dynamic fee calculation based on network conditions
+
+## 💰 Revenue Model
+
+### Current Status
+**No Revenue Model Yet - Focus on User Adoption**
+
+FinTrack Protocol is currently in the development and user acquisition phase. We prioritize building a solid user base and community over immediate monetization.
+
+### Future Considerations
+Once we have established a strong user base, we may consider:
+- **Educational Content**: Tutorials and courses for blockchain beginners
+- **Premium Features**: Advanced analytics and priority support
+
+### User Adoption Strategy
+**Target: Blockchain Beginners & Newcomers**
+
+1. **Completely Free**: All features are free to encourage adoption
+2. **Beginner-Friendly**: Simple interface designed for newcomers
+3. **Educational Focus**: Built-in learning modules and tutorials
+
+### Current Focus
+- **Primary Goal**: User adoption and community building
+- **Secondary Goal**: Platform stability and feature development
+- **Long-term Vision**: Build a trusted platform for blockchain beginners
+
+## 🛠️ Build & Deployment
 
 ### Prerequisites
-- [DFX](https://internetcomputer.org/docs/current/developer-docs/setup/install/) (Internet Computer SDK)
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Rust](https://rust-lang.org/) (latest stable)
-- [Git](https://git-scm.com/)
+- Node.js 23.5.0
+- Rust 1.89.0
+- DFX 0.28.0
+- Git
+- Bitcoin Core (for local Bitcoin node)
 
-### Installation
+### Local Development Setup
 
-1. **Clone Repository**
+1. **Clone the Repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/demigohu/Fintrack_new.git
 cd Fintrack_new
+
+# Switch to local development branch
+git checkout local
 ```
 
-2. **Install Dependencies**
+2. **Install Bitcoin Core**
+Download and install Bitcoin Core from [bitcoin.org](https://bitcoin.org/en/download)
 ```bash
-# Install Rust dependencies
+# For Ubuntu/Debian
+sudo apt update
+sudo apt install bitcoin-core
+
+# For macOS (using Homebrew)
+brew install bitcoin
+
+# For Windows
+# Download from https://bitcoin.org/en/download
+```
+
+3. **Install Dependencies**
+```bash
+# Install backend dependencies
+cd fintrack_backend
 cargo build
 
-# Install Node.js dependencies
+# Install frontend dependencies
+cd ../fintrack_frontend
 npm install
-cd fintrack_frontend && npm install
 ```
 
-3. **Start Local Development Environment**
+4. **Setup Bitcoin Configuration**
+Create `bitcoin.conf` file in project root:
 ```bash
-# Start Node Bitcoin Regtest
-bitcoind -conf=$(pwd)/bitcoin.conf -datadir=$(pwd)/bitcoin_data --port=18444
+# Create bitcoin.conf
+cat > bitcoin.conf << EOF
+regtest=1
+server=1
+rpcuser=bitcoin
+rpcpassword=bitcoin
+rpcport=18443
+port=18444
+rpcallowip=127.0.0.1
+fallbackfee=0.00001
+txindex=1
+EOF
+```
 
-# Start Internet Computer replica
+5. **Start Bitcoin Node**
+```bash
+# Start Bitcoin Core in regtest mode
+bitcoind -conf=$(pwd)/bitcoin.conf -datadir=$(pwd)/bitcoin_data --port=18444
+```
+
+6. **Start Internet Computer Network**
+```bash
+# Start DFX replica with Bitcoin integration
 dfx start --clean --enable-bitcoin --bitcoin-node 127.0.0.1:18444
 
-# Deploy canisters
+# Deploy canisters locally
 dfx deploy
+```
 
-# Set api key for evm_rpc
+7. **Setup EVM RPC API Keys**
+```bash
+# Set API keys for Ethereum networks (optional for local development)
 dfx canister call evm_rpc updateApiKeys '(vec { record { 5 : nat64; opt "YOUR_API" } } )'
-
 dfx canister call evm_rpc updateApiKeys '(vec { record { 9 : nat64; opt "YOUR_API" } } )'
 ```
 
-## 📱 Usage
+8. **Start Frontend Development Server**
+```bash
+cd fintrack_frontend
+npm run dev
+```
 
-### Cross-Chain Bridge Operations
-- **BTC Deposits**: Generate BTC address → Send BTC → Receive ckBTC
-- **ETH Deposits**: Get Helper Contract address → Send ETH → Receive ckETH
-- **Cross-Chain Swapping**: Swap ckETH ↔ ckBTC (DeFi feature)
-- **BTC Withdrawals**: Burn ckBTC → Send BTC on Bitcoin Network
-- **ETH Withdrawals**: Burn ckETH → Send ETH on Ethereum network
-- **Native BTC Transfers**: Direct BTC transfers on Bitcoin network with fee preview
-- **Native ETH Transfers**: Direct ETH transfers on Ethereum network with gas estimation
+9. **Access the Application**
+After running `dfx deploy`, you'll see the generated canister IDs and URLs:
+```
+Deployed canisters.
+URLs:
+  Frontend canister via browser
+    http://<frontend_canister_id>.127.0.0.1:4943/
+  Backend canister via Candid interface:
+    http://127.0.0.1:4943/?canisterId=<backend_canister_id>&id=<backend_canister_id>
+```
 
-### DeFi Ecosystem Access
-- **External Protocol Integration**: Access Uniswap, Curve, and other DeFi protocols directly from Fintrack
-- **Cross-Chain Yield Farming**: Farm yields across multiple blockchains
-- **Lending Services**: Borrow and lend assets across different chains
-- **NFT Trading**: Buy, sell, and manage NFTs from various blockchains
+**Access Points:**
+- **Frontend**: http://<frontend_canister_id>.127.0.0.1:4943/
+- **Backend Candid**: http://127.0.0.1:4943/?canisterId=<backend_canister_id>&id=<backend_canister_id>
+- **Bitcoin RPC**: http://127.0.0.1:18443
 
-**Complete Cross-Chain Flow Example:**
-1. **Deposit ETH** → Get ckETH on Internet Computer
-2. **Swap ckETH → ckBTC** → Convert to ckBTC using DeFi protocol
-3. **Withdraw ckBTC** → Burn ckBTC → Receive BTC on Bitcoin network
+**Note**: Replace `<frontend_canister_id>` and `<backend_canister_id>` with the actual canister IDs displayed after deployment.
 
-*This enables true cross-chain asset movement: ETH → ckETH → ckBTC → BTC*
+### Production Deployment
 
-### Portfolio Dashboard
-- **Cross-Chain Overview**: Total portfolio value across all blockchains
-- **Asset Distribution**: Visual representation of BTC, ETH, ckBTC, ckETH holdings
-- **Transaction History**: Complete bridge operation logs with status tracking
-- **Native Asset Balances**: Real-time BTC and ETH balances on native blockchains
-- **Multi-Chain Transaction View**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
-- **Personal Finance Overview**: Budget tracking and financial goals
-- **Goal Progress Tracking**: Visual progress bars for savings and investment targets
-- **Expense Analytics**: Spending patterns and insights across all financial activities
+1. **Deploy to Internet Computer Mainnet**
+```bash
+# Deploy all canisters defined in dfx.json to mainnet
+dfx deploy --network ic
 
-### DeFi Features
-- **ckAsset Swapping**: Swap between ckBTC, ckETH
-- **External DeFi Integration**: Direct access to Uniswap, Curve, and other protocols
-- **Cross-Chain Yield Farming**: Optimize yields across multiple blockchains
-- **Lending & Borrowing**: Access to cross-chain lending services
-- **NFT Marketplace**: Trade NFTs from various blockchains
+# This will automatically deploy:
+# - fintrack_backend (Rust canister)
+# - fintrack_frontend (assets canister)
+# - evm_rpc (evm_rpc canister)
+# - All remote canisters (ckBTC, ckETH, Internet Identity, etc.)
+```
+
+2. **Add Environment Configuration on next.config**
+```bash
+# Set production environment variables
+export DFX_NETWORK=ic
+export NEXT_PUBLIC_IC_HOST=https://ic0.app
+export NEXT_PUBLIC_DFX_NETWORK=ic
+```
+
+## 🌐 Mainnet Deployment
+
+### Canister IDs
+- **FinTrack Backend**: `hchhn-yyaaa-aaaab-qb5ta-cai`
+- **FinTrack Frontend**: `a4gq6-oaaaa-aaaab-qaa4q-cai`
+- **EVM_RPC**: `giifx-2iaaa-aaaab-qb5ua-cai`
+
+### External Canister Integrations
+- **ckBTC Minter**: `ml52i-qqaaa-aaaar-qaaba-cai`
+- **ckBTC Ledger**: `mxzaz-hqaaa-aaaar-qaada-cai`
+- **ckBTC Index**: `mm444-5iaaa-aaaar-qaabq-cai`
+- **ckETH Minter**: `jzenf-aiaaa-aaaar-qaa7q-cai`
+- **ckETH Ledger**: `apia6-jaaaa-aaaar-qabma-cai`
+- **ckETH Index**: `sh5u2-cqaaa-aaaar-qacna-cai`
+- **Internet Identity**: `rdmx6-jaaaa-aaaaa-aaadq-cai`
+
+### Live URLs
+- **FinTrack_Frontend**: `https://hchhn-yyaaa-aaaab-qb5ta-cai.icp0.io/`
+- **FinTrack_Backend**: `https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=hlemr-oqaaa-aaaab-qb5sq-cai`
+
+## 🎥 Demo Video
+
+[![FinTrack Protocol Demo](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+
+*Watch our comprehensive demo showcasing cross-chain bridge operations, portfolio management, and personal finance features.*
+
+## 🧪 Testing
+
+### Current Testing Status
+**Note**: Testing infrastructure is planned for future development. Currently, the application is manually tested through the live demo and user interface.
+
+### Manual Testing
+```bash
+# Test backend functionality through Candid interface
+# Access: http://127.0.0.1:4943/?canisterId=<backend_canister_id>&id=<backend_canister_id>
+
+# Test frontend through browser
+# Access: http://<frontend_canister_id>.127.0.0.1:4943/
+
+# Test Bitcoin integration
+# Use Bitcoin regtest commands to test BTC transactions
+```
+
+### Planned Testing (Future)
+- **Unit Tests**: Backend Rust tests
+- **Integration Tests**: Cross-chain transaction tests
+- **PocketIC Tests**: Internet Computer integration tests
+- **Frontend Tests**: React component tests
+
+## 🚧 Challenges Faced
+
+### Technical Challenges
+1. **Uniswap Integration Complexity**: The most challenging part was implementing Uniswap integration with ECDSA signing
+   - **Challenge**: Managing complex Ethereum transaction signing via Internet Computer's ECDSA
+   - **Challenge**: Handling Uniswap V3 routing, slippage, and gas estimation
+   - **Challenge**: Integrating multiple Uniswap contracts (Router, Quoter, Permit2)
+   - **Challenge**: Managing nonce tracking and transaction queuing for Ethereum
+
+2. **HTTP Outcall Cycle Management**: Optimizing cycles for external API calls
+   - **Challenge**: Calculating precise cycle costs for Moralis API and Mempool.space
+   - **Challenge**: Handling large response sizes (500KB+ for Bitcoin transactions)
+   - **Challenge**: Implementing proper error handling for cycle exhaustion
+
+3. **Cross-Chain Transaction Parsing**: Converting different blockchain transaction formats
+   - **Challenge**: Parsing Bitcoin UTXO transactions from Mempool.space API
+   - **Challenge**: Handling Ethereum transaction logs and event parsing
+   - **Challenge**: Normalizing transaction data across different blockchains
+
+4. **Real-time Data Synchronization**: Managing live updates without excessive polling
+   - **Challenge**: Balancing real-time updates with performance
+   - **Challenge**: Implementing efficient caching strategies
+   - **Challenge**: Handling network timeouts and API rate limits
+
+### Solutions Implemented
+1. **Uniswap Integration**: 
+   - Implemented comprehensive ECDSA signing with proper nonce management
+   - Created modular transaction building system for different Uniswap operations
+   - Added proper error handling and retry mechanisms for failed transactions
+
+2. **Dynamic Cycle Calculation**: 
+   - Implemented official IC cycles cost formulas with 10-15% buffers
+   - Separated API calls to avoid cycle limit issues
+   - Added response size limits and pagination
+
+3. **Transaction Normalization**: 
+   - Created unified transaction format across all blockchains
+   - Implemented proper filtering for bridge-related transactions
+   - Added comprehensive transaction status tracking
+
+4. **Performance Optimization**: 
+   - Used stable memory for transaction caching
+   - Implemented batch operations for multiple API calls
+   - Added loading states and error boundaries in frontend
+
+## 🔮 Future Plans
+
+### Next Round
+- **Solana Integration**: Add support for Solana blockchain and SPL tokens
+- **Additional DeFi Protocols**: Integrate more DeFi protocols like Aave, Compound, and Curve
+
+### Post Hackathon
+- **Cross-Chain Governance**: Decentralized governance for protocol upgrades
+- **Additional Chains**: Support for Polygon, Avalanche, and other major blockchains
+- **Institutional Features**: Enterprise-grade tools for institutions and businesses
 
 
+### Ecosystem Expansion
+- **Developer SDK**: Tools for third-party developers to integrate FinTrack features
+- **Educational Platform**: DeFi education and tutorials for users
+- **Research & Development**: Advanced DeFi protocol research and optimization
 
-## 📊 API Reference
+## 👥 Team
 
-### Core Bridge Endpoints
-
-#### Bitcoin Bridge Operations
-- `btc_get_deposit_address(owner?, subaccount?)` - Generate BTC deposit address from minter
-- `btc_get_balance(owner?, subaccount?)` - Get ckBTC balance
-- `btc_transfer(request)` - Transfer BTC via Chain Fusion
-- `btc_get_utxos(address)` - Get UTXOs for address
-- `btc_get_native_balance(address)` - Get native BTC balance on Bitcoin network
-- `btc_preview_fee(destination, amount, owner?)` - Preview BTC transfer fees
-
-#### Ethereum Bridge Operations
-- `eth_get_deposit_address(subaccount?)` - Get Helper Contract address
-- `eth_get_balance(owner?, subaccount?)` - Get ckETH balance
-- `eth_estimate_withdrawal_fee()` - Estimate withdrawal fees
-- `eth_get_native_balance(address)` - Get native ETH balance on Ethereum network
-- `eth_transfer(destination, amount)` - Transfer ETH on Ethereum network
-- `eth_preview_fee(destination, amount, gas_limit?)` - Preview ETH transfer fees
-
-#### Portfolio Management
-- `get_user_balances(user)` - Get user balances across all chains including native assets
-- `get_transaction_history(user, limit?, offset?)` - Get bridge transaction history with native transactions
-- `get_crypto_usd_rate(crypto_id)` - Get current crypto rates
-- `btc_derive_address(owner?)` - Derive native BTC address from Principal
-- `eth_derive_address(owner?)` - Derive native ETH address from Principal
-
-
-
-## 🆕 Recent Updates & Features
-
-### ✅ Implemented Features
-- **Native Asset Transfers**: Direct BTC and ETH transfers on native blockchains
-- **Fee Preview System**: Real-time fee estimation for BTC and ETH transfers
-- **Multi-Chain Transaction History**: Separate tabs for ICP, Ethereum, and Bitcoin transactions
-- **HTTP Outcall Integration**: Etherscan API for ETH transaction history, BlockCypher for BTC
-- **ECDSA Address Derivation**: Deterministic BTC/ETH address generation from Internet Computer Principal
-- **Real-time Balance Updates**: Native BTC and ETH balances integrated into portfolio dashboard
-- **Cross-Chain Bridge**: Complete ckBTC and ckETH integration with Bitcoin and Ethereum
-- **Portfolio Management**: Unified dashboard for multi-chain asset tracking
-
-### 🚧 In Development
-- **External DeFi Integration**: Direct access to Uniswap, Curve, and other protocols
-- **Personal Finance Tools**: Budgeting, goal tracking, and expense analytics
-- **Cross-Chain Yield Farming**: Yield optimization across multiple blockchains
-- **NFT Management**: Cross-chain NFT trading and management
-
-### 🔧 Technical Improvements
-- **Stable Storage**: Using `ic-stable-structures` for persistent transaction history
-- **EVM RPC Integration**: Direct Ethereum network interaction via EVM RPC canister
-- **Chain Fusion Technology**: Advanced Bitcoin transfer protocol with UTXO management
-- **Error Handling**: Comprehensive error handling and user feedback
-- **Performance Optimization**: Efficient data fetching and caching strategies
+- **Lead Developer**: Demigohu - Full-stack developer 
+- **Frontend Developer**: Kopsus - React/Next.js 
+- **Backend Developer**: Engkoh - Rust/ICP 
+- **UI/UX Designer**: Doyok - DeFi UX 
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🤝 Contributing
 
-- [Internet Computer](https://internetcomputer.org/) - Blockchain infrastructure
-- [DFX](https://internetcomputer.org/docs/current/developer-docs/setup/install/) - Development framework
-- [Next.js](https://nextjs.org/) - React framework
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [Radix UI](https://www.radix-ui.com/) - UI components
-- [Etherscan](https://etherscan.io/) - Ethereum API for transaction history
-- [BlockCypher](https://www.blockcypher.com/) - Bitcoin API for transaction data
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+## 📞 Contact
+
+- **Email**: tgraji.k@gmail.com
+- **Twitter**: [@FinTrackProtocol](https://twitter.com/FinTrackProtocol)
+- **GitHub**: [FinTrack Protocol](https://github.com/demigohu/)
 
 ---
 
-**FInTrack Protocol** - Bridging the gap between traditional blockchains and the Internet Computer through innovative Chain Fusion technology.
+**Built with ❤️ on Internet Computer**
 
-*Empowering seamless cross-chain DeFi operations with security and efficiency*
-
-*Built with ❤️ on the Internet Computer*
+*FinTrack Protocol - Bridging the Future of Cross-Chain Finance*

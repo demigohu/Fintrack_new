@@ -1,135 +1,140 @@
 {
   "canisters": {
     "fintrack_backend": {
-      "candid": "fintrack_backend/fintrack_backend.did",
-      "package": "fintrack_backend",
       "type": "rust",
+      "package": "fintrack_backend",
+      "candid": "fintrack_backend/fintrack_backend.did",
       "optimize": "cycles",
-      "http": {
-        "enabled": true
+      "http": { "enabled": true },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/fintrack_backend"
       }
     },
+
     "fintrack_frontend": {
-      "frontend": {
-        "entrypoint": "fintrack_frontend/out/index.html"
-      },
-      "source": ["fintrack_frontend/out"],
-      "type": "assets"
+      "type": "assets",
+      "frontend": { "entrypoint": "fintrack_frontend/out/index.html" },
+      "source": ["fintrack_frontend/out"]
     },
+
     "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
       "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
+        "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+        "id": { "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai" }
       },
-      "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+      "frontend": {},
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/internet_identity"
+      }
     },
+
     "ckbtc_minter": {
-      "type": "custom",
-      "candid": "target/ic/ckbtc_minter.did",
-      "wasm": "target/ic/ckbtc_minter.wasm.gz",
       "remote": {
-        "id": {
-          "ic": "mqygn-kiaaa-aaaar-qaadq-cai"
-        }
+        "candid": "target/ic/ckbtc_minter.did",
+        "id": { "ic": "ml52i-qqaaa-aaaar-qaaba-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/ckbtc_minter"
       }
     },
     "ckbtc_ledger": {
-      "type": "custom",
-      "candid": "target/ic/ckbtc_ledger.did",
-      "wasm": "target/ic/ckbtc_ledger.wasm.gz",
       "remote": {
-        "id": {
-          "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
-        }
-      }
-    },
-    "btc_checker": {
-      "type": "custom",
-      "candid": "target/ic/btc_checker.did",
-      "wasm": "target/ic/btc_checker.wasm.gz",
-      "remote": {
-        "id": {
-          "ic": "oltsj-fqaaa-aaaar-qal5q-cai"
-        }
+        "candid": "target/ic/ckbtc_ledger.did",
+        "id": { "ic": "mc6ru-gyaaa-aaaar-qaaaq-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/ckbtc_ledger"
       }
     },
     "ckbtc_index": {
-      "type": "custom",
-      "candid": "target/ic/ckbtc_index.did",
-      "wasm": "target/ic/ckbtc_index.wasm.gz",
       "remote": {
-        "id": {
-          "ic": "n5wcd-faaaa-aaaar-qaaea-cai"
-        }
+        "candid": "target/ic/ckbtc_index.did",
+        "id": { "ic": "mm444-5iaaa-aaaar-qaabq-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/ckbtc_index"
       }
     },
-    "cketh_minter": {
-      "type": "custom",
-      "candid": "target/ic/cketh_minter.did",
-      "wasm": "target/ic/cketh_minter.wasm.gz",
+    "btc_checker": {
       "remote": {
-        "id": {
-          "ic": "sv3dd-oaaaa-aaaar-qacoa-cai"
-        }
+        "candid": "target/ic/btc_checker.did",
+        "id": { "ic": "o6ude-eyaaa-aaaar-qal6a-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/btc_checker"
+      }
+    },
+
+    "cketh_minter": {
+      "remote": {
+        "candid": "target/ic/cketh_minter.did",
+        "id": { "ic": "jzenf-aiaaa-aaaar-qaa7q-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/cketh_minter"
       }
     },
     "cketh_ledger": {
-      "type": "custom",
-      "candid": "target/ic/cketh_ledger.did",
-      "wasm": "target/ic/cketh_ledger.wasm.gz",
       "remote": {
-        "id": {
-          "ic": "ss2fx-dyaaa-aaaar-qacoq-cai"
-        }
+        "candid": "target/ic/cketh_ledger.did",
+        "id": { "ic": "apia6-jaaaa-aaaar-qabma-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/cketh_ledger"
       }
     },
     "cketh_index": {
-      "type": "custom",
-      "candid": "target/ic/cketh_index.did",
-      "wasm": "target/ic/cketh_index.wasm.gz",
       "remote": {
-        "id": {
-          "ic": "s3zol-vqaaa-aaaar-qacpa-cai"
-        }
+        "candid": "target/ic/cketh_index.did",
+        "id": { "ic": "sh5u2-cqaaa-aaaar-qacna-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/cketh_index"
       }
     },
+
     "evm_rpc": {
       "type": "custom",
       "candid": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.did",
       "wasm": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.wasm.gz",
-      "remote": {
-        "id": {
-          "ic": "7hfb6-caaaa-aaaar-qadga-cai"
-        },
-        "init_arg": "(record {})"
+      "specified_id": "giifx-2iaaa-aaaab-qb5ua-cai",
+      "init_arg": "(record {})",
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/evm_rpc"
       }
     },
+
     "bitcoin": {
-    "type": "custom",
-    "candid": "https://github.com/dfinity/ic/releases/latest/download/bitcoin.did",
-    "wasm": "https://github.com/dfinity/ic/releases/latest/download/bitcoin.wasm.gz",
-    "remote": {
-      "id": {
-        "ic": "ghsi2-tqaaa-aaaan-aaaca-cai" 
+      "remote": {
+        "candid": "https://github.com/dfinity/ic/releases/latest/download/bitcoin.did",
+        "id": { "ic": "g4xu7-jiaaa-aaaan-aaaaq-cai" }
+      },
+      "declarations": {
+        "bindings": ["js", "ts", "did"],
+        "output": "src/declarations/bitcoin"
       }
     }
-  }
+  },
 
-  },
   "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
+    "build": { "args": "", "packtool": "" }
   },
+
   "networks": {
     "local": { "bind": "127.0.0.1:4943" },
     "ic": { "providers": ["https://ic0.app"] }
   },
+
   "output_env_file": ".env",
   "version": 1
 }

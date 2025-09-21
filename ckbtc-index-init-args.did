@@ -1,7 +1,0 @@
-(opt variant { 
-    Init = record { 
-        ledger_id = principal "mc6ru-gyaaa-aaaar-qaaaq-cai"; 
-    } 
-})
-
-

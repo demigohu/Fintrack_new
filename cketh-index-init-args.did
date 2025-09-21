@@ -1,5 +1,0 @@
-(opt variant {
-  Init = record {
-    ledger_id = principal "apia6-jaaaa-aaaar-qabma-cai" // ledger canister ID
-  }
-})

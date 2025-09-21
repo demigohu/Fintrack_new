@@ -1,0 +1,11 @@
+{
+  "evm_rpc": {
+    "ic": "giifx-2iaaa-aaaab-qb5ua-cai"
+  },
+  "fintrack_backend": {
+    "ic": "hlemr-oqaaa-aaaab-qb5sq-cai"
+  },
+  "fintrack_frontend": {
+    "ic": "hchhn-yyaaa-aaaab-qb5ta-cai"
+  }
+}

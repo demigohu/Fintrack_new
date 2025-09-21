@@ -10,8 +10,8 @@ import { createActor as createBackendActor, canisterId as generatedBackendCanist
 type Optional<T> = [] | [T]
 
 export const getIcHost = (): string | undefined => {
-  if (typeof window === "undefined") return process.env.NEXT_PUBLIC_IC_HOST
-  if (process.env.NEXT_PUBLIC_DFX_NETWORK === "ic") return undefined
+  if (typeof window === "undefined") return "https://id.ai"
+  if (process.env.NEXT_PUBLIC_DFX_NETWORK === "ic") return "https://id.ai"
   return process.env.NEXT_PUBLIC_IC_HOST || "http://127.0.0.1:4943"
 }
 

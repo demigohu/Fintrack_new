@@ -224,7 +224,7 @@ export function AssetsList() {
     return (
       <Card className="p-6 bg-slate-900/80 border-purple-500/20 glow-purple">
         <div className="text-slate-400 text-center py-8">
-          Silakan login terlebih dahulu
+         Please Login First
         </div>
       </Card>
     )

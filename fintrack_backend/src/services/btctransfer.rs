@@ -1,7 +1,9 @@
 use candid::Principal;
+use ic_cdk::api::call::call_with_payment128;
 use ic_cdk::{
     bitcoin_canister::{
-        bitcoin_get_utxos, bitcoin_send_transaction, GetUtxosRequest, SendTransactionRequest,
+        bitcoin_get_utxos, bitcoin_send_transaction, bitcoin_get_current_fee_percentiles, bitcoin_get_balance,
+        GetUtxosRequest, SendTransactionRequest, GetCurrentFeePercentilesRequest, GetBalanceRequest,
         MillisatoshiPerByte, Satoshi, Utxo,
     },
 };
@@ -17,9 +19,9 @@ use bitcoin::{
 };
 use std::str::FromStr;
 
-const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
-const BTC_NETWORK: BtcNetwork = BtcNetwork::Bitcoin; // Bitcoin mainnet
-const IC_BTC_NETWORK: ic_cdk::bitcoin_canister::Network = ic_cdk::bitcoin_canister::Network::Mainnet; // IC Bitcoin canister mainnet
+const DEFAULT_ECDSA_KEY_NAME: &str = "key_1"; // Use "dfx_test_key" for testnet
+const BTC_NETWORK: BtcNetwork = BtcNetwork::Testnet; // Bitcoin testnet
+const IC_BTC_NETWORK: ic_cdk::bitcoin_canister::Network = ic_cdk::bitcoin_canister::Network::Testnet; // IC Bitcoin canister testnet
 
 // Request struct untuk transfer BTC
 #[derive(candid::CandidType, candid::Deserialize)]
@@ -51,39 +53,61 @@ pub struct BtcFeePreview {
 
 // Get UTXOs untuk address tertentu
 pub async fn get_utxos_for_address(address: String) -> Result<Vec<Utxo>, String> {
-    let response = bitcoin_get_utxos(&GetUtxosRequest {
-        address,
-        network: IC_BTC_NETWORK,
-        filter: None,
-    })
+    // Lampirkan cycles yang cukup (mainnet get_utxos: min 10_000_000_000)
+    let cycles: u128 = 10_000_000_000;
+    
+    let (response,): (ic_cdk::bitcoin_canister::GetUtxosResponse,) = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_get_utxos",
+        (GetUtxosRequest {
+            address,
+            network: IC_BTC_NETWORK,
+            filter: None,
+        },),
+        cycles,
+    )
     .await
-    .map_err(|e| format!("Failed to get UTXOs: {:?}", e))?;
+    .map_err(|e| format!("bitcoin_get_utxos failed: {:?}", e))?;
 
     Ok(response.utxos)
 }
 
 // Get current fee percentiles
 pub async fn get_current_fee_percentiles() -> Result<Vec<MillisatoshiPerByte>, String> {
-    ic_cdk::bitcoin_canister::bitcoin_get_current_fee_percentiles(
-        &ic_cdk::bitcoin_canister::GetCurrentFeePercentilesRequest {
+    // Lampirkan cycles yang cukup (mainnet get_current_fee_percentiles: min 100_000_000)
+    let cycles: u128 = 100_000_000;
+    
+    let (fee_percentiles,): (Vec<MillisatoshiPerByte>,) = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_get_current_fee_percentiles",
+        (GetCurrentFeePercentilesRequest {
             network: IC_BTC_NETWORK,
-        },
+        },),
+        cycles,
     )
     .await
-    .map_err(|e| format!("Failed to get fee percentiles: {:?}", e))
+    .map_err(|e| format!("bitcoin_get_current_fee_percentiles failed: {:?}", e))?;
+    
+    Ok(fee_percentiles)
 }
 
 // Get native BTC balance for an address
 pub async fn get_native_btc_balance(address: String) -> Result<u64, String> {
-    let balance = ic_cdk::bitcoin_canister::bitcoin_get_balance(
-        &ic_cdk::bitcoin_canister::GetBalanceRequest {
+    // Lampirkan cycles yang cukup (mainnet get_balance: min 100_000_000)
+    let cycles: u128 = 100_000_000;
+    
+    let (balance,): (u64,) = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_get_balance",
+        (GetBalanceRequest {
             address,
             network: IC_BTC_NETWORK,
             min_confirmations: Some(0), // Include unconfirmed transactions
-        },
+        },),
+        cycles,
     )
     .await
-    .map_err(|e| format!("Failed to get BTC balance: {:?}", e))?;
+    .map_err(|e| format!("bitcoin_get_balance failed: {:?}", e))?;
 
     Ok(balance)
 }
@@ -473,11 +497,20 @@ pub async fn transfer_btc(request: BtcTransferRequest) -> Result<BtcTransferResp
     
     // Send transaction
     let tx_bytes = serialize(&signed_transaction);
-    let send_result = bitcoin_send_transaction(&SendTransactionRequest {
-        network: IC_BTC_NETWORK,
-        transaction: tx_bytes,
-    })
-    .await;
+    // Lampirkan cycles yang cukup (mainnet send_transaction: 5B + 20M per byte)
+    let cycles: u128 = 5_000_000_000 + (tx_bytes.len() as u128 * 20_000_000);
+    
+    let send_result: Result<(), String> = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_send_transaction",
+        (SendTransactionRequest {
+            network: IC_BTC_NETWORK,
+            transaction: tx_bytes,
+        },),
+        cycles,
+    )
+    .await
+    .map_err(|e| format!("bitcoin_send_transaction failed: {:?}", e));
     
     match send_result {
         Ok(_) => {

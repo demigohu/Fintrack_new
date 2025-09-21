@@ -55,16 +55,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => clearTimeout(t)
   }, [])
 
+  // Listen for auth state changes from popup login
+  useEffect(() => {
+    const handleAuthStateChange = async (event: CustomEvent) => {
+      const { isAuthenticated } = event.detail
+      if (isAuthenticated) {
+        // User just logged in via popup, refresh auth state
+        try {
+          setLoading(true)
+          const isAuth = await authService.isAuthenticated()
+          setIsLoggedIn(isAuth)
+          if (isAuth) {
+            const currentUser = await authService.getCurrentUser()
+            setUser(currentUser)
+          }
+        } catch (error) {
+          console.error('Error refreshing auth state:', error)
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        // User logged out
+        setIsLoggedIn(false)
+        setUser(null)
+      }
+    }
+
+    window.addEventListener('authStateChanged', handleAuthStateChange as unknown as EventListener)
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthStateChange as unknown as EventListener)
+    }
+  }, [])
+
   const handleLogin = async () => {
     setLoading(true)
     try {
       await authService.login()
-      await new Promise(r => setTimeout(r, 1000))
-      const isAuth = await authService.isAuthenticated()
-      setIsLoggedIn(isAuth)
-      if (isAuth) setUser(await authService.getCurrentUser())
-    } finally {
+      // Auto-refresh will be handled by the event listener
+      // No need for manual refresh or delay
+    } catch (error) {
+      console.error('Login error:', error)
       setLoading(false)
+      // Show error to user if needed
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.warn('Login timeout - user may need to try again')
+      }
     }
   }
 

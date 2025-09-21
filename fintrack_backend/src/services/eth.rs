@@ -6,12 +6,12 @@ use ic_cdk::api::call::call_with_payment128;
 // Helper: read ckETH minter and ledger principals from dfx.json (baked-in for now)
 fn cketh_minter_principal() -> Principal {
     // Mainnet ckETH Minter
-    Principal::from_text("sv3dd-oaaaa-aaaar-qacoa-cai").expect("invalid cketh_minter principal")
+    Principal::from_text("jzenf-aiaaa-aaaar-qaa7q-cai").expect("invalid cketh_minter principal")
 }
 
 fn cketh_ledger_principal() -> Principal {
     // Mainnet ckETH Ledger
-    Principal::from_text("ss2fx-dyaaa-aaaar-qacoq-cai").expect("invalid cketh_ledger principal")
+    Principal::from_text("apia6-jaaaa-aaaar-qabma-cai").expect("invalid cketh_ledger principal")
 }
 
 // NOTE: For now, these are stubs to be wired to ckETH minter/ledger.
@@ -97,7 +97,7 @@ pub async fn estimate_withdrawal_fee() -> Result<String, String> {
 /// Get historical fee data to estimate gas prices for Ethereum transactions
 pub async fn fee_history() -> Result<String, String> {
     // Get EVM RPC canister ID from dfx.json
-    let evm_rpc_principal = Principal::from_text("7hfb6-caaaa-aaaar-qadga-cai")
+    let evm_rpc_principal = Principal::from_text("giifx-2iaaa-aaaab-qb5ua-cai")
         .expect("invalid evm_rpc principal");
     
     // Define the fee_history request structure

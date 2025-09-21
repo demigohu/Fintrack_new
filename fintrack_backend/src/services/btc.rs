@@ -1,7 +1,7 @@
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::api::call::call_with_payment128;
 use ic_cdk::{
-    bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, bitcoin_get_block_headers, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest, GetBlockHeadersRequest, GetBlockHeadersResponse},
+    bitcoin_canister::{bitcoin_get_utxos, bitcoin_get_current_fee_percentiles, GetUtxosRequest, GetUtxosResponse, GetCurrentFeePercentilesRequest, GetBlockHeadersRequest, GetBlockHeadersResponse},
 };
 
 // Simplified UTXO structure for frontend consumption - only hash and confirmations
@@ -15,12 +15,12 @@ pub struct SimplifiedUtxo {
 // In production, consider storing in stable state or ENV via build-time feature.
 fn ckbtc_minter_principal() -> Principal {
     // Mainnet ckBTC Minter
-    Principal::from_text("mqygn-kiaaa-aaaar-qaadq-cai").expect("invalid ckbtc_minter principal")
+    Principal::from_text("ml52i-qqaaa-aaaar-qaaba-cai").expect("invalid ckbtc_minter principal")
 }
 
 fn ckbtc_ledger_principal() -> Principal {
     // Mainnet ckBTC Ledger
-    Principal::from_text("mxzaz-hqaaa-aaaar-qaada-cai").expect("invalid ckbtc_ledger principal")
+    Principal::from_text("mc6ru-gyaaa-aaaar-qaaaq-cai").expect("invalid ckbtc_ledger principal")
 }
 
 // NOTE: For now, these are stubs to be wired to ckBTC minter/ledger.
@@ -139,7 +139,7 @@ pub async fn get_balance(owner: Option<Principal>, subaccount: Option<Vec<u8>>) 
 /// Get UTXOs for a Bitcoin address using the Bitcoin canister
 pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
     // Mainnet Bitcoin network
-    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
+    let network = ic_cdk::bitcoin_canister::Network::Testnet;
     
     let request = GetUtxosRequest {
         address: address.clone(),
@@ -147,9 +147,17 @@ pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
         filter: None,
     };
     
-    let response: GetUtxosResponse = bitcoin_get_utxos(&request)
-        .await
-        .map_err(|e| format!("Failed to get UTXOs: {:?}", e))?;
+    // Lampirkan cycles yang cukup (mainnet get_utxos: min 10_000_000_000)
+    let cycles: u128 = 10_000_000_000;
+    
+    let (response,): (GetUtxosResponse,) = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_get_utxos",
+        (request,),
+        cycles,
+    )
+    .await
+    .map_err(|e| format!("bitcoin_get_utxos failed: {:?}", e))?;
     
     // Convert to simplified format - only hash and confirmations
     let simplified_utxos: Vec<SimplifiedUtxo> = response
@@ -167,15 +175,23 @@ pub async fn get_utxos(address: String) -> Result<Vec<SimplifiedUtxo>, String> {
 /// Get current Bitcoin fee percentiles in millisatoshi/byte
 pub async fn get_current_fee_percentiles() -> Result<Vec<u64>, String> {
     // Mainnet Bitcoin network
-    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
+    let network = ic_cdk::bitcoin_canister::Network::Testnet;
     
     let request = GetCurrentFeePercentilesRequest {
         network,
     };
     
-    let fee_percentiles = bitcoin_get_current_fee_percentiles(&request)
-        .await
-        .map_err(|e| format!("Failed to get fee percentiles: {:?}", e))?;
+    // Lampirkan cycles yang cukup (mainnet get_current_fee_percentiles: min 100_000_000)
+    let cycles: u128 = 100_000_000;
+    
+    let (fee_percentiles,): (Vec<ic_cdk::bitcoin_canister::MillisatoshiPerByte>,) = call_with_payment128(
+        Principal::management_canister(),
+        "bitcoin_get_current_fee_percentiles",
+        (request,),
+        cycles,
+    )
+    .await
+    .map_err(|e| format!("bitcoin_get_current_fee_percentiles failed: {:?}", e))?;
     
     // Convert MillisatoshiPerByte to u64 for easier handling
     let fees: Vec<u64> = fee_percentiles
@@ -194,16 +210,24 @@ pub struct BtcNetworkInfo {
 
 /// Returns network info including current block height and highest seen UTXO height
 pub async fn get_network_info(address: Option<String>) -> Result<BtcNetworkInfo, String> {
-    let network = ic_cdk::bitcoin_canister::Network::Mainnet;
+    let network = ic_cdk::bitcoin_canister::Network::Testnet;
 
     let mut utxo_height: u32 = 0;
     let mut current_block_height: u32 = 0;
 
     if let Some(addr) = address {
         let utxo_request = GetUtxosRequest { address: addr, network, filter: None };
-        let utxo_response: GetUtxosResponse = bitcoin_get_utxos(&utxo_request)
-            .await
-            .map_err(|e| format!("Failed to get UTXOs: {:?}", e))?;
+        // Lampirkan cycles yang cukup (mainnet get_utxos: min 10_000_000_000)
+        let cycles: u128 = 10_000_000_000;
+        
+        let (utxo_response,): (GetUtxosResponse,) = call_with_payment128(
+            Principal::management_canister(),
+            "bitcoin_get_utxos",
+            (utxo_request,),
+            cycles,
+        )
+        .await
+        .map_err(|e| format!("bitcoin_get_utxos failed: {:?}", e))?;
 
         // Highest UTXO height for this address
         for utxo in utxo_response.utxos.into_iter() {

@@ -5,8 +5,8 @@ use sha3::{Digest, Keccak256};
 use k256::PublicKey as K256PublicKey;
 use k256::elliptic_curve::sec1::ToEncodedPoint;
 
-const DEFAULT_ECDSA_KEY_NAME: &str = "dfx_test_key"; // Use "test_key_1" or "key_1" on IC
-const BTC_NETWORK: Network = Network::Bitcoin; // Mainnet Bitcoin
+const DEFAULT_ECDSA_KEY_NAME: &str = "key_1"; // Use "dfx_test_key" for testnet
+const BTC_NETWORK: Network = Network::Testnet; // Testnet Bitcoin
 
 fn principal_derivation_path(owner: Principal) -> Vec<Vec<u8>> {
     vec![owner.as_slice().to_vec()]

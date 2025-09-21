@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { TrendingUp, TrendingDown, DollarSign, Percent, RefreshCw, AlertCircle, WifiOff } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { balanceService, currencyService, marketChartService } from "@/services/backend"
 
@@ -20,6 +21,7 @@ export function PortfolioOverview() {
   const [portfolioStats, setPortfolioStats] = useState<PortfolioStats[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorType, setErrorType] = useState<'timeout' | 'network' | 'api' | 'unknown'>('unknown')
 
   const loadData = useCallback(async () => {
     if (!isLoggedIn) return
@@ -27,8 +29,13 @@ export function PortfolioOverview() {
     setError(null)
     
     try {
-      // Ambil ringkasan saldo gabungan (ck + native)
-      const portfolioRes = await balanceService.getPortfolioSummary()
+      // Set timeout for portfolio summary call
+      const portfolioPromise = balanceService.getPortfolioSummary()
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000) // 30 second timeout
+      )
+      
+      const portfolioRes = await Promise.race([portfolioPromise, timeoutPromise])
       if (!portfolioRes.success) {
         setError("Failed to load portfolio summary")
         return
@@ -44,8 +51,13 @@ export function PortfolioOverview() {
       const btcBalance = (ckbtcSats + btcNativeSats) / 1e8
       const ethBalance = (ckethWei + ethNativeWei) / 1e18
       
-      // Get live USD rates from backend
-      const ratesRes = await currencyService.getCurrencyRates()
+      // Get live USD rates from backend with timeout
+      const ratesPromise = currencyService.getCurrencyRates()
+      const ratesTimeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Rates request timeout')), 15000) // 15 second timeout
+      )
+      
+      const ratesRes = await Promise.race([ratesPromise, ratesTimeoutPromise])
       if (!ratesRes.success) {
         setError("Failed to load rates")
         return
@@ -68,10 +80,16 @@ export function PortfolioOverview() {
       let todayPnLPercent = 0
       
       try {
-        // Get 24h changes for BTC and ETH
-        const [btcChangeRes, ethChangeRes] = await Promise.all([
-          marketChartService.get24hChange('bitcoin'),
-          marketChartService.get24hChange('ethereum')
+        // Get 24h changes for BTC and ETH with timeout
+        const btcChangePromise = marketChartService.get24hChange('bitcoin')
+        const ethChangePromise = marketChartService.get24hChange('ethereum')
+        const changeTimeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('24h changes timeout')), 10000) // 10 second timeout
+        )
+        
+        const [btcChangeRes, ethChangeRes] = await Promise.race([
+          Promise.all([btcChangePromise, ethChangePromise]),
+          changeTimeoutPromise
         ])
         
         const btcChange = btcChangeRes.success ? btcChangeRes.data : 0
@@ -97,10 +115,16 @@ export function PortfolioOverview() {
       let weekPnLPercent = 0
       
       try {
-        // Get historical prices for 7 days ago
-        const [btcHistoryRes, ethHistoryRes] = await Promise.all([
-          marketChartService.getHistoricalPrices('bitcoin', 'usd', 7),
-          marketChartService.getHistoricalPrices('ethereum', 'usd', 7)
+        // Get historical prices for 7 days ago with timeout
+        const btcHistoryPromise = marketChartService.getHistoricalPrices('bitcoin', 'usd', 7)
+        const ethHistoryPromise = marketChartService.getHistoricalPrices('ethereum', 'usd', 7)
+        const historyTimeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Historical data timeout')), 20000) // 20 second timeout
+        )
+        
+        const [btcHistoryRes, ethHistoryRes] = await Promise.race([
+          Promise.all([btcHistoryPromise, ethHistoryPromise]),
+          historyTimeoutPromise
         ])
         
         if (btcHistoryRes.success && ethHistoryRes.success) {
@@ -171,7 +195,19 @@ export function PortfolioOverview() {
       
       setPortfolioStats(stats)
     } catch (e: any) {
-      setError(e?.message || "Failed to load portfolio data")
+      const errorMessage = e?.message || "Failed to load portfolio data"
+      setError(errorMessage)
+      
+      // Determine error type for better UX
+      if (errorMessage.includes('timeout') || errorMessage.includes('Request timeout')) {
+        setErrorType('timeout')
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        setErrorType('network')
+      } else if (errorMessage.includes('API') || errorMessage.includes('Failed to load')) {
+        setErrorType('api')
+      } else {
+        setErrorType('unknown')
+      }
     } finally {
       setLoading(false)
     }
@@ -184,23 +220,119 @@ export function PortfolioOverview() {
   if (!isLoggedIn) {
     return (
       <div className="text-slate-400 text-center py-8">
-        Silakan login terlebih dahulu
+        Please Login First
       </div>
     )
   }
 
   if (error) {
+    const getErrorIcon = () => {
+      switch (errorType) {
+        case 'timeout':
+          return <WifiOff className="h-8 w-8 text-yellow-400" />
+        case 'network':
+          return <WifiOff className="h-8 w-8 text-red-400" />
+        case 'api':
+          return <AlertCircle className="h-8 w-8 text-orange-400" />
+        default:
+          return <AlertCircle className="h-8 w-8 text-red-400" />
+      }
+    }
+
+    const getErrorTitle = () => {
+      switch (errorType) {
+        case 'timeout':
+          return "Request Timeout"
+        case 'network':
+          return "Network Error"
+        case 'api':
+          return "API Error"
+        default:
+          return "Error"
+      }
+    }
+
+    const getErrorDescription = () => {
+      switch (errorType) {
+        case 'timeout':
+          return "The request took too long to complete. This might be due to slow network or server response."
+        case 'network':
+          return "Unable to connect to the server. Please check your internet connection."
+        case 'api':
+          return "There was an issue with the API response. Please try again."
+        default:
+          return "An unexpected error occurred while loading your portfolio data."
+      }
+    }
+
     return (
-      <div className="text-red-400 text-center py-8">
-        Error: {error}
+      <div className="text-center py-12">
+        <div className="flex flex-col items-center space-y-4">
+          {getErrorIcon()}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-white">{getErrorTitle()}</h3>
+            <p className="text-sm text-slate-400 max-w-md">
+              {getErrorDescription()}
+            </p>
+            <p className="text-xs text-slate-500 font-mono">
+              {error}
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <Button
+              onClick={() => void loadData()}
+              disabled={loading}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </>
+              )}
+            </Button>
+            
+            {errorType === 'timeout' && (
+              <Button
+                onClick={() => {
+                  setError(null)
+                  setErrorType('unknown')
+                }}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-800 px-6 py-2"
+              >
+                Dismiss
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="text-slate-400 text-center py-8">
-        Loading portfolio...
+      <div className="text-center py-12">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="p-4 rounded-full bg-purple-500/20">
+            <RefreshCw className="h-8 w-8 animate-spin text-purple-400" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-white">Loading Portfolio Data</h3>
+            <p className="text-sm text-slate-400">
+              This may take a moment as we fetch your balances and market data
+            </p>
+            <p className="text-xs text-slate-500">
+              Fetching balances from multiple sources...
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -209,13 +341,21 @@ export function PortfolioOverview() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-white">Portfolio Overview</h2>
-        <button
-          onClick={() => void loadData()}
-          className="p-2 text-slate-400 hover:text-white transition-colors"
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center space-x-2">
+          {loading && (
+            <span className="text-sm text-slate-400">
+              Refreshing...
+            </span>
+          )}
+          <button
+            onClick={() => void loadData()}
+            className="p-2 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+            disabled={loading}
+            title="Refresh portfolio data"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

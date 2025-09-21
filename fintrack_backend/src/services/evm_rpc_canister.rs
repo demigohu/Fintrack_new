@@ -31,6 +31,8 @@ pub struct InstallArgs {
 #[derive(CandidType, Deserialize)]
 pub enum EthSepoliaService { Alchemy, BlockPi, PublicNode, Ankr, Sepolia }
 #[derive(CandidType, Deserialize)]
+pub enum JsonRpcSource { EthMainnet, EthSepolia }
+#[derive(CandidType, Deserialize)]
 pub enum L2MainnetService { Alchemy, Llama, BlockPi, PublicNode, Ankr }
 pub type ChainId = u64;
 #[derive(CandidType, Deserialize)]
@@ -117,9 +119,9 @@ pub struct CallArgs {
   pub transaction: TransactionRequest,
   pub block: Option<BlockTag>,
 }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub struct JsonRpcError { pub code: i64, pub message: String }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum ProviderError {
   TooFewCycles{ expected: candid::Nat, received: candid::Nat },
   InvalidRpcConfig(String),
@@ -127,9 +129,9 @@ pub enum ProviderError {
   ProviderNotFound,
   NoPermission,
 }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum ValidationError { Custom(String), InvalidHex(String) }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum RejectionCode {
   NoError,
   CanisterError,
@@ -139,7 +141,7 @@ pub enum RejectionCode {
   SysFatal,
   CanisterReject,
 }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum HttpOutcallError {
   IcError{ code: RejectionCode, message: String },
   InvalidHttpJsonRpcResponse{
@@ -149,7 +151,7 @@ pub enum HttpOutcallError {
     parsing_error: Option<String>,
   },
 }
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum RpcError {
   JsonRpcError(JsonRpcError),
   ProviderError(ProviderError),

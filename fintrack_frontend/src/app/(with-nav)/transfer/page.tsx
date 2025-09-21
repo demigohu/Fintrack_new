@@ -129,7 +129,7 @@ export default function TransferPage() {
                     <Input
                       value={btcTo}
                       onChange={(e) => setBtcTo(e.target.value)}
-                      placeholder="bcrt1... (Regtest) / bc1... (Mainnet)"
+                      placeholder="tb1... (testnet4) / bc1... (Mainnet)"
                       className="bg-slate-800/50 border-slate-600 text-white mt-2"
                     />
                   </div>

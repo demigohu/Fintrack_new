@@ -1,7 +1,0 @@
-(opt variant {
-  InitArg = record {
-    btc_network = variant { regtest = record { json_rpc_url = "http://ic-btc-integration:QPQiNaph19FqUsCrBRN0FII7lyM26B51fAMeBQzCb-E=@127.0.0.1:18444" } };
-    check_mode = variant { AcceptAll };
-    num_subnet_nodes = 34;
-  }
-})

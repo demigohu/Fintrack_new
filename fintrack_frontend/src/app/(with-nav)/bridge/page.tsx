@@ -60,6 +60,7 @@ export default function BridgePage() {
   const [minterStatus, setMinterStatus] = useState<{ eth_finalized?: number; last_scraped?: number } | null>(null)
   const [btcNetworkInfo, setBtcNetworkInfo] = useState<{ last_seen_utxo_height: number | null; current_block_height: number | null } | null>(null)
   const [recentTxs, setRecentTxs] = useState<any[]>([])
+  const [loadingTransactions, setLoadingTransactions] = useState(false)
   const [fees, setFees] = useState<{ ckbtc: bigint; cketh: bigint } | null>(null)
   
   // Withdraw states
@@ -110,6 +111,30 @@ export default function BridgePage() {
     } catch {}
   }
 
+  async function loadTransactions() {
+    setLoadingTransactions(true)
+    try {
+      const tx = await transactionService.getTransactions()
+      if (tx.success) {
+        // Get all ICP transactions and filter for DEPOSIT/WITHDRAW
+        const icpBridgeTxs = tx.data.filter((tx) => {
+          const unwrapOpt = (opt: any) => Array.isArray(opt) && opt.length ? opt[0] : undefined
+          const icp = unwrapOpt(tx.icp_tx)
+          
+          if (icp) {
+            const operation = icp.operation || ""
+            return operation === "DEPOSIT" || operation === "WITHDRAW"
+          }
+          return false
+        })
+        setRecentTxs(icpBridgeTxs)
+      }
+    } catch {}
+    finally {
+      setLoadingTransactions(false)
+    }
+  }
+
   async function loadEthGasFee() {
     if (assetType !== "ETH") return
     try {
@@ -120,7 +145,7 @@ export default function BridgePage() {
         setEthGasFee(gasFeeEth.toFixed(6))
       }
     } catch (e) {
-      console.error("Failed to load ETH gas fee:", e)
+      // Failed to load ETH gas fee
     }
   }
 
@@ -142,7 +167,7 @@ export default function BridgePage() {
         setEthAllowance(allowanceEth.toFixed(6))
       }
     } catch (e) {
-      console.error("Failed to load ETH allowance:", e)
+      // Failed to load ETH allowance
     }
   }
 
@@ -158,12 +183,10 @@ export default function BridgePage() {
       } catch {}
       try {
         // Load recent transactions (bridge-related will still appear here)
-        const tx = await transactionService.getTransactions()
-        if (tx.success) setRecentTxs(tx.data.slice(0, 5))
+        await loadTransactions()
       } catch {}
       try {
         const eth = await networkService.getEthNetworkStatus()
-        console.log("[Bridge] Initial ETH network status:", eth)
         if (eth.success) setMinterStatus({ eth_finalized: eth.data.eth_finalized ?? undefined, last_scraped: eth.data.last_scraped ?? undefined })
       } catch {}
     })()
@@ -288,6 +311,7 @@ export default function BridgePage() {
       if (r.success) {
         toast({ title: "Minted", description: "Successfully minted BTC to ckBTC" })
         await loadBalances()
+        await loadTransactions()
       } else {
         toast({ title: "Mint failed", description: r.error, variant: "destructive" })
       }
@@ -316,6 +340,7 @@ export default function BridgePage() {
       const res = await depositEthToContract(helper, principal, ethDepositAmount)
       if (res.success) {
         toast({ title: "Deposit submitted", description: `Tx: ${res.data?.hash ?? "submitted"}` })
+        await loadTransactions()
       } else {
         toast({ title: "Deposit failed", description: res.error || "Unknown error", variant: "destructive" })
       }
@@ -346,7 +371,6 @@ export default function BridgePage() {
         return 
       }
       try {
-        console.log("[Bridge] Generating QR for address:", depositAddress)
         const qrDataUrl = await QRCode.toDataURL(depositAddress, {
           width: 160,
           margin: 2,
@@ -357,29 +381,22 @@ export default function BridgePage() {
         })
         setQrDataUrl(qrDataUrl)
       } catch (e) {
-        console.error("[Bridge] QR generation failed:", e)
         setQrDataUrl("")
       }
     })()
   }, [assetType, depositAddress, isDeposit])
 
-  // Real-time polling for network status (ckETH minter info + refresh recent txs)
+  // Real-time polling for network status only (no transactions)
   useEffect(() => {
     const tick = async () => {
       try {
         const eth = await networkService.getEthNetworkStatus()
-        console.log("[Bridge] Poll ETH network status:", eth)
         if (eth.success) setMinterStatus({ eth_finalized: eth.data.eth_finalized ?? undefined, last_scraped: eth.data.last_scraped ?? undefined })
-      } catch {}
-      try {
-        const tx = await transactionService.getTransactions()
-        if (tx.success) setRecentTxs(tx.data.slice(0, 5))
       } catch {}
       try {
         // Get BTC network info including current block height and UTXO height
         if (assetType === "BTC") {
           const btc = await networkService.getBtcNetworkStatus(depositAddress || undefined)
-          console.log("[Bridge] Poll BTC network status:", btc)
           if (btc.success) setBtcNetworkInfo(btc.data)
         }
       } catch {}
@@ -395,13 +412,11 @@ export default function BridgePage() {
     ;(async () => {
       try {
         const eth = await networkService.getEthNetworkStatus()
-        console.log("[Bridge] Direction switch ETH network status:", eth)
         if (eth.success) setMinterStatus({ eth_finalized: eth.data.eth_finalized ?? undefined, last_scraped: eth.data.last_scraped ?? undefined })
       } catch {}
       if (assetType === "BTC") {
         try {
           const btc = await networkService.getBtcNetworkStatus(depositAddress || undefined)
-          console.log("[Bridge] Direction switch BTC network status:", btc)
           if (btc.success) setBtcNetworkInfo(btc.data)
         } catch {}
       }
@@ -436,6 +451,7 @@ export default function BridgePage() {
         if (wd.success) {
           toast({ title: "Withdraw submitted", description: `ckBTC burn, BTC tx: ${wd.data}` })
           await loadBalances()
+          await loadTransactions()
         } else {
           toast({ title: "Withdraw failed", description: wd.error, variant: "destructive" })
         }
@@ -449,6 +465,7 @@ export default function BridgePage() {
         if (wd.success) {
           toast({ title: "Withdraw submitted", description: "ckETH burn, ETH withdrawal requested" })
           await loadBalances()
+          await loadTransactions()
         } else {
           toast({ title: "Withdraw failed", description: wd.error, variant: "destructive" })
         }
@@ -733,25 +750,42 @@ export default function BridgePage() {
           </CardHeader>
           <CardContent className="p-0 space-y-4">
             <div className="flex flex-wrap gap-4">
-              <a href="#" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
-                {assetType === "BTC" ? "ckBTC canister" : "ckETH canister"}
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-              <a href="#" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
-                {assetType === "BTC" ? "ckBTC Dashboard" : "ckETH Dashboard"}
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-              {assetType === "ETH" && (
-                <a href="#" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
-                  ETH smart contract on the Ethereum network
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
+              {assetType === "BTC" ? (
+                <>
+                  <a href="https://dashboard.internetcomputer.org/bitcoin" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    ckBTC Dashboard
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <a href="https://dashboard.internetcomputer.org/canister/ml52i-qqaaa-aaaar-qaaba-cai" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    ckBTC Canister
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a href="https://dashboard.internetcomputer.org/ethereum/apia6-jaaaa-aaaar-qabma-cai" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    ckETH Dashboard
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <a href="https://dashboard.internetcomputer.org/canister/apia6-jaaaa-aaaar-qabma-cai" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    ckETH Canister
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <a href="https://sepolia.etherscan.io/address/0xb44B5e756A894775FC32EDdf3314Bb1B1944dC34" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    ETH Smart Contract
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </>
               )}
             </div>
             
@@ -789,7 +823,16 @@ export default function BridgePage() {
               )}
             </div>
             
-            {recentTxs.length === 0 ? (
+            {loadingTransactions ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 bg-slate-800 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div className="text-slate-400 text-sm">Loading transactions...</div>
+              </div>
+            ) : recentTxs.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 mx-auto mb-4 bg-slate-800 rounded-full flex items-center justify-center">
                   <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -801,28 +844,6 @@ export default function BridgePage() {
             ) : (
               <div className="space-y-2">
                 {recentTxs
-                  .filter((tx) => {
-                    // Filter only bridge-related transactions (native ↔ ckAsset)
-                    const unwrapOpt = (opt: any) => Array.isArray(opt) && opt.length ? opt[0] : undefined
-                    const icp = unwrapOpt(tx.icp_tx)
-                    const eth = unwrapOpt(tx.eth_tx)
-                    const btc = unwrapOpt(tx.btc_tx)
-                    
-                    // Only show DEPOSIT and WITHDRAW operations (bridge transactions)
-                    if (icp) {
-                      const operation = icp.operation || ""
-                      return operation === "DEPOSIT" || operation === "WITHDRAW"
-                    }
-                    if (eth) {
-                      const operation = eth.operation || ""
-                      return operation === "DEPOSIT" || operation === "WITHDRAW"
-                    }
-                    if (btc) {
-                      const operation = btc.operation || ""
-                      return operation === "DEPOSIT" || operation === "WITHDRAW"
-                    }
-                    return false
-                  })
                   .slice(0, 5)
                   .map((tx, i) => {
                   // Parse transaction data
