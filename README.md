@@ -51,6 +51,87 @@
 
 ## 🏗️ Architecture Diagram
 
+```mermaid
+graph LR
+    %% FRONTEND
+    subgraph FE[Frontend - Next.js/React]
+        home[Home Page]
+        bridge[Bridge Page]
+        portfolio[Portfolio Page]
+        trade[Trade Page]
+        budgets[Budgets Page]
+        goals[Goals Page]
+        transactions[Transactions Page]
+        transfer[Transfer Page]
+        deposits[Deposits Page]
+        serviceslayer[Services Layer]
+    end
+
+    %% BACKEND
+    subgraph BE[Backend Canisters - ICP/Rust]
+        txsvc[Transactions Service]
+        btcsvc[Bitcoin Service]
+        btctransfer[Bitcoin Transfer Service]
+        ethsvc[Ethereum Service]
+        ethtransfer[Ethereum Transfer Service]
+        uniswap[Uniswap Service]
+        kongswap[KongSwap Service]
+        evmrpc[EVM RPC Canister]
+        ratessvc[Rates Service]
+        budgetsvc[Budget Service]
+        goalssvc[Goals Service]
+        utilsvc[Utils Service]
+        addrsvc[Address Service]
+    end
+
+    %% AUTHENTICATION
+    subgraph AUTH[Authentication]
+        iid[Internet Identity]
+    end
+
+    %% EXTERNAL SYSTEMS
+    subgraph EXT_BTC[Bitcoin Network]
+        btcnode[Bitcoin Node]
+    end
+    subgraph EXT_ETH[Ethereum Network]
+        ethnode[Ethereum Node]
+    end
+    subgraph EXT_API[External APIs]
+        moralis[Moralis API]
+        mempool[Mempool.space]
+        coingecko[CoinGecko API]
+    end
+
+    %% HIGH LEVEL ARCHITECTURE
+    FE --> serviceslayer
+    serviceslayer --> txsvc
+    serviceslayer --> budgetsvc
+    serviceslayer --> goalssvc
+    serviceslayer --> uniswap
+    serviceslayer --> kongswap
+    serviceslayer --> utilsvc
+    serviceslayer --> btctransfer
+    serviceslayer --> ethtransfer
+
+    txsvc --> btcsvc
+    txsvc --> ethsvc
+    txsvc --> ratessvc
+
+    btcsvc --> btcnode
+    ethsvc --> ethnode
+    uniswap --> evmrpc --> ethnode
+    kongswap --> evmrpc --> ethnode
+
+    %% External price/tx data sources
+    ratessvc --> moralis
+    ratessvc --> mempool
+    ratessvc --> coingecko
+    iid --> addrsvc
+    txsvc --> iid
+    btctransfer --> btcsvc --> btcnode
+    ethtransfer --> evmrpc --> ethnode
+```
+
 ### 🔄 System Flow
 
 1. **User Access**: User navigates through different frontend pages
