@@ -49,8 +49,116 @@
 - **ECDSA Signing**: Secure transaction signing via Internet Computer management canister
 - **Multi-Chain Address Derivation**: Deterministic address generation from Principal
 
+## 🏗️ Architecture Diagram
+
+### 🔄 System Flow
+
+1. **User Access**: User navigates through different frontend pages
+2. **Authentication**: Internet Identity provides decentralized authentication
+3. **API Integration**: Frontend makes calls to backend canister services
+4. **External Data**: Backend fetches data from Moralis, Mempool.space, and CoinGecko
+5. **Cross-Chain Operations**: Backend handles bridging via ckBTC/ckETH canisters
+6. **Native Blockchain**: Direct interaction with Bitcoin and Ethereum networks
+7. **Data Persistence**: All user data stored securely on Internet Computer
 
 ## 🏗️ Architecture
+
+### 🏗️ Architecture Description – Fintrack_new
+
+1. Overview
+
+FinTrack Protocol is a Cross-Chain DeFi Super App built on the Internet Computer (ICP).
+The application enables users to:
+
+- View and manage multi-chain portfolios (Bitcoin, Ethereum, and ERC-20 tokens).
+- Transfer assets across chains through ckBTC, ckETH, and the EVM RPC service.
+- Manage personal finance with budgeting and financial goals.
+- Swap tokens with Uniswap integration.
+
+The architecture is designed to be modular and service-oriented, where each canister is responsible for a specific domain and can evolve independently.
+
+2. System Components
+
+🔹 Frontend (Next.js + React)
+
+Pages / Modules:
+
+- Bridge → cross-chain bridge (BTC ↔ ckBTC, ETH ↔ ckETH)
+- Home → landing page and main navigation
+- Portfolio → display user’s total assets.
+- Trade → token swaps via Uniswap.
+- Budgets → personal budget management.
+- Goals → financial target management.
+- Transactions → transaction history.
+- Transfer / Deposit → cross-chain sending & receiving of assets.
+- Services Layer → abstraction layer for communication with backend canisters.
+- Authentication → Internet Identity integration for login and mapping principal → account.
+
+🔹 Backend (ICP Canisters, Rust)
+
+The backend is composed of multiple canister services, each serving a dedicated purpose:
+
+- BTC Service
+  - Manages Bitcoin deposits & transfers via ckBTC.
+  - Queries Bitcoin network data (via mempool.space API).
+- ETH Service
+  - Integration with ckETH.
+  - ERC-20 token transfers and balances.
+- Uniswap Service
+  - Executes swaps via Uniswap Universal Router.
+  - Supports both quoting and swap execution.
+- Transactions Service
+  - Records and tracks user transactions.
+  - Maintains cross-chain transaction history.
+- Rates Service
+  - Provides real-time asset pricing (BTC, ETH, ERC-20).
+  - Fetches data from external APIs (e.g., Coingecko).
+- Address Service
+  - Handles address derivation from user principals.
+  - Supports ECDSA signing for external blockchain interactions.
+- Budget Service
+  - Manages user budgeting data.
+  - Tracks expenses across categories.
+- Goals Service
+  - Tracks user-defined financial goals (e.g., saving 0.5 BTC).
+  - Stores progress and completion status.
+- Utils Service
+  - Helper functions (value conversion, input validation, etc.).
+
+3. External Integrations
+
+Blockchains:
+
+- Bitcoin (via ckBTC + mempool.space API).
+- Ethereum (via ckETH, EVM_RPC canister, Uniswap).
+
+APIs:
+
+- Moralis → Fetch Address Transaction.
+- Mempool.space → Fetch Address Transaction.
+
+ICP Native Services:
+
+- Internet Identity 2.0 for authentication.
+- Threshold ECDSA signing for secure key management.
+- Bitcoin Canister: Native Bitcoin integration for UTXO management and transaction signing
+- HTTP Outcalls: Real-time data fetching from external APIs (Moralis, Mempool.space, Coingecko)
+
+
+4. Data Flow (User Journey)
+
+- User login → authenticated through Internet Identity → receives a unique principal.
+- Portfolio view → frontend requests data from Rates Service + Transactions Service → displays balances & history.
+- Swap trade → user specifies swap pair → frontend sends to Uniswap Service → fetch quote → transaction signed → submitted via Ethereum RPC.
+- Deposit/Transfer → user initiates request → BTC/ETH Service processes transaction → executes via ckBTC/ckETH + external API → result returned to user.
+- Budgeting & Goals → user stores and updates budgets/goals in Budget Service and Goals Service; data bound to the user’s principal.
+
+7. Architectural Goals
+
+- Scalability → modular services deployed as independent canisters.
+- Security → authentication through Internet Identity + ECDSA key management.
+- Cross-chain interoperability → Bitcoin, Ethereum, ERC-20, Uniswap.
+- User-centric experience → portfolio, trading, and financial management combined in one app
 
 ### Backend (Internet Computer Canisters)
 ```
