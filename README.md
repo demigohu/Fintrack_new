@@ -142,6 +142,77 @@ graph LR
 6. **Native Blockchain**: Direct interaction with Bitcoin and Ethereum networks
 7. **Data Persistence**: All user data stored securely on Internet Computer
 
+### 👣 User Flow Diagram
+
+```mermaid
+flowchart LR
+    %% Actors
+    user((User))
+
+    %% Entry
+    user --> homeUF[Home]
+    homeUF --> loginUF{Logged in?}
+    loginUF -- No --> iiUF[Internet Identity Login]
+    iiUF --> loginUF
+    loginUF -- Yes --> navUF[Navigate]
+
+    %% Main choices
+    navUF --> bridgeUF[Bridge]
+    navUF --> portfolioUF[Portfolio]
+    navUF --> tradeUF[Trade]
+    navUF --> budgetsUF[Budgets]
+    navUF --> goalsUF[Goals]
+
+    %% Bridge flow
+    bridgeUF --> chooseAsset{Choose Asset}
+    chooseAsset -- BTC/ckBTC --> btcAction{Deposit or Withdraw}
+    chooseAsset -- ETH/ckETH --> ethAction{Deposit or Withdraw}
+
+    btcAction --> btcreq[Send request]
+    btcreq --> btctransferUF[Bitcoin Transfer Service]
+    btctransferUF --> btcsvcUF[Bitcoin Service]
+    btcsvcUF --> mempoolUF[Mempool.space]
+    btcsvcUF --> btcnodeUF[Bitcoin Node]
+    btctransferUF --> txsvcUF1[Transactions Service]
+    txsvcUF1 --> bridgeDone[Show status + update list]
+
+    ethAction --> ethreq[Send request]
+    ethreq --> ethtransferUF[Ethereum Transfer Service]
+    ethtransferUF --> evmrpcUF[EVM RPC Canister]
+    evmrpcUF --> ethnodeUF[Ethereum Node]
+    ethtransferUF --> txsvcUF2[Transactions Service]
+    txsvcUF2 --> bridgeDone
+
+    %% Portfolio flow
+    portfolioUF --> getBalances[Request balances]
+    getBalances --> ratessvcUF[Rates Service]
+    getBalances --> txsvcUF3[Transactions Service]
+    ratessvcUF --> coingeckoUF[CoinGecko]
+    txsvcUF3 --> showPortfolio[Render portfolio + prices]
+    coingeckoUF --> showPortfolio
+
+    %% Trade flow
+    tradeUF --> pickPair[Pick pair + amount]
+    pickPair --> quote[Get quote]
+    quote --> uniswapUF[Uniswap Service]
+    uniswapUF --> evmrpcUF2[EVM RPC Canister]
+    evmrpcUF2 --> ethnodeUF2[Ethereum Node]
+    uniswapUF --> txsvcUF4[Transactions Service]
+    txsvcUF4 --> tradeDone[Show tx result]
+
+    %% Budgets / Goals
+    budgetsUF --> budgetOps[Create/Update budgets]
+    budgetOps --> budgetsvcUF[Budget Service]
+    goalsUF --> goalOps[Create/Update goals]
+    goalOps --> goalssvcUF[Goals Service]
+    budgetsvcUF --> budgetsDone[Show budgets]
+    goalssvcUF --> goalsDone[Show goals]
+
+    %% Shared styling for externals
+    classDef ext fill:#fdf6e3,stroke:#b58900,color:#657b83
+    class mempoolUF,btcnodeUF,ethnodeUF,coingeckoUF,ethnodeUF2 ext
+```
+
 ## 🏗️ Architecture
 
 ### 🏗️ Architecture Description – Fintrack_new
